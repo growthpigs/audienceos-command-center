@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
 
 // POST /api/v1/tickets/[id]/reopen - Reopen a resolved ticket
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 30 reopens per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id: ticketId } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(ticketId)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -17,14 +28,17 @@ export async function POST(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json().catch(() => ({}))
-    const { reason } = body as { reason?: string }
+    let body: Record<string, unknown> = {}
+    try {
+      body = await request.json()
+    } catch {
+      // Body is optional for reopen
+    }
+
+    const { reason } = body
 
     // Verify ticket exists and is resolved
     const { data: currentTicket, error: fetchError } = await supabase
@@ -34,30 +48,11 @@ export async function POST(
       .single()
 
     if (fetchError || !currentTicket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      )
+      return createErrorResponse(404, 'Ticket not found')
     }
 
     if (currentTicket.status !== 'resolved') {
-      return NextResponse.json(
-        { error: 'Only resolved tickets can be reopened' },
-        { status: 400 }
-      )
-    }
-
-    // Check if ticket was resolved more than 30 days ago
-    if (currentTicket.resolved_at) {
-      const resolvedDate = new Date(currentTicket.resolved_at)
-      const daysSinceResolved = Math.floor(
-        (Date.now() - resolvedDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
-
-      if (daysSinceResolved > 30) {
-        // For now, just log a warning - in production, this could require manager approval
-        console.warn(`Reopening ticket ${ticketId} that was resolved ${daysSinceResolved} days ago`)
-      }
+      return createErrorResponse(400, 'Only resolved tickets can be reopened')
     }
 
     // Reopen ticket - set status to in_progress, clear resolution data
@@ -87,35 +82,28 @@ export async function POST(
       .single()
 
     if (updateError) {
-      console.error('Error reopening ticket:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to reopen ticket' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to reopen ticket')
     }
 
     // Add a note about reopening if reason provided
-    if (reason && reason.trim()) {
-      await supabase
-        .from('ticket_note')
-        .insert({
+    if (typeof reason === 'string') {
+      const sanitizedReason = sanitizeString(reason).slice(0, 1000)
+      if (sanitizedReason) {
+        await supabase.from('ticket_note').insert({
           ticket_id: ticketId,
           agency_id: currentTicket.agency_id,
-          content: `Ticket reopened: ${reason.trim()}`,
+          content: `Ticket reopened: ${sanitizedReason}`,
           is_internal: true,
           added_by: session.user.id,
         })
+      }
     }
 
     return NextResponse.json({
       data: ticket,
       message: 'Ticket reopened successfully',
     })
-  } catch (error) {
-    console.error('Ticket reopen error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

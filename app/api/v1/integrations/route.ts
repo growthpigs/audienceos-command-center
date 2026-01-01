@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, createErrorResponse } from '@/lib/security'
 import type { IntegrationProvider } from '@/types/database'
+
+const VALID_PROVIDERS: IntegrationProvider[] = ['slack', 'gmail', 'google_ads', 'meta_ads']
 
 // GET /api/v1/integrations - List all integrations for the agency
 export async function GET(request: NextRequest) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -15,10 +22,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
     // Fetch integrations - RLS will filter by agency_id
@@ -28,28 +32,24 @@ export async function GET(request: NextRequest) {
       .order('provider', { ascending: true })
 
     if (error) {
-      console.error('Error fetching integrations:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch integrations' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch integrations')
     }
 
     // Return integrations without exposing tokens
     const safeIntegrations = integrations.map(({ access_token, refresh_token, ...rest }) => rest)
 
     return NextResponse.json({ data: safeIntegrations })
-  } catch (error) {
-    console.error('Integrations GET error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
 // POST /api/v1/integrations - Initiate OAuth flow or create integration record
 export async function POST(request: NextRequest) {
+  // Rate limit: 30 creates per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -59,19 +59,23 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
-    const { provider } = body as { provider: IntegrationProvider }
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
+    }
 
-    if (!provider || !['slack', 'gmail', 'google_ads', 'meta_ads'].includes(provider)) {
-      return NextResponse.json(
-        { error: 'Invalid provider. Must be one of: slack, gmail, google_ads, meta_ads' },
-        { status: 400 }
+    const { provider } = body
+
+    // Validate provider
+    if (typeof provider !== 'string' || !VALID_PROVIDERS.includes(provider as IntegrationProvider)) {
+      return createErrorResponse(
+        400,
+        `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(', ')}`
       )
     }
 
@@ -79,17 +83,14 @@ export async function POST(request: NextRequest) {
     const agencyId = session.user.user_metadata?.agency_id
 
     if (!agencyId) {
-      return NextResponse.json(
-        { error: 'Agency not found in user session' },
-        { status: 400 }
-      )
+      return createErrorResponse(400, 'Agency not found in user session')
     }
 
     // Check if integration already exists for this provider
     const { data: existing } = await supabase
       .from('integration')
       .select('id')
-      .eq('provider', provider)
+      .eq('provider', provider as IntegrationProvider)
       .single()
 
     if (existing) {
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
       .from('integration')
       .insert({
         agency_id: agencyId,
-        provider,
+        provider: provider as IntegrationProvider,
         is_connected: false,
         config: {},
       })
@@ -112,15 +113,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error creating integration:', error)
-      return NextResponse.json(
-        { error: 'Failed to create integration' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to create integration')
     }
 
     // Generate OAuth URL based on provider
-    const oauthUrl = generateOAuthUrl(provider, integration.id)
+    const oauthUrl = generateOAuthUrl(provider as IntegrationProvider, integration.id)
 
     return NextResponse.json({
       data: {
@@ -129,12 +126,8 @@ export async function POST(request: NextRequest) {
         oauthUrl,
       },
     })
-  } catch (error) {
-    console.error('Integrations POST error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
@@ -164,7 +157,8 @@ function generateOAuthUrl(provider: IntegrationProvider, integrationId: string):
     case 'gmail':
       return `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID || '',
-        scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify',
+        scope:
+          'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify',
         redirect_uri: redirectUri,
         state,
         response_type: 'code',

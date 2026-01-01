@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, sanitizeString, isValidUUID, createErrorResponse } from '@/lib/security'
 import type { TicketCategory, TicketPriority, TicketStatus } from '@/types/database'
+
+// Valid enum values
+const VALID_STATUSES: TicketStatus[] = ['new', 'in_progress', 'waiting_client', 'resolved']
+const VALID_PRIORITIES: TicketPriority[] = ['low', 'medium', 'high', 'critical']
+const VALID_CATEGORIES: TicketCategory[] = ['technical', 'billing', 'campaign', 'general', 'escalation']
 
 // GET /api/v1/tickets - List all tickets for the agency
 export async function GET(request: NextRequest) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -14,10 +24,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
     // Get query params for filtering
@@ -48,48 +55,51 @@ export async function GET(request: NextRequest) {
       `)
       .order('created_at', { ascending: false })
 
-    // Apply filters
-    if (status) {
+    // Apply filters with validation
+    if (status && VALID_STATUSES.includes(status as TicketStatus)) {
       query = query.eq('status', status as TicketStatus)
     }
-    if (priority) {
+    if (priority && VALID_PRIORITIES.includes(priority as TicketPriority)) {
       query = query.eq('priority', priority as TicketPriority)
     }
-    if (clientId) {
+    if (clientId && isValidUUID(clientId)) {
       query = query.eq('client_id', clientId)
     }
-    if (assigneeId) {
+    if (assigneeId && isValidUUID(assigneeId)) {
       query = query.eq('assignee_id', assigneeId)
     }
-    if (category) {
+    if (category && VALID_CATEGORIES.includes(category as TicketCategory)) {
       query = query.eq('category', category as TicketCategory)
     }
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+      // Sanitize search input and escape special characters
+      const sanitizedSearch = sanitizeString(search)
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_')
+        .slice(0, 100)
+      if (sanitizedSearch) {
+        query = query.or(`title.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`)
+      }
     }
 
     const { data: tickets, error } = await query
 
     if (error) {
-      console.error('Error fetching tickets:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch tickets' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch tickets')
     }
 
     return NextResponse.json({ data: tickets })
-  } catch (error) {
-    console.error('Tickets GET error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
 // POST /api/v1/tickets - Create a new ticket
 export async function POST(request: NextRequest) {
+  // Rate limit: 30 creates per minute (stricter for writes)
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -99,32 +109,49 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
-    const { client_id, title, description, category, priority, assignee_id, due_date } = body as {
-      client_id: string
-      title: string
-      description: string
-      category: TicketCategory
-      priority: TicketPriority
-      assignee_id?: string | null
-      due_date?: string | null
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
     }
+
+    const { client_id, title, description, category, priority, assignee_id, due_date } = body
 
     // Validate required fields
-    if (!client_id || !title || !description || !category || !priority) {
-      return NextResponse.json(
-        { error: 'Missing required fields: client_id, title, description, category, priority' },
-        { status: 400 }
-      )
+    if (!client_id || !isValidUUID(client_id)) {
+      return createErrorResponse(400, 'Valid client_id is required')
+    }
+    if (!title || typeof title !== 'string') {
+      return createErrorResponse(400, 'Title is required')
+    }
+    if (!category || !VALID_CATEGORIES.includes(category as TicketCategory)) {
+      return createErrorResponse(400, 'Valid category is required')
+    }
+    if (!priority || !VALID_PRIORITIES.includes(priority as TicketPriority)) {
+      return createErrorResponse(400, 'Valid priority is required')
     }
 
-    // Get agency_id from user's JWT claims or profile
+    // Sanitize inputs
+    const sanitizedTitle = sanitizeString(title).slice(0, 500)
+    const sanitizedDescription = description ? sanitizeString(description as string).slice(0, 10000) : ''
+
+    if (!sanitizedTitle) {
+      return createErrorResponse(400, 'Title is required')
+    }
+
+    // Validate optional fields with explicit type narrowing
+    const validatedAssigneeId: string | null = typeof assignee_id === 'string' && isValidUUID(assignee_id)
+      ? assignee_id
+      : null
+    const validatedDueDate: string | null = typeof due_date === 'string' && !isNaN(Date.parse(due_date))
+      ? due_date
+      : null
+
+    // Get agency_id from user's profile
     const { data: profile } = await supabase
       .from('user')
       .select('agency_id')
@@ -132,24 +159,21 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (!profile?.agency_id) {
-      return NextResponse.json(
-        { error: 'Agency not found for user' },
-        { status: 400 }
-      )
+      return createErrorResponse(400, 'Agency not found for user')
     }
 
-    // Create ticket - number will be auto-generated by trigger
+    // Create ticket
     const { data: ticket, error } = await supabase
       .from('ticket')
       .insert({
         agency_id: profile.agency_id,
-        client_id,
-        title,
-        description,
-        category,
-        priority,
-        assignee_id: assignee_id || null,
-        due_date: due_date || null,
+        client_id: client_id as string,
+        title: sanitizedTitle,
+        description: sanitizedDescription,
+        category: category as TicketCategory,
+        priority: priority as TicketPriority,
+        assignee_id: validatedAssigneeId,
+        due_date: validatedDueDate,
         created_by: session.user.id,
       })
       .select(`
@@ -169,19 +193,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error creating ticket:', error)
-      return NextResponse.json(
-        { error: 'Failed to create ticket' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to create ticket')
     }
 
     return NextResponse.json({ data: ticket }, { status: 201 })
-  } catch (error) {
-    console.error('Tickets POST error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

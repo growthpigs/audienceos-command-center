@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
 
 // GET /api/v1/tickets/[id]/notes - List notes for a ticket
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id: ticketId } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(ticketId)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -17,10 +28,7 @@ export async function GET(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
     // Get query params for filtering
@@ -49,20 +57,12 @@ export async function GET(
     const { data: notes, error } = await query
 
     if (error) {
-      console.error('Error fetching notes:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch notes' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch notes')
     }
 
     return NextResponse.json({ data: notes })
-  } catch (error) {
-    console.error('Notes GET error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
@@ -71,8 +71,18 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 50 creates per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id: ticketId } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(ticketId)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -81,24 +91,30 @@ export async function POST(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
-    const { content, is_internal = true } = body as {
-      content: string
-      is_internal?: boolean
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
     }
 
-    if (!content || content.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Note content is required' },
-        { status: 400 }
-      )
+    const { content, is_internal = true } = body
+
+    // Validate and sanitize content
+    if (typeof content !== 'string') {
+      return createErrorResponse(400, 'Note content is required')
     }
+
+    const sanitizedContent = sanitizeString(content).slice(0, 10000)
+    if (!sanitizedContent) {
+      return createErrorResponse(400, 'Note content is required')
+    }
+
+    // Validate is_internal
+    const isInternalBool = is_internal === true || is_internal === 'true'
 
     // Verify ticket exists and get agency_id
     const { data: ticket, error: ticketError } = await supabase
@@ -108,10 +124,7 @@ export async function POST(
       .single()
 
     if (ticketError || !ticket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      )
+      return createErrorResponse(404, 'Ticket not found')
     }
 
     // Create note
@@ -120,8 +133,8 @@ export async function POST(
       .insert({
         ticket_id: ticketId,
         agency_id: ticket.agency_id,
-        content: content.trim(),
-        is_internal,
+        content: sanitizedContent,
+        is_internal: isInternalBool,
         added_by: session.user.id,
       })
       .select(`
@@ -136,19 +149,11 @@ export async function POST(
       .single()
 
     if (error) {
-      console.error('Error creating note:', error)
-      return NextResponse.json(
-        { error: 'Failed to create note' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to create note')
     }
 
     return NextResponse.json({ data: note }, { status: 201 })
-  } catch (error) {
-    console.error('Notes POST error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

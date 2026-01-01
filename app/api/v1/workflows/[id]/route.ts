@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
 import {
   getWorkflowWithStats,
   updateWorkflow,
@@ -24,8 +25,18 @@ type RouteContext = { params: Promise<{ id: string }> }
 // ============================================================================
 
 export async function GET(request: NextRequest, context: RouteContext) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await context.params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid workflow ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -34,40 +45,27 @@ export async function GET(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'unauthorized', message: 'Not authenticated' }, { status: 401 })
+      return createErrorResponse(401, 'Not authenticated')
     }
 
     const agencyId = user.user_metadata?.agency_id
     if (!agencyId) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'No agency associated' },
-        { status: 403 }
-      )
+      return createErrorResponse(403, 'No agency associated')
     }
 
     const { data, error } = await getWorkflowWithStats(supabase, id, agencyId)
 
     if (error) {
-      return NextResponse.json(
-        { error: 'internal_error', message: error.message },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch workflow')
     }
 
     if (!data) {
-      return NextResponse.json(
-        { error: 'not_found', message: 'Workflow not found' },
-        { status: 404 }
-      )
+      return createErrorResponse(404, 'Workflow not found')
     }
 
     return NextResponse.json(data)
-  } catch (error) {
-    console.error('GET /api/v1/workflows/[id] error:', error)
-    return NextResponse.json(
-      { error: 'internal_error', message: 'An unexpected error occurred' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
@@ -76,8 +74,18 @@ export async function GET(request: NextRequest, context: RouteContext) {
 // ============================================================================
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
+  // Rate limit: 50 updates per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await context.params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid workflow ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -86,19 +94,28 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'unauthorized', message: 'Not authenticated' }, { status: 401 })
+      return createErrorResponse(401, 'Not authenticated')
     }
 
     const agencyId = user.user_metadata?.agency_id
     if (!agencyId) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'No agency associated' },
-        { status: 403 }
-      )
+      return createErrorResponse(403, 'No agency associated')
     }
 
-    const body = await request.json()
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
+    }
+
     const { name, description, triggers, actions, isActive } = body
+
+    // Sanitize name and description
+    const sanitizedName =
+      typeof name === 'string' ? sanitizeString(name).slice(0, 200) : undefined
+    const sanitizedDescription =
+      typeof description === 'string' ? sanitizeString(description).slice(0, 1000) : undefined
 
     // Validate if triggers provided
     if (triggers !== undefined) {
@@ -157,6 +174,17 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         )
       }
 
+      if (actions.length > 10) {
+        return NextResponse.json(
+          {
+            error: 'validation_error',
+            message: 'Maximum 10 actions allowed',
+            details: { field: 'actions' },
+          },
+          { status: 400 }
+        )
+      }
+
       const actionErrors: string[] = []
       for (const action of actions as WorkflowAction[]) {
         const validation = validateActionConfig(action)
@@ -178,34 +206,24 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const { data, error } = await updateWorkflow(supabase, id, agencyId, {
-      name: name?.trim(),
-      description: description?.trim(),
+      name: sanitizedName,
+      description: sanitizedDescription,
       triggers,
       actions,
-      isActive,
+      isActive: typeof isActive === 'boolean' ? isActive : undefined,
     })
 
     if (error) {
-      return NextResponse.json(
-        { error: 'internal_error', message: error.message },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to update workflow')
     }
 
     if (!data) {
-      return NextResponse.json(
-        { error: 'not_found', message: 'Workflow not found' },
-        { status: 404 }
-      )
+      return createErrorResponse(404, 'Workflow not found')
     }
 
     return NextResponse.json(data)
-  } catch (error) {
-    console.error('PATCH /api/v1/workflows/[id] error:', error)
-    return NextResponse.json(
-      { error: 'internal_error', message: 'An unexpected error occurred' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
@@ -214,8 +232,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 // ============================================================================
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
+  // Rate limit: 20 deletes per minute (stricter for destructive ops)
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await context.params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid workflow ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -224,34 +252,22 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'unauthorized', message: 'Not authenticated' }, { status: 401 })
+      return createErrorResponse(401, 'Not authenticated')
     }
 
     const agencyId = user.user_metadata?.agency_id
     if (!agencyId) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'No agency associated' },
-        { status: 403 }
-      )
+      return createErrorResponse(403, 'No agency associated')
     }
-
-    // TODO: Check for pending runs and cancel them
 
     const { error } = await deleteWorkflow(supabase, id, agencyId)
 
     if (error) {
-      return NextResponse.json(
-        { error: 'internal_error', message: error.message },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to delete workflow')
     }
 
     return new NextResponse(null, { status: 204 })
-  } catch (error) {
-    console.error('DELETE /api/v1/workflows/[id] error:', error)
-    return NextResponse.json(
-      { error: 'internal_error', message: 'An unexpected error occurred' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { isValidUUID, withTimeout, withRateLimit } from '@/lib/security'
 import type { IntegrationProvider } from '@/types/database'
 
 interface OAuthState {
@@ -17,21 +18,42 @@ interface TokenResponse {
   scope?: string
 }
 
+const VALID_PROVIDERS: IntegrationProvider[] = ['slack', 'gmail', 'google_ads', 'meta_ads']
+const OAUTH_TIMEOUT_MS = 30000 // 30 second timeout for OAuth requests
+
+/**
+ * Validate OAuth state structure
+ */
+function isValidOAuthState(state: unknown): state is OAuthState {
+  if (!state || typeof state !== 'object') return false
+  const s = state as Record<string, unknown>
+  return (
+    typeof s.integrationId === 'string' &&
+    isValidUUID(s.integrationId) &&
+    typeof s.provider === 'string' &&
+    VALID_PROVIDERS.includes(s.provider as IntegrationProvider) &&
+    typeof s.timestamp === 'number' &&
+    s.timestamp > 0
+  )
+}
+
 // GET /api/v1/oauth/callback - Handle OAuth callback from providers
 export async function GET(request: NextRequest) {
+  // Rate limit OAuth callbacks (stricter: 20 per minute)
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get('code')
   const state = searchParams.get('state')
   const error = searchParams.get('error')
-  const errorDescription = searchParams.get('error_description')
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-  // Handle OAuth errors from provider
+  // Handle OAuth errors from provider (don't log user-provided error descriptions)
   if (error) {
-    console.error('OAuth error:', error, errorDescription)
     return NextResponse.redirect(
-      `${baseUrl}/settings/integrations?error=${encodeURIComponent(errorDescription || error)}`
+      `${baseUrl}/settings/integrations?error=oauth_error`
     )
   }
 
@@ -41,10 +63,19 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // Decode and validate state
+  // Decode and validate state with proper error handling
   let oauthState: OAuthState
   try {
-    oauthState = JSON.parse(Buffer.from(state, 'base64').toString())
+    const decoded = Buffer.from(state, 'base64').toString()
+    const parsed = JSON.parse(decoded)
+
+    if (!isValidOAuthState(parsed)) {
+      return NextResponse.redirect(
+        `${baseUrl}/settings/integrations?error=invalid_state`
+      )
+    }
+
+    oauthState = parsed
   } catch {
     return NextResponse.redirect(
       `${baseUrl}/settings/integrations?error=invalid_state`
@@ -95,7 +126,6 @@ export async function GET(request: NextRequest) {
       .eq('id', integrationId)
 
     if (updateError) {
-      console.error('Error updating integration:', updateError)
       return NextResponse.redirect(
         `${baseUrl}/settings/integrations?error=update_failed`
       )
@@ -105,8 +135,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       `${baseUrl}/settings/integrations?success=${provider}`
     )
-  } catch (error) {
-    console.error('OAuth callback error:', error)
+  } catch {
     return NextResponse.redirect(
       `${baseUrl}/settings/integrations?error=callback_failed`
     )
@@ -154,29 +183,32 @@ async function exchangeCodeForTokens(
   const config = configs[provider]
 
   if (!config.clientId || !config.clientSecret) {
-    console.error(`Missing OAuth credentials for ${provider}`)
     return null
   }
 
   try {
-    const response = await fetch(config.tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        code,
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        redirect_uri: redirectUri,
-        ...config.extraParams,
+    // Add timeout to prevent hanging requests
+    const response = await withTimeout(
+      fetch(config.tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          code,
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
+          redirect_uri: redirectUri,
+          ...config.extraParams,
+        }),
       }),
-    })
+      OAUTH_TIMEOUT_MS,
+      'OAuth token exchange timed out'
+    )
 
     const data = await response.json()
 
     if (!response.ok || data.error) {
-      console.error(`Token exchange error for ${provider}:`, data)
       return null
     }
 
@@ -190,8 +222,7 @@ async function exchangeCodeForTokens(
     }
 
     return data as TokenResponse
-  } catch (error) {
-    console.error(`Token exchange failed for ${provider}:`, error)
+  } catch {
     return null
   }
 }

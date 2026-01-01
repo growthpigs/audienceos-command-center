@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, sanitizeString, sanitizeEmail, createErrorResponse } from '@/lib/security'
 import type { HealthStatus } from '@/types/database'
+
+// Valid values for enums
+const VALID_STAGES = ['Lead', 'Onboarding', 'Installation', 'Audit', 'Live', 'Needs Support', 'Off-Boarding']
+const VALID_HEALTH_STATUSES: HealthStatus[] = ['green', 'yellow', 'red']
 
 // GET /api/v1/clients - List all clients for the agency
 export async function GET(request: NextRequest) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -14,13 +23,10 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    // Get query params for filtering
+    // Get query params for filtering (sanitize inputs)
     const { searchParams } = new URL(request.url)
     const stage = searchParams.get('stage')
     const healthStatus = searchParams.get('health_status')
@@ -45,42 +51,45 @@ export async function GET(request: NextRequest) {
       `)
       .order('updated_at', { ascending: false })
 
-    // Apply filters
-    if (stage) {
+    // Apply filters with validation
+    if (stage && VALID_STAGES.includes(stage)) {
       query = query.eq('stage', stage)
     }
-    if (healthStatus) {
+    if (healthStatus && VALID_HEALTH_STATUSES.includes(healthStatus as HealthStatus)) {
       query = query.eq('health_status', healthStatus as HealthStatus)
     }
     if (isActive !== null && isActive !== undefined) {
       query = query.eq('is_active', isActive === 'true')
     }
     if (search) {
-      query = query.or(`name.ilike.%${search}%,contact_email.ilike.%${search}%,contact_name.ilike.%${search}%`)
+      // Sanitize search input and escape special characters for LIKE pattern
+      const sanitizedSearch = sanitizeString(search)
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_')
+        .slice(0, 100) // Limit search length
+      if (sanitizedSearch) {
+        query = query.or(`name.ilike.%${sanitizedSearch}%,contact_email.ilike.%${sanitizedSearch}%,contact_name.ilike.%${sanitizedSearch}%`)
+      }
     }
 
     const { data: clients, error } = await query
 
     if (error) {
-      console.error('Error fetching clients:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch clients' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch clients')
     }
 
     return NextResponse.json({ data: clients })
-  } catch (error) {
-    console.error('Clients GET error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
 // POST /api/v1/clients - Create a new client
 export async function POST(request: NextRequest) {
+  // Rate limit: 30 creates per minute (stricter for writes)
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -90,21 +99,43 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
+    }
+
     const { name, contact_email, contact_name, stage, health_status, notes, tags } = body
 
-    if (!name) {
-      return NextResponse.json(
-        { error: 'Client name is required' },
-        { status: 400 }
-      )
+    // Validate and sanitize required fields
+    if (!name || typeof name !== 'string') {
+      return createErrorResponse(400, 'Client name is required')
     }
+
+    const sanitizedName = sanitizeString(name).slice(0, 200)
+    if (!sanitizedName) {
+      return createErrorResponse(400, 'Client name is required')
+    }
+
+    // Validate optional fields
+    const sanitizedEmail = typeof contact_email === 'string' ? sanitizeEmail(contact_email) : null
+    const sanitizedContactName = typeof contact_name === 'string' ? sanitizeString(contact_name).slice(0, 200) : null
+    const sanitizedNotes = typeof notes === 'string' ? sanitizeString(notes).slice(0, 5000) : null
+
+    // Validate stage and health_status enums
+    const validatedStage = typeof stage === 'string' && VALID_STAGES.includes(stage) ? stage : 'Lead'
+    const validatedHealthStatus = typeof health_status === 'string' && VALID_HEALTH_STATUSES.includes(health_status as HealthStatus)
+      ? (health_status as HealthStatus)
+      : 'green'
+
+    // Validate tags array
+    const validatedTags = Array.isArray(tags)
+      ? tags.filter((t): t is string => typeof t === 'string').map(t => sanitizeString(t).slice(0, 50)).slice(0, 20)
+      : []
 
     // Get user's agency_id from their profile
     const { data: userProfile, error: profileError } = await supabase
@@ -114,41 +145,30 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (profileError || !userProfile?.agency_id) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 400 }
-      )
+      return createErrorResponse(400, 'User profile not found')
     }
 
     const { data: client, error } = await supabase
       .from('client')
       .insert({
         agency_id: userProfile.agency_id,
-        name,
-        contact_email: contact_email || null,
-        contact_name: contact_name || null,
-        stage: stage || 'Lead',
-        health_status: health_status || 'green',
-        notes: notes || null,
-        tags: tags || [],
+        name: sanitizedName,
+        contact_email: sanitizedEmail,
+        contact_name: sanitizedContactName,
+        stage: validatedStage,
+        health_status: validatedHealthStatus,
+        notes: sanitizedNotes,
+        tags: validatedTags,
       })
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating client:', error)
-      return NextResponse.json(
-        { error: 'Failed to create client' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to create client')
     }
 
     return NextResponse.json({ data: client }, { status: 201 })
-  } catch (error) {
-    console.error('Clients POST error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

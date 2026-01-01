@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
 
 // POST /api/v1/tickets/[id]/resolve - Resolve a ticket with mandatory final note
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 30 resolves per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id: ticketId } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(ticketId)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -17,29 +28,35 @@ export async function POST(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
-    const {
-      resolution_notes,
-      time_spent_minutes,
-      send_client_email = false,
-    } = body as {
-      resolution_notes: string
-      time_spent_minutes?: number
-      send_client_email?: boolean
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
     }
+
+    const { resolution_notes, time_spent_minutes, send_client_email = false } = body
 
     // Validate required resolution notes
-    if (!resolution_notes || resolution_notes.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Resolution notes are required to resolve a ticket' },
-        { status: 400 }
-      )
+    if (typeof resolution_notes !== 'string') {
+      return createErrorResponse(400, 'Resolution notes are required to resolve a ticket')
+    }
+
+    const sanitizedNotes = sanitizeString(resolution_notes).slice(0, 10000)
+    if (!sanitizedNotes) {
+      return createErrorResponse(400, 'Resolution notes are required to resolve a ticket')
+    }
+
+    // Validate time_spent_minutes if provided
+    let validatedTimeSpent: number | null = null
+    if (time_spent_minutes !== undefined && time_spent_minutes !== null) {
+      if (typeof time_spent_minutes !== 'number' || time_spent_minutes < 0 || time_spent_minutes > 99999) {
+        return createErrorResponse(400, 'time_spent_minutes must be a non-negative number')
+      }
+      validatedTimeSpent = time_spent_minutes
     }
 
     // Verify ticket exists and get current state
@@ -58,18 +75,12 @@ export async function POST(
       .single()
 
     if (fetchError || !currentTicket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      )
+      return createErrorResponse(404, 'Ticket not found')
     }
 
     // Check if already resolved
     if (currentTicket.status === 'resolved') {
-      return NextResponse.json(
-        { error: 'Ticket is already resolved' },
-        { status: 400 }
-      )
+      return createErrorResponse(400, 'Ticket is already resolved')
     }
 
     // Update ticket to resolved status
@@ -77,8 +88,8 @@ export async function POST(
       .from('ticket')
       .update({
         status: 'resolved',
-        resolution_notes: resolution_notes.trim(),
-        time_spent_minutes: time_spent_minutes || null,
+        resolution_notes: sanitizedNotes,
+        time_spent_minutes: validatedTimeSpent,
         resolved_by: session.user.id,
         resolved_at: new Date().toISOString(),
       })
@@ -101,19 +112,14 @@ export async function POST(
       .single()
 
     if (updateError) {
-      console.error('Error resolving ticket:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to resolve ticket' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to resolve ticket')
     }
 
     // TODO: If send_client_email is true, queue an email to the client
     // This would integrate with an email service like SendGrid or Resend
     const emailSent = false
-    if (send_client_email) {
+    if (send_client_email === true) {
       // Future: Send email via email integration
-      console.log('Client email sending not yet implemented')
     }
 
     return NextResponse.json({
@@ -121,11 +127,7 @@ export async function POST(
       emailSent,
       message: 'Ticket resolved successfully',
     })
-  } catch (error) {
-    console.error('Ticket resolve error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

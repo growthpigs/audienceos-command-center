@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, sanitizeString, createErrorResponse } from '@/lib/security'
 import {
   getWorkflows,
   createWorkflow,
@@ -20,6 +21,10 @@ import type { WorkflowTrigger, WorkflowAction } from '@/types/workflow'
 // ============================================================================
 
 export async function GET(request: NextRequest) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -30,37 +35,32 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'unauthorized', message: 'Not authenticated' }, { status: 401 })
+      return createErrorResponse(401, 'Not authenticated')
     }
 
     // Get agency_id from user metadata or JWT
     const agencyId = user.user_metadata?.agency_id
     if (!agencyId) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'No agency associated' },
-        { status: 403 }
-      )
+      return createErrorResponse(403, 'No agency associated')
     }
 
-    // Parse query params
+    // Parse query params with sanitization
     const { searchParams } = new URL(request.url)
     const isActiveParam = searchParams.get('enabled')
-    const search = searchParams.get('q') || undefined
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const rawSearch = searchParams.get('q')
+    const search = rawSearch ? sanitizeString(rawSearch).slice(0, 100) : undefined
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10) || 50), 100)
 
     const filters = {
       isActive: isActiveParam === 'true' ? true : isActiveParam === 'false' ? false : undefined,
       search,
-      limit: Math.min(limit, 100),
+      limit,
     }
 
     const { data, error, count } = await getWorkflows(supabase, agencyId, filters)
 
     if (error) {
-      return NextResponse.json(
-        { error: 'internal_error', message: error.message },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch workflows')
     }
 
     return NextResponse.json({
@@ -70,12 +70,8 @@ export async function GET(request: NextRequest) {
         has_more: (data?.length ?? 0) < count,
       },
     })
-  } catch (error) {
-    console.error('GET /api/v1/workflows error:', error)
-    return NextResponse.json(
-      { error: 'internal_error', message: 'An unexpected error occurred' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
@@ -84,6 +80,10 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 30 creates per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
@@ -94,28 +94,43 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'unauthorized', message: 'Not authenticated' }, { status: 401 })
+      return createErrorResponse(401, 'Not authenticated')
     }
 
     const agencyId = user.user_metadata?.agency_id
     if (!agencyId) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'No agency associated' },
-        { status: 403 }
-      )
+      return createErrorResponse(403, 'No agency associated')
     }
 
     // Parse request body
-    const body = await request.json()
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
+    }
+
     const { name, description, triggers, actions, isActive } = body
 
-    // Validate required fields
-    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    // Validate and sanitize name
+    if (typeof name !== 'string') {
       return NextResponse.json(
         { error: 'validation_error', message: 'Name is required', details: { field: 'name' } },
         { status: 400 }
       )
     }
+
+    const sanitizedName = sanitizeString(name).slice(0, 200)
+    if (!sanitizedName) {
+      return NextResponse.json(
+        { error: 'validation_error', message: 'Name is required', details: { field: 'name' } },
+        { status: 400 }
+      )
+    }
+
+    // Sanitize description
+    const sanitizedDescription =
+      typeof description === 'string' ? sanitizeString(description).slice(0, 1000) : undefined
 
     if (!Array.isArray(triggers) || triggers.length === 0) {
       return NextResponse.json(
@@ -144,6 +159,17 @@ export async function POST(request: NextRequest) {
         {
           error: 'validation_error',
           message: 'At least one action is required',
+          details: { field: 'actions' },
+        },
+        { status: 400 }
+      )
+    }
+
+    if (actions.length > 10) {
+      return NextResponse.json(
+        {
+          error: 'validation_error',
+          message: 'Maximum 10 actions allowed',
           details: { field: 'actions' },
         },
         { status: 400 }
@@ -192,26 +218,19 @@ export async function POST(request: NextRequest) {
 
     // Create workflow
     const { data, error } = await createWorkflow(supabase, agencyId, user.id, {
-      name: name.trim(),
-      description: description?.trim(),
+      name: sanitizedName,
+      description: sanitizedDescription,
       triggers,
       actions,
-      isActive: isActive ?? true,
+      isActive: isActive === true,
     })
 
     if (error) {
-      return NextResponse.json(
-        { error: 'internal_error', message: error.message },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to create workflow')
     }
 
     return NextResponse.json(data, { status: 201 })
-  } catch (error) {
-    console.error('POST /api/v1/workflows error:', error)
-    return NextResponse.json(
-      { error: 'internal_error', message: 'An unexpected error occurred' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

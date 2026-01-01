@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
+import type { TicketCategory, TicketPriority } from '@/types/database'
+
+// Valid enum values
+const VALID_PRIORITIES: TicketPriority[] = ['low', 'medium', 'high', 'critical']
+const VALID_CATEGORIES: TicketCategory[] = ['technical', 'billing', 'campaign', 'general', 'escalation']
 
 // GET /api/v1/tickets/[id] - Get single ticket with notes and history
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -17,10 +33,7 @@ export async function GET(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
     // Fetch ticket with related data
@@ -58,25 +71,14 @@ export async function GET(
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Ticket not found' },
-          { status: 404 }
-        )
+        return createErrorResponse(404, 'Ticket not found')
       }
-      console.error('Error fetching ticket:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch ticket' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch ticket')
     }
 
     return NextResponse.json({ data: ticket })
-  } catch (error) {
-    console.error('Ticket GET error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
@@ -85,8 +87,18 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 50 updates per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -95,28 +107,74 @@ export async function PATCH(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
-    const allowedFields = ['title', 'description', 'category', 'priority', 'assignee_id', 'due_date']
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
+    }
 
-    // Filter to only allowed fields
+    const { title, description, category, priority, assignee_id, due_date } = body
+
+    // Build validated updates object
     const updates: Record<string, unknown> = {}
-    for (const field of allowedFields) {
-      if (field in body) {
-        updates[field] = body[field]
+
+    if (title !== undefined) {
+      if (typeof title !== 'string') {
+        return createErrorResponse(400, 'Title must be a string')
+      }
+      const sanitizedTitle = sanitizeString(title).slice(0, 500)
+      if (sanitizedTitle) {
+        updates.title = sanitizedTitle
+      }
+    }
+
+    if (description !== undefined) {
+      if (typeof description !== 'string') {
+        return createErrorResponse(400, 'Description must be a string')
+      }
+      updates.description = sanitizeString(description).slice(0, 10000)
+    }
+
+    if (category !== undefined) {
+      if (!VALID_CATEGORIES.includes(category as TicketCategory)) {
+        return createErrorResponse(400, `Invalid category. Must be one of: ${VALID_CATEGORIES.join(', ')}`)
+      }
+      updates.category = category
+    }
+
+    if (priority !== undefined) {
+      if (!VALID_PRIORITIES.includes(priority as TicketPriority)) {
+        return createErrorResponse(400, `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}`)
+      }
+      updates.priority = priority
+    }
+
+    if (assignee_id !== undefined) {
+      if (assignee_id === null) {
+        updates.assignee_id = null
+      } else if (typeof assignee_id === 'string' && isValidUUID(assignee_id)) {
+        updates.assignee_id = assignee_id
+      } else {
+        return createErrorResponse(400, 'Invalid assignee_id format')
+      }
+    }
+
+    if (due_date !== undefined) {
+      if (due_date === null) {
+        updates.due_date = null
+      } else if (typeof due_date === 'string' && !isNaN(Date.parse(due_date))) {
+        updates.due_date = due_date
+      } else {
+        return createErrorResponse(400, 'Invalid due_date format')
       }
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: 'No valid fields to update' },
-        { status: 400 }
-      )
+      return createErrorResponse(400, 'No valid fields to update')
     }
 
     const { data: ticket, error } = await supabase
@@ -140,20 +198,12 @@ export async function PATCH(
       .single()
 
     if (error) {
-      console.error('Error updating ticket:', error)
-      return NextResponse.json(
-        { error: 'Failed to update ticket' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to update ticket')
     }
 
     return NextResponse.json({ data: ticket })
-  } catch (error) {
-    console.error('Ticket PATCH error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
@@ -162,8 +212,18 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 20 deletes per minute (stricter for destructive ops)
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -172,10 +232,7 @@ export async function DELETE(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
     // Delete ticket (notes will cascade due to FK)
@@ -185,19 +242,11 @@ export async function DELETE(
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting ticket:', error)
-      return NextResponse.json(
-        { error: 'Failed to delete ticket' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to delete ticket')
     }
 
     return NextResponse.json({ success: true }, { status: 200 })
-  } catch (error) {
-    console.error('Ticket DELETE error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

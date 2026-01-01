@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, createErrorResponse } from '@/lib/security'
 import type { TicketStatus } from '@/types/database'
 
 const VALID_STATUSES: TicketStatus[] = ['new', 'in_progress', 'waiting_client', 'resolved']
@@ -18,8 +19,18 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 50 status changes per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid ticket ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -28,20 +39,21 @@ export async function PATCH(
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
-    const { status: newStatus } = body as { status: TicketStatus }
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
+    }
 
-    if (!newStatus || !VALID_STATUSES.includes(newStatus)) {
-      return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` },
-        { status: 400 }
-      )
+    const { status: newStatus } = body
+
+    // Validate status is a valid enum value
+    if (typeof newStatus !== 'string' || !VALID_STATUSES.includes(newStatus as TicketStatus)) {
+      return createErrorResponse(400, `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`)
     }
 
     // Get current ticket status
@@ -52,16 +64,13 @@ export async function PATCH(
       .single()
 
     if (fetchError || !currentTicket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      )
+      return createErrorResponse(404, 'Ticket not found')
     }
 
     const currentStatus = currentTicket.status as TicketStatus
 
     // Validate transition
-    if (!ALLOWED_TRANSITIONS[currentStatus]?.includes(newStatus)) {
+    if (!ALLOWED_TRANSITIONS[currentStatus]?.includes(newStatus as TicketStatus)) {
       return NextResponse.json(
         {
           error: `Invalid status transition from "${currentStatus}" to "${newStatus}"`,
@@ -73,16 +82,13 @@ export async function PATCH(
 
     // Special handling for resolved status - require resolution notes
     if (newStatus === 'resolved') {
-      return NextResponse.json(
-        { error: 'Use /api/v1/tickets/[id]/resolve endpoint to resolve tickets' },
-        { status: 400 }
-      )
+      return createErrorResponse(400, 'Use /api/v1/tickets/[id]/resolve endpoint to resolve tickets')
     }
 
     // Update status
     const { data: ticket, error: updateError } = await supabase
       .from('ticket')
-      .update({ status: newStatus })
+      .update({ status: newStatus as TicketStatus })
       .eq('id', id)
       .select(`
         *,
@@ -101,11 +107,7 @@ export async function PATCH(
       .single()
 
     if (updateError) {
-      console.error('Error updating ticket status:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to update ticket status' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to update ticket status')
     }
 
     return NextResponse.json({
@@ -113,11 +115,7 @@ export async function PATCH(
       previousStatus: currentStatus,
       newStatus,
     })
-  } catch (error) {
-    console.error('Ticket status PATCH error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }

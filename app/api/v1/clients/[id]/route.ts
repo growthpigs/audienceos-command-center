@@ -1,16 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, sanitizeString, sanitizeEmail, createErrorResponse } from '@/lib/security'
 import type { HealthStatus } from '@/types/database'
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
 
+// Valid values for enums
+const VALID_STAGES = ['Lead', 'Onboarding', 'Installation', 'Audit', 'Live', 'Needs Support', 'Off-Boarding']
+const VALID_HEALTH_STATUSES: HealthStatus[] = ['green', 'yellow', 'red']
+
 // GET /api/v1/clients/[id] - Get a single client
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid client ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -19,10 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
     const { data: client, error } = await supabase
@@ -59,32 +71,31 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Client not found' },
-          { status: 404 }
-        )
+        return createErrorResponse(404, 'Client not found')
       }
-      console.error('Error fetching client:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch client' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to fetch client')
     }
 
     return NextResponse.json({ data: client })
-  } catch (error) {
-    console.error('Client GET error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
 // PUT /api/v1/clients/[id] - Update a client
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  // Rate limit: 50 updates per minute
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid client ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -93,51 +104,135 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
-    const body = await request.json()
-    const allowedFields = [
-      'name',
-      'contact_email',
-      'contact_name',
-      'stage',
-      'health_status',
-      'notes',
-      'tags',
-      'is_active',
-      'install_date',
-      'total_spend',
-      'lifetime_value',
-    ]
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return createErrorResponse(400, 'Invalid JSON body')
+    }
 
-    // Filter to only allowed fields
+    const {
+      name,
+      contact_email,
+      contact_name,
+      stage,
+      health_status,
+      notes,
+      tags,
+      is_active,
+      install_date,
+      total_spend,
+      lifetime_value,
+    } = body
+
+    // Build validated updates object
     const updates: Record<string, unknown> = {}
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updates[field] = body[field]
+
+    if (name !== undefined) {
+      if (typeof name !== 'string') {
+        return createErrorResponse(400, 'Name must be a string')
+      }
+      const sanitizedName = sanitizeString(name).slice(0, 200)
+      if (!sanitizedName) {
+        return createErrorResponse(400, 'Name cannot be empty')
+      }
+      updates.name = sanitizedName
+    }
+
+    if (contact_email !== undefined) {
+      if (contact_email === null) {
+        updates.contact_email = null
+      } else {
+        const sanitizedEmail = sanitizeEmail(contact_email)
+        if (sanitizedEmail === null && contact_email !== '') {
+          return createErrorResponse(400, 'Invalid email format')
+        }
+        updates.contact_email = sanitizedEmail
+      }
+    }
+
+    if (contact_name !== undefined) {
+      if (contact_name === null) {
+        updates.contact_name = null
+      } else if (typeof contact_name === 'string') {
+        updates.contact_name = sanitizeString(contact_name).slice(0, 200)
+      }
+    }
+
+    if (stage !== undefined) {
+      if (typeof stage !== 'string' || !VALID_STAGES.includes(stage)) {
+        return createErrorResponse(400, `Invalid stage. Must be one of: ${VALID_STAGES.join(', ')}`)
+      }
+      updates.stage = stage
+    }
+
+    if (health_status !== undefined) {
+      if (!VALID_HEALTH_STATUSES.includes(health_status as HealthStatus)) {
+        return createErrorResponse(400, 'Invalid health_status. Must be: green, yellow, or red')
+      }
+      updates.health_status = health_status
+    }
+
+    if (notes !== undefined) {
+      if (notes === null) {
+        updates.notes = null
+      } else if (typeof notes === 'string') {
+        updates.notes = sanitizeString(notes).slice(0, 5000)
+      }
+    }
+
+    if (tags !== undefined) {
+      if (!Array.isArray(tags)) {
+        return createErrorResponse(400, 'Tags must be an array')
+      }
+      updates.tags = tags
+        .filter((t): t is string => typeof t === 'string')
+        .map((t) => sanitizeString(t).slice(0, 50))
+        .slice(0, 20)
+    }
+
+    if (is_active !== undefined) {
+      if (typeof is_active !== 'boolean') {
+        return createErrorResponse(400, 'is_active must be a boolean')
+      }
+      updates.is_active = is_active
+    }
+
+    if (install_date !== undefined) {
+      if (install_date === null) {
+        updates.install_date = null
+      } else if (typeof install_date === 'string' && !isNaN(Date.parse(install_date))) {
+        updates.install_date = install_date
+      } else {
+        return createErrorResponse(400, 'Invalid install_date format')
+      }
+    }
+
+    if (total_spend !== undefined) {
+      if (total_spend === null) {
+        updates.total_spend = null
+      } else if (typeof total_spend === 'number' && total_spend >= 0) {
+        updates.total_spend = total_spend
+      } else {
+        return createErrorResponse(400, 'total_spend must be a non-negative number')
+      }
+    }
+
+    if (lifetime_value !== undefined) {
+      if (lifetime_value === null) {
+        updates.lifetime_value = null
+      } else if (typeof lifetime_value === 'number' && lifetime_value >= 0) {
+        updates.lifetime_value = lifetime_value
+      } else {
+        return createErrorResponse(400, 'lifetime_value must be a non-negative number')
       }
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: 'No valid fields to update' },
-        { status: 400 }
-      )
-    }
-
-    // Validate health_status if provided
-    if (updates.health_status) {
-      const validStatuses: HealthStatus[] = ['green', 'yellow', 'red']
-      if (!validStatuses.includes(updates.health_status as HealthStatus)) {
-        return NextResponse.json(
-          { error: 'Invalid health_status value. Must be: green, yellow, or red' },
-          { status: 400 }
-        )
-      }
+      return createErrorResponse(400, 'No valid fields to update')
     }
 
     const { data: client, error } = await supabase
@@ -149,32 +244,31 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Client not found' },
-          { status: 404 }
-        )
+        return createErrorResponse(404, 'Client not found')
       }
-      console.error('Error updating client:', error)
-      return NextResponse.json(
-        { error: 'Failed to update client' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to update client')
     }
 
     return NextResponse.json({ data: client })
-  } catch (error) {
-    console.error('Client PUT error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
 
 // DELETE /api/v1/clients/[id] - Soft delete a client (set is_active = false)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  // Rate limit: 20 deletes per minute (stricter for destructive ops)
+  const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid client ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
     const {
@@ -183,10 +277,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return createErrorResponse(401, 'Unauthorized')
     }
 
     // Soft delete - set is_active to false instead of hard delete
@@ -199,27 +290,16 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Client not found' },
-          { status: 404 }
-        )
+        return createErrorResponse(404, 'Client not found')
       }
-      console.error('Error deleting client:', error)
-      return NextResponse.json(
-        { error: 'Failed to delete client' },
-        { status: 500 }
-      )
+      return createErrorResponse(500, 'Failed to delete client')
     }
 
     return NextResponse.json({
       data: client,
-      message: 'Client deactivated successfully'
+      message: 'Client deactivated successfully',
     })
-  } catch (error) {
-    console.error('Client DELETE error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  } catch {
+    return createErrorResponse(500, 'Internal server error')
   }
 }
