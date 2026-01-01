@@ -18,15 +18,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { MessageSquare, GripVertical, AlertTriangle } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { MessageSquare, GripVertical, AlertTriangle, RefreshCw } from "lucide-react"
 import { type Client, type Stage, stages, owners } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { StageConfirmModal, isSensitiveStage } from "@/components/stage-confirm-modal"
 
 interface KanbanBoardProps {
   clients: Client[]
   onClientClick: (client: Client) => void
-  onClientMove?: (clientId: string, toStage: Stage) => void
+  onClientMove?: (clientId: string, toStage: Stage, notes?: string) => void
+}
+
+// Pending move state for confirmation modal
+interface PendingMove {
+  clientId: string
+  client: Client
+  fromStage: Stage
+  toStage: Stage
 }
 
 // Helper functions for styling
@@ -236,13 +246,20 @@ interface DroppableColumnProps {
   onClientClick: (client: Client) => void
 }
 
+const CARDS_PER_PAGE = 10
+
 function DroppableColumn({ stage, clients, onClientClick }: DroppableColumnProps) {
+  const [showAll, setShowAll] = useState(false)
   const { setNodeRef, isOver } = useDroppable({
     id: stage,
   })
 
+  const visibleClients = showAll ? clients : clients.slice(0, CARDS_PER_PAGE)
+  const hiddenCount = clients.length - CARDS_PER_PAGE
+  const hasMore = clients.length > CARDS_PER_PAGE
+
   return (
-    <div className="flex-shrink-0 w-72">
+    <div className="w-full md:flex-shrink-0 md:w-72">
       <Card className={cn(
         "bg-secondary/30 border-border transition-colors duration-200",
         isOver && "border-primary bg-primary/5 ring-2 ring-primary/20"
@@ -256,13 +273,29 @@ function DroppableColumn({ stage, clients, onClientClick }: DroppableColumnProps
           </CardTitle>
         </CardHeader>
         <CardContent ref={setNodeRef} className="p-2 space-y-2 min-h-[400px]">
-          {clients.map((client) => (
+          {visibleClients.map((client) => (
             <DraggableClientCard
               key={client.id}
               client={client}
               onClick={() => onClientClick(client)}
             />
           ))}
+
+          {/* Show more/less button */}
+          {hasMore && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-muted-foreground hover:text-foreground"
+              onClick={() => setShowAll(!showAll)}
+            >
+              {showAll ? (
+                <>Show less</>
+              ) : (
+                <>+{hiddenCount} more</>
+              )}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -272,6 +305,8 @@ function DroppableColumn({ stage, clients, onClientClick }: DroppableColumnProps
 // Main KanbanBoard Component
 export function KanbanBoard({ clients, onClientClick, onClientMove }: KanbanBoardProps) {
   const [activeClient, setActiveClient] = useState<Client | null>(null)
+  const [pendingMove, setPendingMove] = useState<PendingMove | null>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   // Configure sensors for drag detection
   // PointerSensor requires 8px of movement to start drag (prevents accidental drags)
@@ -312,10 +347,35 @@ export function KanbanBoard({ clients, onClientClick, onClientMove }: KanbanBoar
     // Don't do anything if dropped on the same stage
     if (draggedClient.stage === newStage) return
 
-    // Call the onClientMove callback if provided
+    // Check if moving to a sensitive stage - show confirmation modal
+    if (isSensitiveStage(newStage)) {
+      setPendingMove({
+        clientId,
+        client: draggedClient,
+        fromStage: draggedClient.stage,
+        toStage: newStage,
+      })
+      setShowConfirmModal(true)
+      return
+    }
+
+    // Call the onClientMove callback if provided (non-sensitive move)
     if (onClientMove) {
       onClientMove(clientId, newStage)
     }
+  }
+
+  function handleConfirmMove(notes?: string) {
+    if (pendingMove && onClientMove) {
+      onClientMove(pendingMove.clientId, pendingMove.toStage, notes)
+    }
+    setPendingMove(null)
+    setShowConfirmModal(false)
+  }
+
+  function handleCancelMove() {
+    setPendingMove(null)
+    setShowConfirmModal(false)
   }
 
   return (
@@ -325,7 +385,8 @@ export function KanbanBoard({ clients, onClientClick, onClientMove }: KanbanBoar
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      {/* Mobile: vertical stack, Desktop: horizontal scroll */}
+      <div className="flex flex-col gap-4 md:flex-row md:overflow-x-auto md:pb-4">
         {stages.map((stage) => (
           <DroppableColumn
             key={stage}
@@ -349,6 +410,114 @@ export function KanbanBoard({ clients, onClientClick, onClientMove }: KanbanBoar
           />
         ) : null}
       </DragOverlay>
+
+      {/* Stage Confirmation Modal for sensitive stages */}
+      {pendingMove && (
+        <StageConfirmModal
+          open={showConfirmModal}
+          onOpenChange={setShowConfirmModal}
+          clientName={pendingMove.client.name}
+          fromStage={pendingMove.fromStage}
+          toStage={pendingMove.toStage}
+          onConfirm={handleConfirmMove}
+          onCancel={handleCancelMove}
+        />
+      )}
     </DndContext>
+  )
+}
+
+// Skeleton loading state for KanbanBoard
+function KanbanCardSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-lg p-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-8 w-8 rounded" />
+        <div className="flex-1 space-y-1">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/4" />
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-3 w-12" />
+        </div>
+        <Skeleton className="h-3 w-10" />
+      </div>
+    </div>
+  )
+}
+
+function KanbanColumnSkeleton() {
+  return (
+    <div className="w-full md:flex-shrink-0 md:w-72">
+      <Card className="bg-secondary/30 border-border">
+        <CardHeader className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-5 w-8 rounded-full" />
+          </div>
+        </CardHeader>
+        <CardContent className="p-2 space-y-2 min-h-[400px]">
+          {[1, 2, 3].map((i) => (
+            <KanbanCardSkeleton key={i} />
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function KanbanBoardSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 md:flex-row md:overflow-x-auto md:pb-4">
+      {stages.map((stage) => (
+        <KanbanColumnSkeleton key={stage} />
+      ))}
+    </div>
+  )
+}
+
+// Error state for KanbanBoard
+interface KanbanBoardErrorProps {
+  error: string
+  onRetry?: () => void
+}
+
+export function KanbanBoardError({ error, onRetry }: KanbanBoardErrorProps) {
+  return (
+    <Card className="p-8 text-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
+          <AlertTriangle className="h-6 w-6 text-rose-500" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">Failed to load pipeline</h3>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+        {onRetry && (
+          <Button onClick={onRetry} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Try again
+          </Button>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+// Empty state for KanbanBoard
+export function KanbanBoardEmpty({ message = "No clients found" }: { message?: string }) {
+  return (
+    <Card className="p-8 text-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="text-4xl">📋</div>
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">No clients</h3>
+          <p className="text-sm text-muted-foreground">{message}</p>
+        </div>
+      </div>
+    </Card>
   )
 }

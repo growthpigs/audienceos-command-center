@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { DashboardView } from "@/components/dashboard-view"
 import { KanbanBoard } from "@/components/kanban-board"
@@ -17,9 +18,10 @@ import { OnboardingHubView } from "@/components/onboarding-hub-view"
 import { QuickCreateDialogs } from "@/components/quick-create-dialogs"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
-import { mockClients, type Client, type Stage } from "@/lib/mock-data"
+import { mockClients, type Client, type Stage, type HealthStatus, type Owner } from "@/lib/mock-data"
+import { FilterChips, type PipelineFilters, defaultFilters, countActiveFilters } from "@/components/filter-chips"
 
-export default function CommandCenter() {
+function CommandCenterContent() {
   const [activeView, setActiveView] = useState("dashboard")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
@@ -32,8 +34,145 @@ export default function CommandCenter() {
   const [clients, setClients] = useState<Client[]>(mockClients)
   const { toast } = useToast()
 
+  // Pipeline filters state
+  const [filters, setFilters] = useState<PipelineFilters>(defaultFilters)
+  const currentUser: Owner = "Luke" // TODO: Get from auth context
+
+  // Filter clients based on current filters
+  const filteredClients = clients.filter((client) => {
+    // Stage filter
+    if (filters.stage !== "all" && client.stage !== filters.stage) return false
+
+    // Health filter
+    if (filters.health !== "all" && client.health !== filters.health) return false
+
+    // Owner filter
+    if (filters.owner !== "all" && client.owner !== filters.owner) return false
+
+    // Search filter
+    if (filters.search) {
+      const search = filters.search.toLowerCase()
+      if (!client.name.toLowerCase().includes(search)) return false
+    }
+
+    // My Clients filter
+    if (filters.showMyClients && client.owner !== currentUser) return false
+
+    // At Risk filter (Yellow or Red health, or high days in stage)
+    if (filters.showAtRisk) {
+      const isAtRisk = client.health === "Yellow" || client.health === "Red" || client.daysInStage > 4
+      if (!isAtRisk) return false
+    }
+
+    // Blocked filter
+    if (filters.showBlocked) {
+      if (client.health !== "Blocked" && !client.blocker) return false
+    }
+
+    return true
+  })
+
+  // Handle filter changes
+  const handleFilterChange = <K extends keyof PipelineFilters>(key: K, value: PipelineFilters[K]) => {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setFilters(defaultFilters)
+  }
+
+  // URL syncing
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // Update URL with current state (without full page reload)
+  const updateURL = useCallback((params: Record<string, string | null>) => {
+    const current = new URLSearchParams(searchParams.toString())
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === null || value === "" || value === "all" || value === "false") {
+        current.delete(key)
+      } else {
+        current.set(key, value)
+      }
+    })
+
+    const newUrl = current.toString() ? `${pathname}?${current.toString()}` : pathname
+    router.replace(newUrl, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  // Restore state from URL on mount
+  useEffect(() => {
+    // Restore client drawer state
+    const clientId = searchParams.get("client")
+    const tab = searchParams.get("tab") || "overview"
+
+    if (clientId) {
+      const client = clients.find((c) => c.id === clientId)
+      if (client) {
+        setSelectedClient(client)
+        setDefaultTab(tab)
+        setIsSheetOpen(true)
+      }
+    }
+
+    // Restore filter state
+    const stage = searchParams.get("stage") as Stage | "all" | null
+    const health = searchParams.get("health") as HealthStatus | "all" | null
+    const owner = searchParams.get("owner") as Owner | "all" | null
+    const search = searchParams.get("search")
+    const myClients = searchParams.get("myClients") === "true"
+    const atRisk = searchParams.get("atRisk") === "true"
+    const blocked = searchParams.get("blocked") === "true"
+
+    if (stage || health || owner || search || myClients || atRisk || blocked) {
+      setFilters({
+        stage: stage || "all",
+        health: health || "all",
+        owner: owner || "all",
+        search: search || "",
+        showMyClients: myClients,
+        showAtRisk: atRisk,
+        showBlocked: blocked,
+      })
+    }
+
+    // Restore active view
+    const view = searchParams.get("view")
+    if (view && ["dashboard", "pipeline", "clients", "onboarding", "intelligence", "tickets", "knowledge", "automations", "integrations", "settings"].includes(view)) {
+      setActiveView(view)
+    }
+  }, []) // Only run on mount
+
+  // Sync drawer state to URL
+  useEffect(() => {
+    if (isSheetOpen && selectedClient) {
+      updateURL({
+        client: selectedClient.id,
+        tab: defaultTab !== "overview" ? defaultTab : null,
+      })
+    } else {
+      updateURL({ client: null, tab: null })
+    }
+  }, [isSheetOpen, selectedClient, defaultTab, updateURL])
+
+  // Sync filters to URL
+  useEffect(() => {
+    updateURL({
+      stage: filters.stage,
+      health: filters.health,
+      owner: filters.owner,
+      search: filters.search || null,
+      myClients: filters.showMyClients ? "true" : null,
+      atRisk: filters.showAtRisk ? "true" : null,
+      blocked: filters.showBlocked ? "true" : null,
+    })
+  }, [filters, updateURL])
+
   // Optimistic update handler for drag-drop
-  const handleClientMove = (clientId: string, toStage: Stage) => {
+  const handleClientMove = (clientId: string, toStage: Stage, notes?: string) => {
     const client = clients.find((c) => c.id === clientId)
     if (!client) return
 
@@ -43,19 +182,21 @@ export default function CommandCenter() {
     setClients((prev) =>
       prev.map((c) =>
         c.id === clientId
-          ? { ...c, stage: toStage, daysInStage: 0 }
+          ? { ...c, stage: toStage, daysInStage: 0, statusNote: notes || c.statusNote }
           : c
       )
     )
 
-    // Show toast notification
+    // Show toast notification with notes if provided
     toast({
       title: "Client moved",
-      description: `${client.name} moved from ${fromStage} to ${toStage}`,
+      description: notes
+        ? `${client.name} moved to ${toStage}. Note: ${notes}`
+        : `${client.name} moved from ${fromStage} to ${toStage}`,
     })
 
     // TODO: API call would go here
-    // moveClientAPI(clientId, toStage).catch(() => {
+    // moveClientAPI(clientId, toStage, notes).catch(() => {
     //   // Rollback on error
     //   setClients((prev) =>
     //     prev.map((c) =>
@@ -98,8 +239,15 @@ export default function CommandCenter() {
               <h1 className="text-2xl font-bold text-foreground">Pipeline</h1>
               <p className="text-muted-foreground">Drag and drop clients between stages</p>
             </div>
+            <FilterChips
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+              currentUser={currentUser}
+              activeFilterCount={countActiveFilters(filters)}
+            />
             <KanbanBoard
-              clients={clients}
+              clients={filteredClients}
               onClientClick={handleClientClick}
               onClientMove={handleClientMove}
             />
@@ -146,5 +294,23 @@ export default function CommandCenter() {
       <AIBar />
       <Toaster />
     </div>
+  )
+}
+
+// Loading fallback for Suspense
+function CommandCenterLoading() {
+  return (
+    <div className="flex h-screen bg-background items-center justify-center">
+      <div className="animate-pulse text-muted-foreground">Loading...</div>
+    </div>
+  )
+}
+
+// Wrap with Suspense for useSearchParams
+export default function CommandCenter() {
+  return (
+    <Suspense fallback={<CommandCenterLoading />}>
+      <CommandCenterContent />
+    </Suspense>
   )
 }

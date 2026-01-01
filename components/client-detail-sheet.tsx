@@ -24,7 +24,7 @@ import {
   Video,
   Check,
 } from "lucide-react"
-import { type Client, owners, mockRecordings } from "@/lib/mock-data"
+import { type Client, type ZoomRecording, owners, mockRecordings } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
@@ -130,7 +130,7 @@ export function ClientDetailSheet({ client, open, onOpenChange, defaultTab = "ov
   }, [client, defaultTab])
 
   const owner = owners.find((o) => o.name === client?.owner)
-  const recordings = mockRecordings[client?.id] || []
+  const recordings: ZoomRecording[] = client?.id ? mockRecordings[client.id] || [] : []
 
   const handleVerifyAccess = (platform: "meta" | "gtm" | "shopify") => {
     setAccessStatus((prev) => ({ ...prev, [platform]: true }))
@@ -180,7 +180,13 @@ export function ClientDetailSheet({ client, open, onOpenChange, defaultTab = "ov
             </SheetHeader>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-              <TabsList className="grid w-full grid-cols-5 bg-secondary">
+              <TabsList className="grid w-full grid-cols-6 bg-secondary">
+                <TabsTrigger
+                  value="overview"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs"
+                >
+                  Overview
+                </TabsTrigger>
                 <TabsTrigger
                   value="comms"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs"
@@ -197,7 +203,7 @@ export function ClientDetailSheet({ client, open, onOpenChange, defaultTab = "ov
                   value="performance"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs"
                 >
-                  Performance
+                  Perf
                 </TabsTrigger>
                 <TabsTrigger
                   value="media"
@@ -209,9 +215,124 @@ export function ClientDetailSheet({ client, open, onOpenChange, defaultTab = "ov
                   value="techsetup"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs"
                 >
-                  Tech Setup
+                  Tech
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="overview" className="mt-6 space-y-6 px-1">
+                {/* Client Summary */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-secondary/30 border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Health Status</p>
+                    <Badge variant="outline" className={cn("text-sm", getHealthColor(client.health))}>
+                      {client.health}
+                    </Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-secondary/30 border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Days in Stage</p>
+                    <p className="text-lg font-bold text-foreground">{client.daysInStage}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-secondary/30 border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Owner</p>
+                    <div className="flex items-center gap-2">
+                      <Avatar className={cn("h-6 w-6", owner?.color)}>
+                        <AvatarFallback className={cn(owner?.color, "text-xs text-white")}>
+                          {owner?.avatar}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-foreground">{client.owner}</span>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-secondary/30 border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Tier</p>
+                    <Badge variant="outline" className={cn("text-sm", getTierBadgeStyle(client.tier))}>
+                      {client.tier}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Stage History Timeline */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Stage History
+                  </h4>
+                  <div className="relative pl-6 space-y-4">
+                    {/* Timeline line */}
+                    <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border" />
+
+                    {/* Current stage */}
+                    <div className="relative flex items-start gap-3">
+                      <div className="absolute left-[-15px] w-3 h-3 rounded-full bg-primary ring-4 ring-background" />
+                      <div className="flex-1 p-3 rounded-lg bg-primary/10 border border-primary/30">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">{client.stage}</span>
+                          <span className="text-xs text-muted-foreground">Current</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {client.daysInStage} {client.daysInStage === 1 ? "day" : "days"} ago
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Mock previous stages - in production would come from stage_event table */}
+                    {client.stage !== "Onboarding" && (
+                      <div className="relative flex items-start gap-3">
+                        <div className="absolute left-[-15px] w-3 h-3 rounded-full bg-muted ring-4 ring-background" />
+                        <div className="flex-1 p-3 rounded-lg bg-secondary/30 border border-border">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-foreground">
+                              {client.stage === "Installation" ? "Onboarding" :
+                               client.stage === "Audit" ? "Installation" :
+                               client.stage === "Live" ? "Audit" :
+                               client.stage === "Needs Support" ? "Live" :
+                               "Previous Stage"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">Completed</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Moved by {client.owner}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Initial onboarding */}
+                    <div className="relative flex items-start gap-3">
+                      <div className="absolute left-[-15px] w-3 h-3 rounded-full bg-muted ring-4 ring-background" />
+                      <div className="flex-1 p-3 rounded-lg bg-secondary/30 border border-border">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-foreground">Client Created</span>
+                          <span className="text-xs text-muted-foreground">Initial</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Added to pipeline
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Note */}
+                {client.statusNote && (
+                  <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                    <h4 className="text-sm font-medium text-amber-400 mb-1">Status Note</h4>
+                    <p className="text-sm text-foreground">{client.statusNote}</p>
+                  </div>
+                )}
+
+                {/* Quick Actions */}
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                    <Send className="h-3.5 w-3.5 mr-2" />
+                    Send Message
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1 bg-transparent">
+                    <Sparkles className="h-3.5 w-3.5 mr-2" />
+                    AI Summary
+                  </Button>
+                </div>
+              </TabsContent>
 
               <TabsContent value="comms" className="mt-6 space-y-4">
                 <div className="space-y-4 max-h-96 overflow-y-auto pr-1">

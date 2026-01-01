@@ -1,12 +1,12 @@
 "use client"
 
-import { KPICards } from "./kpi-cards"
-import { OverviewChart } from "./overview-chart"
+import { KPIGrid, TimeSeriesChart, LastUpdated } from "./dashboard"
 import { DataHealthDashboard } from "./data-health-dashboard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { type Client, owners, getKPIs } from "@/lib/mock-data"
+import { useDashboard } from "@/hooks/use-dashboard"
+import { type Client, owners } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 interface DashboardViewProps {
@@ -30,19 +30,38 @@ function getHealthColor(health: string) {
 }
 
 export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
-  const kpis = getKPIs(clients)
+  const {
+    kpis,
+    kpisLoading,
+    trends,
+    trendsLoading,
+    selectedPeriod,
+    refresh,
+    realtimeConnected,
+    setSelectedPeriod,
+    refreshDashboard,
+  } = useDashboard()
+
   const atRiskClients = clients.filter((c) => c.health === "Red" || c.health === "Blocked")
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Command Center</h1>
-        <p className="text-muted-foreground">Real-time overview of client fulfillment operations</p>
+      {/* Page Header with Refresh Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Command Center</h1>
+          <p className="text-muted-foreground">Real-time overview of client fulfillment operations</p>
+        </div>
+        <LastUpdated
+          lastUpdated={refresh.lastRefreshed}
+          isRefreshing={refresh.isRefreshing}
+          onRefresh={refreshDashboard}
+          realtimeConnected={realtimeConnected}
+        />
       </div>
 
-      {/* KPI Cards */}
-      <KPICards {...kpis} />
+      {/* KPI Grid - Uses new enhanced components */}
+      <KPIGrid kpis={kpis} isLoading={kpisLoading} />
 
       {/* Data Health Dashboard with technical metrics */}
       <DataHealthDashboard />
@@ -51,7 +70,12 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart - Takes 2 columns */}
         <div className="lg:col-span-2">
-          <OverviewChart />
+          <TimeSeriesChart
+            data={trends?.data ?? null}
+            isLoading={trendsLoading}
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={setSelectedPeriod}
+          />
         </div>
 
         {/* At Risk Clients */}

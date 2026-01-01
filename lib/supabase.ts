@@ -17,8 +17,13 @@ export function createClient() {
  * Create a Supabase client for Server Components
  * Requires cookies() from next/headers
  */
-export function createServerComponentClient(cookies: () => ReturnType<typeof import('next/headers').cookies>) {
-  const cookieStore = cookies()
+export async function createServerComponentClient(
+  cookiesFn: () => Promise<{
+    getAll: () => { name: string; value: string }[]
+    set: (name: string, value: string, options?: object) => void
+  }>
+) {
+  const cookieStore = await cookiesFn()
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -40,10 +45,15 @@ export function createServerComponentClient(cookies: () => ReturnType<typeof imp
 
 /**
  * Create a Supabase client for Route Handlers and Server Actions
- * Requires cookies() from next/headers
+ * Requires cookies() from next/headers - async version for Next.js 15
  */
-export function createRouteHandlerClient(cookies: () => ReturnType<typeof import('next/headers').cookies>) {
-  const cookieStore = cookies()
+export async function createRouteHandlerClient(
+  cookiesFn: () => Promise<{
+    getAll: () => { name: string; value: string }[]
+    set: (name: string, value: string, options?: object) => void
+  }>
+) {
+  const cookieStore = await cookiesFn()
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -67,16 +77,19 @@ export function createMiddlewareClient(
   request: Request,
   response: Response
 ) {
+  const cookieHeader = request.headers.get('cookie') || ''
+  const cookiePairs = cookieHeader.split(';').filter(Boolean)
+
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
-        return request.headers.getAll('cookie').map(cookie => {
-          const [name, ...rest] = cookie.split('=')
+        return cookiePairs.map((cookie: string) => {
+          const [name, ...rest] = cookie.trim().split('=')
           return { name, value: rest.join('=') }
         })
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
+        cookiesToSet.forEach(({ name, value }) => {
           response.headers.append('Set-Cookie', `${name}=${value}; Path=/; HttpOnly; SameSite=Lax`)
         })
       },
