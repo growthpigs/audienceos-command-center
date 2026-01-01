@@ -19,6 +19,8 @@ import { QuickCreateDialogs } from "@/components/quick-create-dialogs"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
 import { mockClients, type Client, type Stage, type HealthStatus, type Owner } from "@/lib/mock-data"
+import { useAuth } from "@/hooks/use-auth"
+import { usePipelineStore } from "@/stores/pipeline-store"
 import { FilterChips, type PipelineFilters, defaultFilters, countActiveFilters } from "@/components/filter-chips"
 
 function CommandCenterContent() {
@@ -30,13 +32,48 @@ function CommandCenterContent() {
   const [quickCreateType, setQuickCreateType] = useState<"client" | "ticket" | "project" | null>(null)
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
 
-  // Local state for clients (enables optimistic updates)
+  // Auth state
+  const { isLoading: authLoading, isAuthenticated, displayName, profile } = useAuth()
+
+  // Pipeline store for clients
+  const {
+    clients: pipelineClients,
+    isLoading: clientsLoading,
+    fetchClients,
+    updateClientStage,
+  } = usePipelineStore()
+
+  // Use pipeline store clients if authenticated, fallback to mock for demo
   const [clients, setClients] = useState<Client[]>(mockClients)
   const { toast } = useToast()
 
+  // Fetch clients from API when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchClients()
+    }
+  }, [isAuthenticated, fetchClients])
+
+  // Sync pipeline store clients to local state (for mock data compatibility)
+  useEffect(() => {
+    if (pipelineClients.length > 0) {
+      // Transform pipeline store clients to mock Client format for compatibility
+      const transformedClients = pipelineClients.map((pc) => ({
+        ...mockClients[0], // Base structure from mock
+        id: pc.id,
+        name: pc.name,
+        stage: pc.stage as Stage,
+        health: pc.health_status as HealthStatus,
+        owner: (pc.owner || 'Luke') as Owner,
+        daysInStage: pc.days_in_stage,
+      }))
+      setClients(transformedClients as Client[])
+    }
+  }, [pipelineClients])
+
   // Pipeline filters state
   const [filters, setFilters] = useState<PipelineFilters>(defaultFilters)
-  const currentUser: Owner = "Luke" // TODO: Get from auth context
+  const currentUser: Owner = (profile?.first_name as Owner) || "Luke"
 
   // Filter clients based on current filters
   const filteredClients = clients.filter((client) => {
@@ -172,7 +209,7 @@ function CommandCenterContent() {
   }, [filters, updateURL])
 
   // Optimistic update handler for drag-drop
-  const handleClientMove = (clientId: string, toStage: Stage, notes?: string) => {
+  const handleClientMove = async (clientId: string, toStage: Stage, notes?: string) => {
     const client = clients.find((c) => c.id === clientId)
     if (!client) return
 
@@ -195,22 +232,25 @@ function CommandCenterContent() {
         : `${client.name} moved from ${fromStage} to ${toStage}`,
     })
 
-    // TODO: API call would go here
-    // moveClientAPI(clientId, toStage, notes).catch(() => {
-    //   // Rollback on error
-    //   setClients((prev) =>
-    //     prev.map((c) =>
-    //       c.id === clientId
-    //         ? { ...c, stage: fromStage }
-    //         : c
-    //     )
-    //   )
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to move client. Changes reverted.",
-    //     variant: "destructive",
-    //   })
-    // })
+    // Call API if authenticated
+    if (isAuthenticated) {
+      const success = await updateClientStage(clientId, toStage as Stage)
+      if (!success) {
+        // Rollback on error
+        setClients((prev) =>
+          prev.map((c) =>
+            c.id === clientId
+              ? { ...c, stage: fromStage }
+              : c
+          )
+        )
+        toast({
+          title: "Error",
+          description: "Failed to move client. Changes reverted.",
+          variant: "destructive",
+        })
+      }
+    }
   }
 
   const handleClientClick = (client: Client, tab?: string) => {
