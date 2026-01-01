@@ -12,7 +12,7 @@
 |---------|--------|-----------|-------|-------|
 | client-pipeline-management | ✅ Complete | [client-pipeline-management.md](client-pipeline-management.md) | 20 | Batch 1 - Filter chips, stage confirm |
 | unified-communications-hub | ✅ Complete | [unified-communications-hub.md](unified-communications-hub.md) | 32 | Batch 1 - Timeline, reply composer |
-| ai-intelligence-layer | 📝 Specced | [ai-intelligence-layer.md](ai-intelligence-layer.md) | 50 | Batch 3 - Most complex, do last |
+| ai-intelligence-layer | ➡️ Standalone | [ai-intelligence-layer.md](ai-intelligence-layer.md) | 50 | **EXTRACTED** to `/chi-intelligent-chat/` project |
 | dashboard-overview | ✅ Complete | [dashboard-overview.md](dashboard-overview.md) | 30 | Batch 1 - KPI cards, charts |
 | integrations-management | ✅ Complete | [integrations-management.md](integrations-management.md) | 31 | Batch 1 - OAuth, sync, test |
 | support-tickets | 📝 Specced | [support-tickets.md](support-tickets.md) | 40 | Batch 2 - Ready |

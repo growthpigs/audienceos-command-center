@@ -7,6 +7,35 @@
 
 ---
 
+## ⚠️ STANDALONE PROJECT NOTICE
+
+**This feature has been extracted to a standalone project for focused development and validation.**
+
+| Attribute | Value |
+|-----------|-------|
+| Standalone Project | `/Users/rodericandrews/_PAI/projects/chi-intelligent-chat/` |
+| Architecture | Gemini-First (File Search, Google Search Grounding, Flash) |
+| Spec Location | `chi-intelligent-chat/features/chi-intelligent-chat.md` |
+| Re-integration | Copy back after validation |
+
+**Why standalone?**
+- This is the flagship "Holy Grail Chat" feature
+- Needs focused development without affecting other AudienceOS work
+- Allows architecture validation before integration
+- Uses Gemini-first stack (different from original Claude-based plan)
+
+**When to re-integrate:**
+1. Standalone project validated and working
+2. Copy components to AudienceOS `components/ai/`
+3. Copy spec back here (replacing below content)
+4. Update features/INDEX.md
+
+**The spec below is preserved for reference but the ACTIVE spec is in the standalone project.**
+
+---
+
+---
+
 ## User Stories
 
 **US-017: View AI Risk Alerts**

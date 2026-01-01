@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   Search,
-  BookOpen,
   FileText,
   Upload,
   Filter,
@@ -30,7 +30,6 @@ import {
   Grid3X3,
   List,
   FolderOpen,
-  ChevronRight,
   RefreshCw,
   MoreVertical,
   Eye,
@@ -377,7 +376,7 @@ interface DocumentCardProps {
   onPreview: (doc: KnowledgeBaseDocument) => void
   onReindex: (doc: KnowledgeBaseDocument) => void
   getFileTypeInfo: (mimeType: string) => { label: string; color: string; bgColor: string }
-  renderIndexStatus: (status: IndexStatus) => React.ReactNode
+  renderIndexStatus: (status: IndexStatus) => ReactNode
 }
 
 function DocumentCard({
