@@ -126,9 +126,42 @@ CREATE INDEX idx_client_health ON client(agency_id, health_status);
 
 ---
 
+### 6. TASK (Client Checklist Items)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | UUID | Yes | Primary key |
+| agency_id | UUID | Yes | FK to agency |
+| client_id | UUID | Yes | FK to client |
+| name | String(200) | Yes | Task title |
+| description | Text | No | Task details |
+| stage | String(50) | No | Associated pipeline stage |
+| assigned_to | UUID | No | FK to user |
+| due_date | Date | No | Deadline |
+| is_completed | Boolean | Yes | Default: false |
+| completed_at | Timestamp | No | Completion time |
+| completed_by | UUID | No | FK to user |
+| sort_order | Integer | Yes | Display order |
+| created_at | Timestamp | Yes | Task creation |
+| updated_at | Timestamp | Yes | Last modification |
+
+**RLS Policy:** Agency-scoped access
+```sql
+CREATE POLICY task_rls ON task FOR ALL
+USING (agency_id = (auth.jwt() ->> 'agency_id')::uuid);
+```
+
+**Indexes:**
+```sql
+CREATE INDEX idx_task_client_stage ON task(agency_id, client_id, stage);
+CREATE INDEX idx_task_assignee ON task(agency_id, assigned_to) WHERE is_completed = false;
+```
+
+---
+
 ## Communications
 
-### 6. INTEGRATION
+### 7. INTEGRATION
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -148,7 +181,7 @@ CREATE INDEX idx_client_health ON client(agency_id, health_status);
 
 ---
 
-### 7. COMMUNICATION
+### 8. COMMUNICATION
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -179,7 +212,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ## AI Intelligence
 
-### 8. ALERT
+### 9. ALERT
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -202,7 +235,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ---
 
-### 9. DOCUMENT
+### 10. DOCUMENT
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -230,7 +263,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ---
 
-### 10. CHAT_SESSION
+### 11. CHAT_SESSION
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -245,7 +278,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ---
 
-### 11. CHAT_MESSAGE
+### 12. CHAT_MESSAGE
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -263,7 +296,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ## Support System
 
-### 12. TICKET
+### 13. TICKET
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -290,7 +323,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ---
 
-### 13. TICKET_NOTE
+### 14. TICKET_NOTE
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -306,7 +339,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ## Automation System
 
-### 14. WORKFLOW
+### 15. WORKFLOW
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -326,7 +359,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ---
 
-### 15. WORKFLOW_RUN
+### 16. WORKFLOW_RUN
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -344,7 +377,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ## Settings & Preferences
 
-### 16. USER_PREFERENCE
+### 17. USER_PREFERENCE
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -363,7 +396,7 @@ CREATE INDEX idx_comm_needs_reply ON communication(agency_id, needs_reply) WHERE
 
 ## Performance & Analytics
 
-### 17. KPI_SNAPSHOT
+### 18. KPI_SNAPSHOT
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -383,7 +416,7 @@ CREATE INDEX idx_kpi_agency_metric ON kpi_snapshot(agency_id, metric_name, snaps
 
 ---
 
-### 18. AD_PERFORMANCE
+### 19. AD_PERFORMANCE
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -447,6 +480,15 @@ erDiagram
         boolean needs_reply
     }
 
+    TASK {
+        uuid id PK
+        uuid agency_id FK
+        uuid client_id FK
+        string name
+        uuid assigned_to FK
+        boolean is_completed
+    }
+
     TICKET {
         uuid id PK
         uuid agency_id FK
@@ -468,8 +510,10 @@ erDiagram
     CLIENT ||--o{ CLIENT_ASSIGNMENT : "assigned_to"
     USER ||--o{ CLIENT_ASSIGNMENT : "assigned"
     CLIENT ||--o{ COMMUNICATION : "has"
+    CLIENT ||--o{ TASK : "has"
     CLIENT ||--o{ TICKET : "reports"
     CLIENT ||--o{ ALERT : "triggers"
+    USER ||--o{ TASK : "assigned"
     USER ||--o{ TICKET : "handles"
 ```
 
@@ -573,6 +617,7 @@ CREATE INDEX idx_ad_perf_date ON ad_performance(agency_id, client_id, date DESC)
 
 | Date | Change |
 |------|--------|
+| 2025-01-01 | Added TASK entity (missing from original spec, required by API-CONTRACTS). Total entities: 18 → 19. |
 | 2025-12-31 | Created comprehensive data model from 56 user stories |
 
 ---

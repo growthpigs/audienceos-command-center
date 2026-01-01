@@ -117,6 +117,39 @@ Response: `{ "user": {...}, "token": "jwt" }`
 
 ---
 
+## Agency (Current Tenant)
+
+### `GET /v1/agency`
+Get current agency profile (from JWT agency_id).
+Response:
+```json
+{
+  "id": "uuid",
+  "name": "Acme Marketing",
+  "slug": "acme-marketing",
+  "logo_url": "...",
+  "timezone": "America/New_York",
+  "business_hours": { "start": "09:00", "end": "17:00" },
+  "pipeline_stages": ["Onboarding", "Installation", "Audit", "Live", "Needs Support", "Off-Boarding"],
+  "health_thresholds": { "yellow_days": 7, "red_days": 14 }
+}
+```
+
+### `PATCH /v1/agency`
+Update agency settings (admin only).
+```json
+{
+  "name": "...",
+  "logo_url": "...",
+  "timezone": "...",
+  "business_hours": {...},
+  "pipeline_stages": [...],
+  "health_thresholds": {...}
+}
+```
+
+---
+
 ## Users
 
 ### `GET /v1/users`
@@ -134,6 +167,49 @@ Update user (admin can update others, users can update self).
 
 ### `DELETE /v1/users/{id}`
 Soft-delete user (admin only).
+
+### `GET /v1/users/{id}/preferences`
+Get user preferences.
+Params: `?category=notifications|ai|display`
+Response:
+```json
+{
+  "notifications": {
+    "email_enabled": true,
+    "slack_enabled": true,
+    "digest_mode": "daily",
+    "quiet_hours": { "start": "22:00", "end": "08:00" }
+  },
+  "ai": {
+    "assistant_name": "Chi",
+    "response_tone": "professional",
+    "response_length": "concise"
+  },
+  "display": {
+    "theme": "dark",
+    "sidebar_collapsed": false
+  }
+}
+```
+
+### `PATCH /v1/users/{id}/preferences`
+Update user preferences.
+```json
+{
+  "category": "notifications",
+  "key": "email_enabled",
+  "value": false
+}
+```
+Or bulk update:
+```json
+{
+  "notifications": {
+    "email_enabled": false,
+    "digest_mode": "weekly"
+  }
+}
+```
 
 ---
 
