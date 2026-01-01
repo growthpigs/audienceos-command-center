@@ -2,7 +2,18 @@
 
 > **Based on:** Linear's design philosophy
 > **Created:** 2025-12-31
+> **Verified:** 2026-01-01 (CSS extraction from linear.app + Mobbin audit)
 > **Component Library:** shadcn/ui (Radix primitives)
+
+---
+
+## CRITICAL RULE: Line Height = Font Size × 1.25
+
+**All typography uses 125% line height (font size + 25%).** This is non-negotiable across the entire application. No exceptions.
+
+```
+line-height = font-size × 1.25
+```
 
 ---
 
@@ -62,31 +73,47 @@ AudienceOS follows Linear's design philosophy: **minimal, functional, and quietl
 
 ## Typography
 
-### Font Stack
+### Font Stack (Verified from Linear)
 
 ```css
---font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+/* Primary - Inter Variable for precision weight control */
+--font-sans: "Inter Variable", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+/* Monospace - for code blocks */
 --font-mono: "JetBrains Mono", "Fira Code", monospace;
 ```
 
-### Type Scale
+**Note:** Linear uses "Inter Variable" which allows precise font-weight values like 510. If unavailable, fall back to standard Inter.
 
-| Name | Size | Weight | Line Height | Usage |
-|------|------|--------|-------------|-------|
-| `text-xs` | 11px | 400 | 16px | Badges, timestamps |
-| `text-sm` | 13px | 400 | 20px | Secondary text, labels |
-| `text-base` | 14px | 400 | 22px | Body text (default) |
-| `text-lg` | 16px | 500 | 24px | Card titles |
-| `text-xl` | 18px | 600 | 28px | Section headers |
-| `text-2xl` | 24px | 600 | 32px | Page titles |
-| `text-3xl` | 30px | 700 | 38px | Dashboard KPIs |
+### Type Scale (125% Line Height Rule Applied)
 
-### Weight Guidelines
+| Name | Size | Weight | Line Height | Calculation | Usage |
+|------|------|--------|-------------|-------------|-------|
+| `text-xs` | 11px | 400 | 14px | 11 × 1.25 = 13.75 → 14 | Badges, timestamps |
+| `text-sm` | 13px | 510 | 16px | 13 × 1.25 = 16.25 → 16 | Buttons, nav items, labels |
+| `text-base` | 14px | 400 | 18px | 14 × 1.25 = 17.5 → 18 | Body text (default) |
+| `text-lg` | 16px | 500 | 20px | 16 × 1.25 = 20 | Card titles |
+| `text-xl` | 18px | 600 | 22px | 18 × 1.25 = 22.5 → 22 | Section headers |
+| `text-2xl` | 24px | 600 | 30px | 24 × 1.25 = 30 | Page titles |
+| `text-3xl` | 30px | 700 | 38px | 30 × 1.25 = 37.5 → 38 | Dashboard KPIs |
+| `text-4xl` | 48px | 510 | 60px | 48 × 1.25 = 60 | Hero headlines |
+| `text-5xl` | 80px | 510 | 100px | 80 × 1.25 = 100 | Marketing hero (Linear style) |
+
+### Letter Spacing (Verified from Linear)
+
+| Size | Letter Spacing | Note |
+|------|---------------|------|
+| `text-5xl` (80px) | -1.76px | Tight for large headlines |
+| `text-4xl` (48px) | -1px | Slightly tight |
+| `text-3xl` and below | 0 | Normal tracking |
+
+### Weight Guidelines (Linear Uses 510 for UI)
 
 - **400 (Regular):** Body text, descriptions
-- **500 (Medium):** Labels, card titles, emphasis
+- **500 (Medium):** Labels, card titles
+- **510 (Linear Medium):** Buttons, navigation - LINEAR'S SIGNATURE WEIGHT
 - **600 (Semibold):** Section headers, page titles
-- **700 (Bold):** Dashboard metrics only
+- **700 (Bold):** Dashboard metrics, emphasis
 
 ---
 
@@ -165,7 +192,32 @@ In dark mode, shadows are less visible. Use subtle glows or border emphasis inst
 
 ## Components
 
-### Buttons
+### Buttons (Verified from Linear CSS)
+
+#### Button Specifications
+
+| Property | Value | Note |
+|----------|-------|------|
+| Font Size | 13px | `text-sm` |
+| Font Weight | 510 | Linear's signature weight |
+| Height | 32px | Standard button height |
+| Padding | 0px 12px | Horizontal only |
+| Border Radius | 8px | `rounded-md` |
+| Line Height | 16px | 13 × 1.25 = 16.25 → 16 |
+
+#### Button Colors (Dark Mode - Primary)
+
+| State | Background | Text Color |
+|-------|------------|------------|
+| Default | `rgb(230, 230, 230)` / `#E6E6E6` | `rgb(8, 9, 10)` / `#08090A` |
+| Hover | `rgb(255, 255, 255)` / `#FFFFFF` | `rgb(8, 9, 10)` / `#08090A` |
+
+#### Button Colors (Ghost/Nav)
+
+| State | Background | Text Color |
+|-------|------------|------------|
+| Default | `transparent` | `rgb(138, 143, 152)` / `#8A8F98` |
+| Hover | `rgba(255, 255, 255, 0.05)` | `rgb(255, 255, 255)` |
 
 ```tsx
 // Primary - main actions
@@ -174,7 +226,7 @@ In dark mode, shadows are less visible. Use subtle glows or border emphasis inst
 // Secondary - alternative actions
 <Button variant="secondary">Cancel</Button>
 
-// Ghost - tertiary actions
+// Ghost - tertiary actions (nav items)
 <Button variant="ghost">View Details</Button>
 
 // Destructive - dangerous actions
@@ -497,10 +549,338 @@ const config = {
 
 ---
 
+## Login & Authentication Screens (Verified from Mobbin)
+
+### Login Page Layout
+
+```
+┌────────────────────────────────────────────────────────┐
+│                                                        │
+│                    ┌─────────┐                         │
+│                    │  Logo   │                         │
+│                    └─────────┘                         │
+│                                                        │
+│              Log in to AudienceOS                      │
+│           (text-2xl, 600 weight, centered)             │
+│                                                        │
+│         ┌──────────────────────────────┐               │
+│         │ Continue with Google          │               │
+│         └──────────────────────────────┘               │
+│                                                        │
+│         ┌──────────────────────────────┐               │
+│         │ Continue with SAML SSO        │               │
+│         └──────────────────────────────┘               │
+│                                                        │
+│                    ───── or ─────                      │
+│                                                        │
+│         Email address                                  │
+│         ┌──────────────────────────────┐               │
+│         │                              │               │
+│         └──────────────────────────────┘               │
+│                                                        │
+│         ┌──────────────────────────────┐               │
+│         │     Continue with email       │               │
+│         └──────────────────────────────┘               │
+│                                                        │
+│         Don't have an account? Sign up                 │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+```
+
+### Login Specifications
+
+| Element | Specs |
+|---------|-------|
+| Container | Max-width 400px, centered, 24px padding |
+| Logo | 48px height, centered |
+| Heading | 24px, 600 weight, centered, 16px margin-bottom |
+| OAuth Buttons | Full width, 40px height, 8px border-radius |
+| Divider | `──── or ────` with muted text |
+| Input | Full width, 40px height, 8px border-radius |
+| Submit Button | Full width, 40px height, primary color |
+| Links | text-sm, muted color, hover: primary |
+
+### Email Verification Screen
+
+```
+┌────────────────────────────────────────────────────────┐
+│                                                        │
+│                    ┌─────────┐                         │
+│                    │  ✉️ Icon │                         │
+│                    └─────────┘                         │
+│                                                        │
+│              Check your email                          │
+│                                                        │
+│     We sent a login link to user@example.com           │
+│                                                        │
+│         ┌──────────────────────────────┐               │
+│         │     Open email app            │               │
+│         └──────────────────────────────┘               │
+│                                                        │
+│         Didn't receive it? Resend email                │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Toast Notifications (Verified from Mobbin)
+
+### Toast Types
+
+| Type | Icon | Background | Border |
+|------|------|------------|--------|
+| Success | ✓ CheckCircle | `bg-green-500/10` | `border-green-500/20` |
+| Error | ✕ XCircle | `bg-red-500/10` | `border-red-500/20` |
+| Warning | ⚠ AlertTriangle | `bg-yellow-500/10` | `border-yellow-500/20` |
+| Info | ℹ Info | `bg-blue-500/10` | `border-blue-500/20` |
+
+### Toast Layout
+
+```
+┌─────────────────────────────────────────────────┐
+│  ✓  Issue ENG-135 assigned to you               │
+│     Refactor sonic crawler                  ✕   │
+└─────────────────────────────────────────────────┘
+```
+
+### Toast Specifications
+
+| Property | Value |
+|----------|-------|
+| Position | Bottom-right, 16px from edges |
+| Width | Min 300px, max 420px |
+| Padding | 12px 16px |
+| Border Radius | 8px |
+| Shadow | `shadow-lg` |
+| Icon Size | 16px |
+| Title | 14px, 500 weight |
+| Description | 13px, 400 weight, muted color |
+| Duration | 5000ms default, infinite for errors |
+| Animation | Slide in from right, 200ms |
+| Stack | Max 3 visible, older toasts fade |
+
+### Toast Actions
+
+```tsx
+<Toast>
+  <ToastTitle>Issue assigned</ToastTitle>
+  <ToastDescription>ENG-135: Refactor sonic crawler</ToastDescription>
+  <ToastAction altText="View">View</ToastAction>
+  <ToastClose />
+</Toast>
+```
+
+---
+
+## Modals & Dialogs (Verified from Mobbin)
+
+### Modal Types
+
+| Type | Max Width | Use Case |
+|------|-----------|----------|
+| Alert | 400px | Confirmations, warnings |
+| Form | 500px | Create/edit forms |
+| Detail | 640px | View details, previews |
+| Full | 90vw | Complex workflows |
+
+### Quick Add Modal (Linear's Signature)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ Issue title...                                   │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ Add description...                              │   │
+│  │                                                  │   │
+│  │                                                  │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  ┌────────┐ ┌──────────┐ ┌────────┐ ┌─────────┐       │
+│  │ Status │ │ Priority │ │ Assign │ │ Project │       │
+│  └────────┘ └──────────┘ └────────┘ └─────────┘       │
+│                                                         │
+│                              Cancel    Create Issue     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Modal Specifications
+
+| Property | Value |
+|----------|-------|
+| Overlay | `bg-black/50`, backdrop-blur: none |
+| Background | `bg-card` / `bg-zinc-900` (dark) |
+| Border | `border-border` / `border-zinc-800` (dark) |
+| Border Radius | 12px |
+| Padding | 24px |
+| Shadow | `shadow-xl` |
+| Animation | Fade in + scale from 95% to 100%, 150ms |
+| Close | X button top-right, ESC key, click outside |
+
+### Confirmation Dialog
+
+```tsx
+<AlertDialog>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete client?</AlertDialogTitle>
+      <AlertDialogDescription>
+        This action cannot be undone. This will permanently delete
+        the client and all associated data.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction variant="destructive">Delete</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+---
+
+## Popovers & Dropdowns (Verified from Mobbin)
+
+### Popover Specifications
+
+| Property | Value |
+|----------|-------|
+| Background | `bg-popover` / `bg-zinc-900` (dark) |
+| Border | `border-border` |
+| Border Radius | 8px |
+| Shadow | `shadow-md` |
+| Padding | 4px (menu) / 12px (content) |
+| Animation | Fade in + slight translateY, 100ms |
+
+### Dropdown Menu Item
+
+| Property | Value |
+|----------|-------|
+| Height | 32px |
+| Padding | 8px 12px |
+| Font Size | 13px |
+| Font Weight | 400 |
+| Line Height | 16px (13 × 1.25) |
+| Icon Size | 16px, 8px gap from text |
+| Hover | `bg-accent` / `bg-zinc-800` |
+| Active | `bg-accent` with checkmark |
+
+### Command Palette (⌘K)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  🔍 Search or type a command...                         │
+├─────────────────────────────────────────────────────────┤
+│  Recent                                                 │
+│  ─────────────────────────────────────────────────────  │
+│  ▸ Open client: Acme Corp                              │
+│  ▸ View pipeline                                        │
+│  ▸ Create new ticket                                    │
+├─────────────────────────────────────────────────────────┤
+│  Actions                                                │
+│  ─────────────────────────────────────────────────────  │
+│  ▸ Create client                              ⌘N       │
+│  ▸ Create ticket                              ⌘T       │
+│  ▸ Search everything                          ⌘K       │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Inbox & Notifications Panel (Verified from Mobbin)
+
+### Inbox Layout
+
+```
+┌────────────────────────────────────────┐
+│  Inbox                            ✓ ⋮  │
+├────────────────────────────────────────┤
+│  ┌──────────────────────────────────┐  │
+│  │ 🟣 ENG-135 Refactor sonic...  2h │  │
+│  │    nan assigned you              │  │
+│  └──────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │ 🤖 LLM Chatbot                8h │  │
+│  │    New project update by raisa  │  │
+│  └──────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │ 🔴 ENG-159 Error uploading   1d │  │
+│  │    SLA breached                 │  │
+│  └──────────────────────────────────┘  │
+└────────────────────────────────────────┘
+```
+
+### Notification Item Specifications
+
+| Property | Value |
+|----------|-------|
+| Padding | 12px 16px |
+| Background (unread) | `bg-primary/5` |
+| Background (read) | `bg-transparent` |
+| Title | 14px, 500 weight, truncate |
+| Subtitle | 13px, 400 weight, muted color |
+| Timestamp | 12px, muted color, right-aligned |
+| Status Dot | 8px, positioned left |
+| Hover | `bg-muted` |
+
+---
+
+## Onboarding Flow (Verified from Mobbin)
+
+### Welcome Screen
+
+```
+┌────────────────────────────────────────────────────────┐
+│                                                        │
+│              Welcome to AudienceOS                     │
+│                                                        │
+│        The command center for your agency              │
+│                                                        │
+│         ┌──────────────────────────────┐               │
+│         │       Get started             │               │
+│         └──────────────────────────────┘               │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+```
+
+### Workspace Setup
+
+```
+┌────────────────────────────────────────────────────────┐
+│                                                        │
+│              Create your workspace                     │
+│                                                        │
+│        Company or team name                            │
+│        ┌──────────────────────────────┐               │
+│        │ Acme Agency                   │               │
+│        └──────────────────────────────┘               │
+│                                                        │
+│        Workspace URL                                   │
+│        ┌──────────────────────────────┐               │
+│        │ acme-agency                   │               │
+│        └──────────────────────────────┘               │
+│        .audienceos.app                                 │
+│                                                        │
+│         ┌──────────────────────────────┐               │
+│         │       Create workspace        │               │
+│         └──────────────────────────────┘               │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Changelog
 
 | Date | Change |
 |------|--------|
+| 2026-01-01 | Verified with Mobbin + CSS extraction: typography, buttons, modals, notifications, login |
+| 2026-01-01 | Added 125% line-height rule (font size + 25%) |
+| 2026-01-01 | Added Inter Variable font, 510 weight for buttons |
+| 2026-01-01 | Added Login, Toast, Modal, Popover, Inbox, Onboarding specs |
 | 2025-12-31 | Created design system based on Linear philosophy |
 
 ---

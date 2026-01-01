@@ -15,6 +15,9 @@ build/
 .env.local
 .env.*.local
 
+# Secrets (credentials stored locally, never committed)
+docs/secrets/
+
 # IDE
 .idea/
 .vscode/
