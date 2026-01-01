@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,7 +22,7 @@ export default function OnboardingPage() {
     slackChannel: false,
     googleDrive: false,
   })
-  const [isInitializing, setIsInitializing] = useState(false)
+  const isInitializingRef = useRef(false)
 
   // Step 2: Tech Stack Form
   const [platform, setPlatform] = useState("shopify")
@@ -63,13 +63,13 @@ export default function OnboardingPage() {
 
   // Auto-run initialization sequence on mount
   useEffect(() => {
-    if (currentStep === 1 && !isInitializing) {
-      setIsInitializing(true)
+    if (currentStep === 1 && !isInitializingRef.current) {
+      isInitializingRef.current = true
       setTimeout(() => setInitSteps((p) => ({ ...p, clientId: true })), 800)
       setTimeout(() => setInitSteps((p) => ({ ...p, slackChannel: true })), 1600)
       setTimeout(() => setInitSteps((p) => ({ ...p, googleDrive: true })), 2400)
     }
-  }, [currentStep, isInitializing])
+  }, [currentStep])
 
   const allInitComplete = initSteps.clientId && initSteps.slackChannel && initSteps.googleDrive
 

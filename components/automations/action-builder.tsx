@@ -61,7 +61,7 @@ export function ActionBuilder({
 
   const handleAddAction = (type: ActionType) => {
     const newAction: WorkflowAction = {
-      id: `action-${Date.now()}`,
+      id: `action-${crypto.randomUUID()}`,
       type,
       name: ACTION_TYPES[type].name,
       config: getDefaultConfig(type),

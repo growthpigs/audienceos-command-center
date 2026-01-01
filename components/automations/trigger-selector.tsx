@@ -60,7 +60,7 @@ export function TriggerSelector({
 
   const handleAddTrigger = (type: TriggerType) => {
     const newTrigger: WorkflowTrigger = {
-      id: `trigger-${Date.now()}`,
+      id: `trigger-${crypto.randomUUID()}`,
       type,
       name: TRIGGER_TYPES[type].name,
       config: getDefaultConfig(type),

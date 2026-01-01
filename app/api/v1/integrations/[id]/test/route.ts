@@ -86,7 +86,7 @@ async function testProviderConnection(
     let details: Record<string, unknown> = {}
 
     switch (provider) {
-      case 'slack':
+      case 'slack': {
         response = await fetch('https://slack.com/api/auth.test', {
           method: 'POST',
           headers: {
@@ -106,8 +106,9 @@ async function testProviderConnection(
         }
         details = { team: slackData.team, user: slackData.user }
         break
+      }
 
-      case 'gmail':
+      case 'gmail': {
         response = await fetch(
           'https://www.googleapis.com/gmail/v1/users/me/profile',
           {
@@ -127,8 +128,9 @@ async function testProviderConnection(
         const gmailData = await response.json()
         details = { email: gmailData.emailAddress }
         break
+      }
 
-      case 'google_ads':
+      case 'google_ads': {
         // Google Ads requires a developer token and additional setup
         // For MVP, we use chi-gateway MCP instead
         response = await fetch(
@@ -149,8 +151,9 @@ async function testProviderConnection(
         const adsData = await response.json()
         details = { customerIds: adsData.resourceNames?.length || 0 }
         break
+      }
 
-      case 'meta_ads':
+      case 'meta_ads': {
         response = await fetch(
           `https://graph.facebook.com/v18.0/me?access_token=${accessToken}&fields=id,name`
         )
@@ -166,6 +169,7 @@ async function testProviderConnection(
         const metaData = await response.json()
         details = { userId: metaData.id, name: metaData.name }
         break
+      }
 
       default:
         return {

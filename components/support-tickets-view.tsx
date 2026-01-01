@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   DndContext,
   DragEndEvent,
@@ -802,9 +802,27 @@ export function SupportTicketsView() {
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false)
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null)
 
-  // Mock clients and users - in production, fetch from API
-  const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
-  const [users, setUsers] = useState<Array<{ id: string; name: string }>>([])
+  // Derive clients and users from tickets - in production, fetch from API
+  const clients = useMemo(() => {
+    return tickets.reduce((acc, ticket) => {
+      if (ticket.client && !acc.find((c) => c.id === ticket.client?.id)) {
+        acc.push({ id: ticket.client.id, name: ticket.client.name })
+      }
+      return acc
+    }, [] as Array<{ id: string; name: string }>)
+  }, [tickets])
+
+  const users = useMemo(() => {
+    return tickets.reduce((acc, ticket) => {
+      if (ticket.assignee && !acc.find((u) => u.id === ticket.assignee?.id)) {
+        acc.push({
+          id: ticket.assignee.id,
+          name: `${ticket.assignee.first_name} ${ticket.assignee.last_name}`,
+        })
+      }
+      return acc
+    }, [] as Array<{ id: string; name: string }>)
+  }, [tickets])
 
   // Configure sensors for drag detection
   const sensors = useSensors(
@@ -827,27 +845,6 @@ export function SupportTicketsView() {
     // For now, extract unique clients from tickets
   }, [fetchTickets])
 
-  // Extract unique clients from tickets for the create modal
-  useEffect(() => {
-    const uniqueClients = tickets.reduce((acc, ticket) => {
-      if (ticket.client && !acc.find((c) => c.id === ticket.client?.id)) {
-        acc.push({ id: ticket.client.id, name: ticket.client.name })
-      }
-      return acc
-    }, [] as Array<{ id: string; name: string }>)
-    setClients(uniqueClients)
-
-    const uniqueUsers = tickets.reduce((acc, ticket) => {
-      if (ticket.assignee && !acc.find((u) => u.id === ticket.assignee?.id)) {
-        acc.push({
-          id: ticket.assignee.id,
-          name: `${ticket.assignee.first_name} ${ticket.assignee.last_name}`,
-        })
-      }
-      return acc
-    }, [] as Array<{ id: string; name: string }>)
-    setUsers(uniqueUsers)
-  }, [tickets])
 
   const filteredTickets = getFilteredTickets()
 

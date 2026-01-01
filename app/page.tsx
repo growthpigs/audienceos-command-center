@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense } from "react"
+import { useState, useEffect, useCallback, Suspense, useRef } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { DashboardView } from "@/components/dashboard-view"
@@ -43,7 +43,7 @@ function CommandCenterContent() {
     updateClientStage,
   } = usePipelineStore()
 
-  // Use pipeline store clients if authenticated, fallback to mock for demo
+  // Local clients state for optimistic updates
   const [clients, setClients] = useState<Client[]>(mockClients)
   const { toast } = useToast()
 
@@ -54,20 +54,20 @@ function CommandCenterContent() {
     }
   }, [isAuthenticated, fetchClients])
 
-  // Sync pipeline store clients to local state (for mock data compatibility)
+  // Sync pipeline store clients to local state
+  // Using setTimeout to move setState outside effect execution
   useEffect(() => {
     if (pipelineClients.length > 0) {
-      // Transform pipeline store clients to mock Client format for compatibility
       const transformedClients = pipelineClients.map((pc) => ({
-        ...mockClients[0], // Base structure from mock
+        ...mockClients[0],
         id: pc.id,
         name: pc.name,
         stage: pc.stage as Stage,
         health: pc.health_status as HealthStatus,
         owner: (pc.owner || 'Luke') as Owner,
         daysInStage: pc.days_in_stage,
-      }))
-      setClients(transformedClients as Client[])
+      })) as Client[]
+      setTimeout(() => setClients(transformedClients), 0)
     }
   }, [pipelineClients])
 
@@ -140,8 +140,14 @@ function CommandCenterContent() {
     router.replace(newUrl, { scroll: false })
   }, [searchParams, router, pathname])
 
+  // Track URL state restoration
+  const urlRestoredRef = useRef(false)
+
   // Restore state from URL on mount
   useEffect(() => {
+    if (urlRestoredRef.current) return
+    urlRestoredRef.current = true
+
     // Restore client drawer state
     const clientId = searchParams.get("client")
     const tab = searchParams.get("tab") || "overview"
@@ -149,9 +155,12 @@ function CommandCenterContent() {
     if (clientId) {
       const client = clients.find((c) => c.id === clientId)
       if (client) {
-        setSelectedClient(client)
-        setDefaultTab(tab)
-        setIsSheetOpen(true)
+        // Use timeout to batch state updates outside effect
+        setTimeout(() => {
+          setSelectedClient(client)
+          setDefaultTab(tab)
+          setIsSheetOpen(true)
+        }, 0)
       }
     }
 
@@ -165,23 +174,25 @@ function CommandCenterContent() {
     const blocked = searchParams.get("blocked") === "true"
 
     if (stage || health || owner || search || myClients || atRisk || blocked) {
-      setFilters({
-        stage: stage || "all",
-        health: health || "all",
-        owner: owner || "all",
-        search: search || "",
-        showMyClients: myClients,
-        showAtRisk: atRisk,
-        showBlocked: blocked,
-      })
+      setTimeout(() => {
+        setFilters({
+          stage: stage || "all",
+          health: health || "all",
+          owner: owner || "all",
+          search: search || "",
+          showMyClients: myClients,
+          showAtRisk: atRisk,
+          showBlocked: blocked,
+        })
+      }, 0)
     }
 
     // Restore active view
     const view = searchParams.get("view")
     if (view && ["dashboard", "pipeline", "clients", "onboarding", "intelligence", "tickets", "knowledge", "automations", "integrations", "settings"].includes(view)) {
-      setActiveView(view)
+      setTimeout(() => setActiveView(view), 0)
     }
-  }, []) // Only run on mount
+  }, [clients, searchParams]) // Include deps but guard with ref
 
   // Sync drawer state to URL
   useEffect(() => {
