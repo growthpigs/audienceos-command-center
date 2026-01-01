@@ -13,7 +13,7 @@ import { IntelligenceView } from "@/components/intelligence-view"
 import { SupportTicketsView } from "@/components/support-tickets-view"
 import { KnowledgeBaseView } from "@/components/knowledge-base-view"
 import { IntegrationsView } from "@/components/integrations-view"
-import { AutomationsView } from "@/components/automations-view"
+import { AutomationsDashboard } from "@/components/automations/automations-dashboard"
 import { OnboardingHubView } from "@/components/onboarding-hub-view"
 import { QuickCreateDialogs } from "@/components/quick-create-dialogs"
 import { Toaster } from "@/components/ui/toaster"
@@ -264,7 +264,7 @@ function CommandCenterContent() {
       case "knowledge":
         return <KnowledgeBaseView />
       case "automations":
-        return <AutomationsView />
+        return <AutomationsDashboard />
       case "integrations":
         return <IntegrationsView />
       case "settings":
