@@ -59,12 +59,16 @@ interface PipelineState {
   // Selected client for drawer
   selectedClientId: string | null
 
-  // Actions
+  // Actions - Data fetching
+  fetchClients: () => Promise<void>
   setClients: (clients: Client[]) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 
-  // Optimistic update with rollback
+  // Actions - Stage management with API
+  updateClientStage: (clientId: string, toStage: Stage) => Promise<boolean>
+
+  // Optimistic update with rollback (internal)
   moveClient: (clientId: string, toStage: Stage) => void
   rollbackMove: (clientId: string, fromStage: Stage) => void
 
@@ -92,6 +96,20 @@ const STAGES: Stage[] = [
   'Off-boarding'
 ]
 
+// Map DB health_status to UI HealthStatus
+function mapHealthStatus(dbStatus: string): HealthStatus {
+  switch (dbStatus) {
+    case 'green':
+      return 'Green'
+    case 'yellow':
+      return 'Yellow'
+    case 'red':
+      return 'Red'
+    default:
+      return 'Green'
+  }
+}
+
 export const usePipelineStore = create<PipelineState>((set, get) => ({
   // Initial state
   clients: [],
@@ -108,12 +126,86 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
 
   selectedClientId: null,
 
+  // Fetch clients from API
+  fetchClients: async () => {
+    set({ isLoading: true, error: null })
+
+    try {
+      const response = await fetch('/api/v1/clients')
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch clients')
+      }
+
+      const { data } = await response.json()
+
+      // Transform DB format to UI format
+      const clients: Client[] = (data || []).map((row: Record<string, unknown>) => ({
+        id: row.id as string,
+        agency_id: row.agency_id as string,
+        name: row.name as string,
+        contact_email: row.contact_email as string | null,
+        contact_name: row.contact_name as string | null,
+        stage: row.stage as Stage,
+        health_status: mapHealthStatus(row.health_status as string),
+        days_in_stage: row.days_in_stage as number,
+        notes: row.notes as string | null,
+        tags: (row.tags as string[]) || [],
+        is_active: row.is_active as boolean,
+        created_at: row.created_at as string,
+        updated_at: row.updated_at as string,
+        // Get primary owner from assignments if available
+        owner: (row.assignments as Array<{ user: { first_name: string; last_name: string } }>)?.[0]?.user
+          ? `${(row.assignments as Array<{ user: { first_name: string; last_name: string } }>)[0].user.first_name}`
+          : undefined,
+      }))
+
+      set({ clients, isLoading: false })
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch clients',
+        isLoading: false
+      })
+    }
+  },
+
   // Actions
   setClients: (clients) => set({ clients }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
 
-  // Optimistic move - update UI immediately
+  // Update stage via API with optimistic update
+  updateClientStage: async (clientId, toStage) => {
+    const client = get().clients.find((c) => c.id === clientId)
+    if (!client) return false
+
+    const previousStage = client.stage
+
+    // Optimistic update
+    get().moveClient(clientId, toStage)
+
+    try {
+      const response = await fetch(`/api/v1/clients/${clientId}/stage`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: toStage }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update stage')
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error updating stage:', error)
+      // Rollback on failure
+      get().rollbackMove(clientId, previousStage)
+      return false
+    }
+  },
+
+  // Optimistic move - update UI immediately (internal)
   moveClient: (clientId, toStage) => {
     set((state) => ({
       clients: state.clients.map((client) =>
@@ -124,7 +216,7 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
     }))
   },
 
-  // Rollback if API fails
+  // Rollback if API fails (internal)
   rollbackMove: (clientId, fromStage) => {
     set((state) => ({
       clients: state.clients.map((client) =>
