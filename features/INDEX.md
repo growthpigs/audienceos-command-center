@@ -10,15 +10,15 @@
 
 | Feature | Status | Spec File | Tasks | Notes |
 |---------|--------|-----------|-------|-------|
-| client-pipeline-management | ✅ Fully Specced | [client-pipeline-management.md](client-pipeline-management.md) | 20 | Core Kanban workflow |
-| unified-communications-hub | ✅ Fully Specced | [unified-communications-hub.md](unified-communications-hub.md) | 32 | Slack + Gmail unified timeline |
-| ai-intelligence-layer | ✅ Fully Specced | [ai-intelligence-layer.md](ai-intelligence-layer.md) | 50 | Chi Intelligent Chat + Risk alerts + RAG |
-| dashboard-overview | ✅ Fully Specced | [dashboard-overview.md](dashboard-overview.md) | 30 | Executive KPIs + drill-down |
-| integrations-management | ✅ Fully Specced | [integrations-management.md](integrations-management.md) | 31 | OAuth connections + MCP fallback |
-| support-tickets | ✅ Fully Specced | [support-tickets.md](support-tickets.md) | 40 | Ticket Kanban + resolution workflow |
-| knowledge-base | ✅ Fully Specced | [knowledge-base.md](knowledge-base.md) | 40 | Document upload + RAG indexing |
-| automations | ✅ Fully Specced | [automations.md](automations.md) | 40 | IF/THEN workflow builder |
-| settings | ✅ Fully Specced | [settings.md](settings.md) | 40 | Agency config + user management |
+| client-pipeline-management | ✅ Complete | [client-pipeline-management.md](client-pipeline-management.md) | 20 | Batch 1 - Filter chips, stage confirm |
+| unified-communications-hub | ✅ Complete | [unified-communications-hub.md](unified-communications-hub.md) | 32 | Batch 1 - Timeline, reply composer |
+| ai-intelligence-layer | 📝 Specced | [ai-intelligence-layer.md](ai-intelligence-layer.md) | 50 | Batch 3 - Most complex, do last |
+| dashboard-overview | ✅ Complete | [dashboard-overview.md](dashboard-overview.md) | 30 | Batch 1 - KPI cards, charts |
+| integrations-management | ✅ Complete | [integrations-management.md](integrations-management.md) | 31 | Batch 1 - OAuth, sync, test |
+| support-tickets | 📝 Specced | [support-tickets.md](support-tickets.md) | 40 | Batch 2 - Ready |
+| knowledge-base | 📝 Specced | [knowledge-base.md](knowledge-base.md) | 40 | Batch 2 - Ready |
+| automations | 📝 Specced | [automations.md](automations.md) | 40 | Batch 2 - Ready |
+| settings | 📝 Specced | [settings.md](settings.md) | 40 | Batch 2 - Ready |
 
 **Total MVP Tasks:** 323
 
@@ -49,6 +49,7 @@
 
 | Date | Score | Gaps Fixed |
 |------|-------|------------|
+| 2026-01-01 | - | **BATCH 1 COMPLETE**: 4 features built in parallel (client-pipeline, dashboard, communications, integrations). 38 files, 4,733 lines. Build passes. 113/323 tasks done. |
 | 2025-12-31 | 10/10 | **D-2 SpecKit COMPLETE**: All 9 MVP features fully specced with correct user story numbers (US-025 to US-041). Expanded all features to 40 comprehensive implementation tasks each. Added TypeScript code snippets, edge cases, testing checklists, performance considerations, security sections, and monitoring for each feature. Total tasks: 206 → 323. |
 | 2025-12-31 | 10/10 | Added 4 missing features (support-tickets, knowledge-base, automations, settings). Expanded ai-intelligence-layer with full Chi Intelligent Chat architecture. Total tasks: 120 → 206. |
 | 2025-12-31 | 9/10 | Dashboard API endpoints added to API-CONTRACTS |
