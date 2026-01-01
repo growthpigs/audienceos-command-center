@@ -1,0 +1,1149 @@
+export type Stage = "Onboarding" | "Installation" | "Audit" | "Live" | "Needs Support" | "Off-boarding"
+export type HealthStatus = "Green" | "Yellow" | "Red" | "Blocked"
+export type Owner = "Luke" | "Garrett" | "Josh" | "Jeff"
+export type Tier = "Enterprise" | "Core" | "Starter"
+
+export type TicketStatus = "New" | "In Progress" | "Waiting on Client" | "Resolved"
+export type TicketPriority = "High" | "Medium" | "Low"
+
+export interface Client {
+  id: string
+  name: string
+  logo: string
+  stage: Stage
+  health: HealthStatus
+  owner: Owner
+  daysInStage: number
+  supportTickets: number
+  installTime: number
+  statusNote?: string
+  shopifyUrl?: string
+  gtmContainerId?: string
+  metaPixelId?: string
+  tasks: Task[]
+  comms: CommMessage[]
+  tier: Tier
+  performanceData?: PerformanceData[]
+  metaAds?: AdMetrics
+  googleAds?: AdMetrics
+  onboardingData?: {
+    shopifyUrl: string
+    gtmContainerId: string
+    metaPixelId: string
+    klaviyoApiKey: string
+    submittedAt: string
+    contactEmail: string // Added contactEmail field
+    metaAccessVerified: boolean
+    gtmAccessVerified: boolean
+    shopifyAccessVerified: boolean
+    accessGrants: {
+      // Added accessGrants for onboarding management view
+      meta: boolean
+      gtm: boolean
+      shopify: boolean
+    }
+  }
+  blocker?: "WAITING ON ACCESS" | "WAITING ON DNS" | "DATA LAYER ERROR" | "CODE NOT INSTALLED" | null
+}
+
+export interface Task {
+  id: string
+  name: string
+  completed: boolean
+  assignee?: Owner
+  dueDate?: string
+  stage?: string
+}
+
+export interface CommMessage {
+  id: string
+  sender: string
+  avatar: string
+  message: string
+  timestamp: string
+  isInternal?: boolean
+  source?: "slack" | "email"
+  channel?: string
+  subject?: string
+  aiTags?: string[]
+}
+
+export interface PerformanceData {
+  date: string
+  adSpend: number
+  roas: number
+}
+
+export interface AdMetrics {
+  spend: number
+  roas: number
+  cpa: number
+  impressions: number
+  clicks: number
+  conversions: number
+  trend: "up" | "down" | "neutral"
+}
+
+export interface SupportTicket {
+  id: string
+  title: string
+  clientId: string
+  clientName: string
+  status: TicketStatus
+  priority: TicketPriority
+  source: string
+  assignee: Owner
+  createdAt: string
+  description: string
+}
+
+export interface ZoomRecording {
+  id: string
+  title: string
+  date: string
+  duration: string
+  aiSummary: string[]
+  transcriptUrl?: string
+}
+
+export const owners: { name: Owner; avatar: string; color: string }[] = [
+  { name: "Luke", avatar: "L", color: "bg-emerald-600" },
+  { name: "Garrett", avatar: "G", color: "bg-blue-600" },
+  { name: "Josh", avatar: "J", color: "bg-amber-600" },
+  { name: "Jeff", avatar: "JF", color: "bg-purple-600" },
+]
+
+export const stages: Stage[] = ["Onboarding", "Installation", "Audit", "Live", "Needs Support", "Off-boarding"]
+export const ticketStatuses: TicketStatus[] = ["New", "In Progress", "Waiting on Client", "Resolved"]
+
+function generatePerformanceData(): PerformanceData[] {
+  const data: PerformanceData[] = []
+  const baseDate = new Date("2024-10-30")
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(baseDate)
+    date.setDate(baseDate.getDate() + i)
+    data.push({
+      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      adSpend: Math.floor(Math.random() * 5000) + 2000,
+      roas: Number((Math.random() * 3 + 1.5).toFixed(2)),
+    })
+  }
+  return data
+}
+
+function generateAdMetrics(): AdMetrics {
+  return {
+    spend: Math.floor(Math.random() * 15000) + 5000,
+    roas: Number((Math.random() * 3 + 1.5).toFixed(2)),
+    cpa: Math.floor(Math.random() * 50) + 15,
+    impressions: Math.floor(Math.random() * 500000) + 100000,
+    clicks: Math.floor(Math.random() * 15000) + 3000,
+    conversions: Math.floor(Math.random() * 500) + 100,
+    trend: ["up", "down", "neutral"][Math.floor(Math.random() * 3)] as "up" | "down" | "neutral",
+  }
+}
+
+export const mockClients: Client[] = [
+  {
+    id: "1",
+    name: "RTA Outdoor Living",
+    logo: "RTA",
+    stage: "Installation",
+    health: "Blocked",
+    owner: "Luke",
+    daysInStage: 20,
+    supportTickets: 3,
+    installTime: 20,
+    statusNote: "Waiting on Access",
+    shopifyUrl: "rta-outdoor.myshopify.com",
+    gtmContainerId: "GTM-ABC123",
+    metaPixelId: "1234567890",
+    tier: "Enterprise",
+    blocker: "WAITING ON DNS", // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Setup Call", completed: true, assignee: "Luke", stage: "Onboarding" },
+      {
+        id: "2",
+        name: "DNS Configuration",
+        completed: false,
+        assignee: "Luke",
+        dueDate: "Nov 25",
+        stage: "Installation",
+      },
+      {
+        id: "3",
+        name: "Pixel Installation",
+        completed: false,
+        assignee: "Garrett",
+        dueDate: "Nov 27",
+        stage: "Installation",
+      },
+      { id: "4", name: "GTM Setup", completed: false, assignee: "Garrett", dueDate: "Nov 29", stage: "Installation" },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Luke",
+        avatar: "L",
+        message: "Sent DNS instructions to client - still waiting on access credentials",
+        timestamp: "5d ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-rta-outdoor",
+      },
+      {
+        id: "2",
+        sender: "Mark (Client)",
+        avatar: "M",
+        message: "IT department is on vacation, will get back next week",
+        timestamp: "4d ago",
+        source: "email",
+        subject: "Re: DNS Access Required",
+        aiTags: ["Blocker", "Delay"],
+      },
+      {
+        id: "3",
+        sender: "Luke",
+        avatar: "L",
+        message: "Following up again - this is becoming critical",
+        timestamp: "1d ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-rta-outdoor",
+        aiTags: ["Urgent"],
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: { spend: 12400, roas: 3.4, cpa: 28, impressions: 450000, clicks: 12000, conversions: 443, trend: "down" },
+    googleAds: {
+      spend: 8200,
+      roas: 2.8,
+      cpa: 35,
+      impressions: 320000,
+      clicks: 8500,
+      conversions: 234,
+      trend: "neutral",
+    },
+    onboardingData: {
+      shopifyUrl: "rta-outdoor.myshopify.com",
+      gtmContainerId: "GTM-ABC123",
+      metaPixelId: "1234567890",
+      klaviyoApiKey: "KL-KEY123",
+      submittedAt: "Nov 1, 2024",
+      contactEmail: "info@rtaoutdoor.com", // Updated contact email
+      metaAccessVerified: false,
+      gtmAccessVerified: false,
+      shopifyAccessVerified: false,
+      accessGrants: {
+        meta: false,
+        gtm: false,
+        shopify: false,
+      },
+    },
+  },
+  {
+    id: "2",
+    name: "V Shred",
+    logo: "VS",
+    stage: "Audit",
+    health: "Yellow",
+    owner: "Luke",
+    daysInStage: 3,
+    supportTickets: 1,
+    installTime: 6,
+    shopifyUrl: "vshred.myshopify.com",
+    gtmContainerId: "GTM-VSHRED1",
+    metaPixelId: "9876543210",
+    tier: "Enterprise",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Audit", completed: true, assignee: "Luke", stage: "Audit" },
+      { id: "2", name: "Pixel Verification", completed: true, assignee: "Luke", stage: "Audit" },
+      {
+        id: "3",
+        name: "Conversion Tracking Test",
+        completed: false,
+        assignee: "Josh",
+        dueDate: "Nov 30",
+        stage: "Audit",
+      },
+      { id: "4", name: "Final Report", completed: false, assignee: "Luke", dueDate: "Dec 2", stage: "Audit" },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Luke",
+        avatar: "L",
+        message: "Audit started, looking good so far",
+        timestamp: "2d ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-vshred",
+      },
+      {
+        id: "2",
+        sender: "Sarah (V Shred)",
+        avatar: "S",
+        message: "Thanks team! When can we expect the final report?",
+        timestamp: "1d ago",
+        source: "email",
+        subject: "Audit Timeline",
+        aiTags: ["Question"],
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: { spend: 45000, roas: 4.2, cpa: 22, impressions: 1200000, clicks: 35000, conversions: 2045, trend: "up" },
+    googleAds: { spend: 28000, roas: 3.8, cpa: 25, impressions: 890000, clicks: 24000, conversions: 1120, trend: "up" },
+    onboardingData: {
+      shopifyUrl: "vshred.myshopify.com",
+      gtmContainerId: "GTM-VSHRED1",
+      metaPixelId: "9876543210",
+      klaviyoApiKey: "KL-VSHRED789",
+      submittedAt: "Nov 12, 2024",
+      contactEmail: "ops@vshred.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: false,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: false,
+      },
+    },
+  },
+  {
+    id: "3",
+    name: "Terren",
+    logo: "TR",
+    stage: "Live",
+    health: "Green",
+    owner: "Garrett",
+    daysInStage: 45,
+    supportTickets: 0,
+    installTime: 5,
+    shopifyUrl: "terren.myshopify.com",
+    gtmContainerId: "GTM-TERREN99",
+    metaPixelId: "5555666677",
+    tier: "Core",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Setup Call", completed: true, assignee: "Garrett", stage: "Onboarding" },
+      { id: "2", name: "DNS Configuration", completed: true, assignee: "Garrett", stage: "Installation" },
+      { id: "3", name: "Pixel Installation", completed: true, assignee: "Garrett", stage: "Installation" },
+      { id: "4", name: "GTM Setup", completed: true, assignee: "Garrett", stage: "Installation" },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Garrett",
+        avatar: "G",
+        message: "Client fully onboarded and happy with results",
+        timestamp: "1w ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-terren",
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "terren.myshopify.com",
+      gtmContainerId: "GTM-TERREN99",
+      metaPixelId: "5555666677",
+      klaviyoApiKey: "KL-TERREN456",
+      submittedAt: "Oct 10, 2024",
+      contactEmail: "support@terren.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "4",
+    name: "Glow Recipe",
+    logo: "GR",
+    stage: "Onboarding",
+    health: "Green",
+    owner: "Josh",
+    daysInStage: 2,
+    supportTickets: 0,
+    installTime: 0,
+    shopifyUrl: "glowrecipe.myshopify.com",
+    gtmContainerId: "",
+    metaPixelId: "",
+    tier: "Core",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Welcome Email Sent", completed: true, assignee: "Josh", stage: "Onboarding" },
+      { id: "2", name: "Kickoff Call Scheduled", completed: true, assignee: "Josh", stage: "Onboarding" },
+      {
+        id: "3",
+        name: "Access Credentials Received",
+        completed: false,
+        assignee: "Josh",
+        dueDate: "Dec 1",
+        stage: "Onboarding",
+      },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Josh",
+        avatar: "J",
+        message: "Kickoff call scheduled for Thursday",
+        timestamp: "1d ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-glow-recipe",
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "glowrecipe.myshopify.com",
+      gtmContainerId: "",
+      metaPixelId: "",
+      klaviyoApiKey: "KL-KEY012",
+      submittedAt: "Nov 4, 2024",
+      contactEmail: "contact@glowrecipe.com",
+      metaAccessVerified: false,
+      gtmAccessVerified: false,
+      shopifyAccessVerified: false,
+      accessGrants: {
+        meta: false,
+        gtm: false,
+        shopify: false,
+      },
+    },
+  },
+  {
+    id: "5",
+    name: "Alo Yoga",
+    logo: "AY",
+    stage: "Installation",
+    health: "Green",
+    owner: "Luke",
+    daysInStage: 3,
+    supportTickets: 0,
+    installTime: 3,
+    shopifyUrl: "aloyoga.myshopify.com",
+    gtmContainerId: "GTM-ALO321",
+    metaPixelId: "1122334455",
+    tier: "Enterprise",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Setup Call", completed: true, assignee: "Luke", stage: "Onboarding" },
+      { id: "2", name: "DNS Configuration", completed: true, assignee: "Luke", stage: "Installation" },
+      { id: "3", name: "Pixel Installation", completed: true, assignee: "Luke", stage: "Installation" },
+      { id: "4", name: "GTM Setup", completed: false, assignee: "Luke", dueDate: "Nov 30", stage: "Installation" },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Luke",
+        avatar: "L",
+        message: "Making great progress, GTM setup tomorrow",
+        timestamp: "5h ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-alo-yoga",
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "aloyoga.myshopify.com",
+      gtmContainerId: "GTM-ALO321",
+      metaPixelId: "1122334455",
+      klaviyoApiKey: "KL-KEY345",
+      submittedAt: "Nov 5, 2024",
+      contactEmail: "contact@aloyoga.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "6",
+    name: "Beardbrand",
+    logo: "BB",
+    stage: "Needs Support",
+    health: "Red",
+    owner: "Jeff",
+    daysInStage: 6,
+    supportTickets: 5,
+    installTime: 8,
+    statusNote: "Conversion tracking broken",
+    shopifyUrl: "beardbrand.myshopify.com",
+    gtmContainerId: "GTM-BBR654",
+    metaPixelId: "6677889900",
+    tier: "Core",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Diagnose Tracking Issue", completed: true, assignee: "Jeff", stage: "Support" },
+      {
+        id: "2",
+        name: "Rebuild Pixel Events",
+        completed: false,
+        assignee: "Jeff",
+        dueDate: "Nov 29",
+        stage: "Support",
+      },
+      {
+        id: "3",
+        name: "Test All Conversions",
+        completed: false,
+        assignee: "Josh",
+        dueDate: "Nov 30",
+        stage: "Support",
+      },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Jeff",
+        avatar: "JF",
+        message: "Client escalated, needs resolution by EOD Friday",
+        timestamp: "30m ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-beardbrand",
+        aiTags: ["Urgent", "Escalation"],
+      },
+      {
+        id: "2",
+        sender: "Eric (Client)",
+        avatar: "E",
+        message: "Our ROAS tanked after the site redesign, this is urgent",
+        timestamp: "2h ago",
+        source: "email",
+        subject: "URGENT: Tracking Issues",
+        aiTags: ["Urgent", "Bug"],
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: { spend: 18500, roas: 1.2, cpa: 65, impressions: 380000, clicks: 9200, conversions: 285, trend: "down" },
+    googleAds: { spend: 12000, roas: 1.5, cpa: 52, impressions: 290000, clicks: 7100, conversions: 231, trend: "down" },
+    onboardingData: {
+      shopifyUrl: "beardbrand.myshopify.com",
+      gtmContainerId: "GTM-BBR654",
+      metaPixelId: "6677889900",
+      klaviyoApiKey: "KL-KEY678",
+      submittedAt: "Nov 6, 2024",
+      contactEmail: "contact@beardbrand.com",
+      metaAccessVerified: false,
+      gtmAccessVerified: false,
+      shopifyAccessVerified: false,
+      accessGrants: {
+        meta: false,
+        gtm: false,
+        shopify: false,
+      },
+    },
+  },
+  {
+    id: "7",
+    name: "MVMT Watches",
+    logo: "MV",
+    stage: "Live",
+    health: "Green",
+    owner: "Luke",
+    daysInStage: 120,
+    supportTickets: 0,
+    installTime: 4,
+    shopifyUrl: "mvmt.myshopify.com",
+    gtmContainerId: "GTM-MVM987",
+    metaPixelId: "2233445566",
+    tier: "Enterprise",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Setup Call", completed: true, assignee: "Luke", stage: "Onboarding" },
+      { id: "2", name: "DNS Configuration", completed: true, assignee: "Luke", stage: "Installation" },
+      { id: "3", name: "Pixel Installation", completed: true, assignee: "Luke", stage: "Installation" },
+      { id: "4", name: "GTM Setup", completed: true, assignee: "Luke", stage: "Installation" },
+    ],
+    comms: [],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "mvmt.myshopify.com",
+      gtmContainerId: "GTM-MVM987",
+      metaPixelId: "2233445566",
+      klaviyoApiKey: "KL-KEY901",
+      submittedAt: "Nov 7, 2024",
+      contactEmail: "contact@mvmt.myshopify.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "8",
+    name: "Ruggable",
+    logo: "RG",
+    stage: "Audit",
+    health: "Green",
+    owner: "Josh",
+    daysInStage: 2,
+    supportTickets: 0,
+    installTime: 6,
+    shopifyUrl: "ruggable.myshopify.com",
+    gtmContainerId: "GTM-RUG159",
+    metaPixelId: "7788990011",
+    tier: "Core",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Audit", completed: true, assignee: "Josh", stage: "Audit" },
+      { id: "2", name: "Pixel Verification", completed: true, assignee: "Josh", stage: "Audit" },
+      {
+        id: "3",
+        name: "Conversion Tracking Test",
+        completed: false,
+        assignee: "Josh",
+        dueDate: "Dec 1",
+        stage: "Audit",
+      },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Josh",
+        avatar: "J",
+        message: "Audit looking clean so far",
+        timestamp: "1d ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-ruggable",
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "ruggable.myshopify.com",
+      gtmContainerId: "GTM-RUG159",
+      metaPixelId: "7788990011",
+      klaviyoApiKey: "KL-KEY234",
+      submittedAt: "Nov 8, 2024",
+      contactEmail: "contact@ruggable.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "9",
+    name: "Bombas",
+    logo: "BO",
+    stage: "Off-boarding",
+    health: "Yellow",
+    owner: "Jeff",
+    daysInStage: 3,
+    supportTickets: 0,
+    installTime: 6,
+    statusNote: "Contract ended",
+    shopifyUrl: "bombas.myshopify.com",
+    gtmContainerId: "GTM-CAR753",
+    metaPixelId: "3344556677",
+    tier: "Starter",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Final Report Generated", completed: true, assignee: "Jeff", stage: "Off-boarding" },
+      {
+        id: "2",
+        name: "Remove Tracking Code",
+        completed: false,
+        assignee: "Jeff",
+        dueDate: "Dec 1",
+        stage: "Off-boarding",
+      },
+      {
+        id: "3",
+        name: "Archive Client Data",
+        completed: false,
+        assignee: "Jeff",
+        dueDate: "Dec 5",
+        stage: "Off-boarding",
+      },
+    ],
+    comms: [],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "bombas.myshopify.com",
+      gtmContainerId: "GTM-CAR753",
+      metaPixelId: "3344556677",
+      klaviyoApiKey: "KL-KEY567",
+      submittedAt: "Nov 9, 2024",
+      contactEmail: "contact@bombas.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "10",
+    name: "Caraway Home",
+    logo: "CH",
+    stage: "Off-boarding",
+    health: "Yellow",
+    owner: "Jeff",
+    daysInStage: 3,
+    supportTickets: 0,
+    installTime: 6,
+    statusNote: "Contract ended",
+    shopifyUrl: "carawayhome.myshopify.com",
+    gtmContainerId: "GTM-CAR753",
+    metaPixelId: "3344556677",
+    tier: "Starter",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Final Report Generated", completed: true, assignee: "Jeff", stage: "Off-boarding" },
+      {
+        id: "2",
+        name: "Remove Tracking Code",
+        completed: false,
+        assignee: "Jeff",
+        dueDate: "Dec 1",
+        stage: "Off-boarding",
+      },
+      {
+        id: "3",
+        name: "Archive Client Data",
+        completed: false,
+        assignee: "Jeff",
+        dueDate: "Dec 5",
+        stage: "Off-boarding",
+      },
+    ],
+    comms: [],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "carawayhome.myshopify.com",
+      gtmContainerId: "GTM-CAR753",
+      metaPixelId: "3344556677",
+      klaviyoApiKey: "KL-KEY890",
+      submittedAt: "Nov 10, 2024",
+      contactEmail: "contact@carawayhome.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "11",
+    name: "Brooklinen",
+    logo: "BL",
+    stage: "Installation",
+    health: "Red",
+    owner: "Josh",
+    daysInStage: 15,
+    supportTickets: 2,
+    installTime: 15,
+    statusNote: "Theme compatibility issues",
+    shopifyUrl: "brooklinen.myshopify.com",
+    gtmContainerId: "GTM-BRK852",
+    metaPixelId: "8899001122",
+    tier: "Core",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Setup Call", completed: true, assignee: "Josh", stage: "Onboarding" },
+      { id: "2", name: "DNS Configuration", completed: true, assignee: "Josh", stage: "Installation" },
+      {
+        id: "3",
+        name: "Pixel Installation",
+        completed: false,
+        assignee: "Josh",
+        dueDate: "Nov 28",
+        stage: "Installation",
+      },
+      { id: "4", name: "GTM Setup", completed: false, assignee: "Josh", dueDate: "Dec 1", stage: "Installation" },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Josh",
+        avatar: "J",
+        message: "Custom theme is blocking standard install, need dev help",
+        timestamp: "6h ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-brooklinen",
+        aiTags: ["Bug", "Technical"],
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "brooklinen.myshopify.com",
+      gtmContainerId: "GTM-BRK852",
+      metaPixelId: "8899001122",
+      klaviyoApiKey: "KL-KEY124",
+      submittedAt: "Nov 11, 2024",
+      contactEmail: "contact@brooklinen.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "12",
+    name: "Gymshark",
+    logo: "GS",
+    stage: "Live",
+    health: "Green",
+    owner: "Luke",
+    daysInStage: 90,
+    supportTickets: 0,
+    installTime: 4,
+    shopifyUrl: "gymshark.myshopify.com",
+    gtmContainerId: "GTM-GYM951",
+    metaPixelId: "4455667788",
+    tier: "Enterprise",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Initial Setup Call", completed: true, assignee: "Luke", stage: "Onboarding" },
+      { id: "2", name: "DNS Configuration", completed: true, assignee: "Luke", stage: "Installation" },
+      { id: "3", name: "Pixel Installation", completed: true, assignee: "Luke", stage: "Installation" },
+      { id: "4", name: "GTM Setup", completed: true, assignee: "Luke", stage: "Installation" },
+    ],
+    comms: [],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "gymshark.myshopify.com",
+      gtmContainerId: "GTM-GYM951",
+      metaPixelId: "4455667788",
+      klaviyoApiKey: "KL-KEY346",
+      submittedAt: "Nov 12, 2024",
+      contactEmail: "contact@gymshark.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "13",
+    name: "Allbirds",
+    logo: "AB",
+    stage: "Needs Support",
+    health: "Yellow",
+    owner: "Jeff",
+    daysInStage: 2,
+    supportTickets: 1,
+    installTime: 5,
+    statusNote: "iOS tracking questions",
+    shopifyUrl: "allbirds.myshopify.com",
+    gtmContainerId: "GTM-ALL357",
+    metaPixelId: "9900112233",
+    tier: "Core",
+    blocker: null, // Added blocker
+    tasks: [
+      {
+        id: "1",
+        name: "Respond to iOS Question",
+        completed: false,
+        assignee: "Jeff",
+        dueDate: "Nov 29",
+        stage: "Support",
+      },
+      { id: "2", name: "Update Documentation", completed: false, assignee: "Jeff", dueDate: "Dec 2", stage: "Support" },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Sarah (Client)",
+        avatar: "S",
+        message: "How does iOS 17 affect our tracking?",
+        timestamp: "4h ago",
+        source: "email",
+        subject: "iOS 17 Tracking Question",
+        aiTags: ["Question", "Technical"],
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "allbirds.myshopify.com",
+      gtmContainerId: "GTM-ALL357",
+      metaPixelId: "9900112233",
+      klaviyoApiKey: "KL-KEY457",
+      submittedAt: "Nov 13, 2024",
+      contactEmail: "contact@allbirds.com",
+      metaAccessVerified: true,
+      gtmAccessVerified: true,
+      shopifyAccessVerified: true,
+      accessGrants: {
+        meta: true,
+        gtm: true,
+        shopify: true,
+      },
+    },
+  },
+  {
+    id: "14",
+    name: "Casper",
+    logo: "CA",
+    stage: "Onboarding",
+    health: "Green",
+    owner: "Garrett",
+    daysInStage: 1,
+    supportTickets: 0,
+    installTime: 0,
+    shopifyUrl: "casper.myshopify.com",
+    gtmContainerId: "",
+    metaPixelId: "",
+    tier: "Enterprise",
+    blocker: null, // Added blocker
+    tasks: [
+      { id: "1", name: "Welcome Email Sent", completed: true, assignee: "Garrett", stage: "Onboarding" },
+      {
+        id: "2",
+        name: "Kickoff Call Scheduled",
+        completed: false,
+        assignee: "Garrett",
+        dueDate: "Dec 1",
+        stage: "Onboarding",
+      },
+      {
+        id: "3",
+        name: "Access Credentials Received",
+        completed: false,
+        assignee: "Garrett",
+        dueDate: "Dec 3",
+        stage: "Onboarding",
+      },
+    ],
+    comms: [
+      {
+        id: "1",
+        sender: "Garrett",
+        avatar: "G",
+        message: "New high-value client, prioritizing onboarding",
+        timestamp: "2h ago",
+        isInternal: true,
+        source: "slack",
+        channel: "#client-casper",
+      },
+    ],
+    performanceData: generatePerformanceData(),
+    metaAds: generateAdMetrics(),
+    googleAds: generateAdMetrics(),
+    onboardingData: {
+      shopifyUrl: "casper.myshopify.com",
+      gtmContainerId: "",
+      metaPixelId: "",
+      klaviyoApiKey: "KL-KEY568",
+      submittedAt: "Nov 14, 2024",
+      contactEmail: "contact@casper.com",
+      metaAccessVerified: false,
+      gtmAccessVerified: false,
+      shopifyAccessVerified: false,
+      accessGrants: {
+        meta: false,
+        gtm: false,
+        shopify: false,
+      },
+    },
+  },
+]
+
+export const mockTickets: SupportTicket[] = [
+  {
+    id: "T001",
+    title: "Pixel misfiring on checkout",
+    clientId: "6",
+    clientName: "Beardbrand",
+    status: "In Progress",
+    priority: "High",
+    source: "Detected via Slack",
+    assignee: "Jeff",
+    createdAt: "2h ago",
+    description: "Conversion pixel not firing on checkout confirmation page after theme update.",
+  },
+  {
+    id: "T002",
+    title: "iOS 17 tracking documentation needed",
+    clientId: "13",
+    clientName: "Allbirds",
+    status: "New",
+    priority: "Medium",
+    source: "Client Email",
+    assignee: "Josh",
+    createdAt: "4h ago",
+    description: "Client requesting clarification on iOS 17 changes and impact on their tracking setup.",
+  },
+  {
+    id: "T003",
+    title: "GTM container access request",
+    clientId: "1",
+    clientName: "RTA Outdoor Living",
+    status: "Waiting on Client",
+    priority: "High",
+    source: "Internal",
+    assignee: "Luke",
+    createdAt: "5d ago",
+    description: "Waiting for client IT team to provide GTM admin access for pixel installation.",
+  },
+  {
+    id: "T004",
+    title: "Theme compatibility debugging",
+    clientId: "11",
+    clientName: "Brooklinen",
+    status: "In Progress",
+    priority: "High",
+    source: "Detected via AI",
+    assignee: "Luke",
+    createdAt: "1d ago",
+    description: "Custom Shopify theme blocking standard pixel installation methods.",
+  },
+  {
+    id: "T005",
+    title: "Monthly report generation",
+    clientId: "12",
+    clientName: "Gymshark",
+    status: "Resolved",
+    priority: "Low",
+    source: "Scheduled Task",
+    assignee: "Josh",
+    createdAt: "3d ago",
+    description: "Generate and send November performance report to client.",
+  },
+  {
+    id: "T006",
+    title: "Conversion value discrepancy",
+    clientId: "2",
+    clientName: "V Shred",
+    status: "New",
+    priority: "Medium",
+    source: "Client Email",
+    assignee: "Luke",
+    createdAt: "6h ago",
+    description: "Client reporting 12% difference between Meta reported conversions and Shopify orders.",
+  },
+]
+
+export const mockRecordings: Record<string, ZoomRecording[]> = {
+  "1": [
+    {
+      id: "Z001",
+      title: "RTA Outdoor - Kickoff Call",
+      date: "Nov 8, 2024",
+      duration: "45 min",
+      aiSummary: [
+        "Client wants to prioritize Meta pixel installation first",
+        "IT team availability limited - main blocker identified",
+        "Target launch date: November 30th",
+      ],
+    },
+    {
+      id: "Z002",
+      title: "RTA Outdoor - Technical Deep Dive",
+      date: "Nov 15, 2024",
+      duration: "32 min",
+      aiSummary: [
+        "Reviewed current Shopify setup and theme customizations",
+        "Identified need for custom pixel implementation",
+        "Client to follow up with IT for access credentials",
+      ],
+    },
+  ],
+  "2": [
+    {
+      id: "Z003",
+      title: "V Shred - Audit Review",
+      date: "Nov 27, 2024",
+      duration: "28 min",
+      aiSummary: [
+        "Pixel implementation verified and working correctly",
+        "ROAS trending up 15% since implementation",
+        "Client happy with results, discussing expansion",
+      ],
+    },
+  ],
+  "6": [
+    {
+      id: "Z004",
+      title: "Beardbrand - Emergency Support Call",
+      date: "Nov 28, 2024",
+      duration: "52 min",
+      aiSummary: [
+        "Tracking broke after site redesign pushed to production",
+        "Client frustrated with ROAS decline",
+        "Action items: rebuild pixel events, test all conversion points",
+      ],
+    },
+  ],
+}
+
+export const chartData = [
+  { date: "Nov 1", newClients: 2, completedInstalls: 1 },
+  { date: "Nov 5", newClients: 1, completedInstalls: 2 },
+  { date: "Nov 10", newClients: 3, completedInstalls: 1 },
+  { date: "Nov 15", newClients: 2, completedInstalls: 3 },
+  { date: "Nov 20", newClients: 4, completedInstalls: 2 },
+  { date: "Nov 25", newClients: 1, completedInstalls: 4 },
+  { date: "Nov 29", newClients: 2, completedInstalls: 2 },
+]
+
+export function getKPIs(clients: Client[]) {
+  const activeOnboardings = clients.filter((c) => c.stage === "Onboarding" || c.stage === "Installation").length
+  const clientsAtRisk = clients.filter((c) => c.health === "Red" || c.health === "Blocked").length
+  const avgInstallTime = Math.round(
+    clients.filter((c) => c.installTime > 0).reduce((acc, c) => acc + c.installTime, 0) /
+      clients.filter((c) => c.installTime > 0).length,
+  )
+  const supportHours = 12
+
+  return { activeOnboardings, clientsAtRisk, avgInstallTime, supportHours }
+}

@@ -1,0 +1,651 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Check, Play, Sparkles, Loader2, Copy, ExternalLink } from "lucide-react"
+import confetti from "canvas-confetti"
+import { useToast } from "@/hooks/use-toast"
+
+type Step = 1 | 2 | 3 | 4
+
+export default function OnboardingPage() {
+  const { toast } = useToast()
+  const [currentStep, setCurrentStep] = useState<Step>(1)
+
+  // Step 1: Fake initialization states
+  const [initSteps, setInitSteps] = useState({
+    clientId: false,
+    slackChannel: false,
+    googleDrive: false,
+  })
+  const [isInitializing, setIsInitializing] = useState(false)
+
+  // Step 2: Tech Stack Form
+  const [platform, setPlatform] = useState("shopify")
+  const [storeUrl, setStoreUrl] = useState("")
+  const [gtmId, setGtmId] = useState("")
+  const [metaPixelId, setMetaPixelId] = useState("")
+  const [klaviyoKey, setKlaviyoKey] = useState("")
+
+  const [testResults, setTestResults] = useState({
+    store: false,
+    gtm: false,
+    meta: false,
+    klaviyo: false,
+  })
+  const [testing, setTesting] = useState<string | null>(null)
+
+  // Step 3: Access Delegation
+  const [accessChecks, setAccessChecks] = useState({
+    meta: false,
+    google: false,
+    shopify: false,
+    dns: false,
+  })
+
+  // Platform Type Toggle
+  const [platformType, setPlatformType] = useState<"shopify" | "custom">("shopify")
+
+  // Validation helpers
+  const isStoreUrlValid = storeUrl.includes(".myshopify.com") || storeUrl.includes(".com")
+  const isGtmIdValid = gtmId.match(/GTM-[A-Z0-9]+/)
+  const isMetaPixelValid = metaPixelId.length >= 10
+  const isKlaviyoValid = klaviyoKey.length >= 6 || klaviyoKey === ""
+
+  const allFieldsValid = isStoreUrlValid && isGtmIdValid && isMetaPixelValid && isKlaviyoValid
+  const allAccessGranted =
+    accessChecks.meta && accessChecks.google && accessChecks.shopify && (platformType === "shopify" || accessChecks.dns)
+  const allTestsPassed = testResults.store && testResults.gtm && testResults.meta && testResults.klaviyo
+
+  // Auto-run initialization sequence on mount
+  useEffect(() => {
+    if (currentStep === 1 && !isInitializing) {
+      setIsInitializing(true)
+      setTimeout(() => setInitSteps((p) => ({ ...p, clientId: true })), 800)
+      setTimeout(() => setInitSteps((p) => ({ ...p, slackChannel: true })), 1600)
+      setTimeout(() => setInitSteps((p) => ({ ...p, googleDrive: true })), 2400)
+    }
+  }, [currentStep, isInitializing])
+
+  const allInitComplete = initSteps.clientId && initSteps.slackChannel && initSteps.googleDrive
+
+  const handleTestConnection = (field: string) => {
+    setTesting(field)
+    setTimeout(() => {
+      setTestResults((prev) => ({ ...prev, [field]: true }))
+      setTesting(null)
+      toast({
+        title: "Connection Verified",
+        description: `${field.toUpperCase()} connection successful`,
+      })
+    }, 1500)
+  }
+
+  const handleCopyEmail = (email: string) => {
+    navigator.clipboard.writeText(email)
+    toast({
+      title: "Copied to clipboard",
+      description: email,
+    })
+  }
+
+  const handleFinish = () => {
+    const onboardingData = {
+      platform,
+      storeUrl,
+      gtmId,
+      metaPixelId,
+      klaviyoKey,
+      platformType,
+      accessChecks,
+      submittedAt: new Date().toISOString(),
+    }
+
+    localStorage.setItem("latestOnboardingSubmission", JSON.stringify(onboardingData))
+
+    console.log("[v0] Onboarding data saved:", onboardingData)
+
+    confetti({
+      particleCount: 150,
+      spread: 90,
+      origin: { y: 0.6 },
+      colors: ["#10b981", "#34d399", "#6ee7b7"],
+    })
+    setCurrentStep(4)
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl">
+        {/* Stepper */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center gap-2">
+            {[1, 2, 3].map((step, idx) => (
+              <div key={step} className="flex items-center">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                    currentStep >= step
+                      ? "bg-emerald-500 text-white"
+                      : "bg-slate-800 text-slate-400 border border-slate-700"
+                  }`}
+                >
+                  {currentStep > step ? <Check className="h-5 w-5" /> : step}
+                </div>
+                <span className="ml-2 text-sm text-slate-400 hidden sm:inline">
+                  {step === 1 ? "Handshake" : step === 2 ? "Keys" : "Handoff"}
+                </span>
+                {idx < 2 && (
+                  <div className={`w-12 h-0.5 ml-2 ${currentStep > step ? "bg-emerald-500" : "bg-slate-700"}`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 1: The Handshake */}
+        {currentStep === 1 && (
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left: Text & Steps */}
+            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur p-8">
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-100 mb-2">Welcome to the AudienceOS Command Center</h1>
+                  <p className="text-slate-400">
+                    We are setting up your private Slack channel, Google Drive folder, and Knowledge Base right now.
+                  </p>
+                </div>
+
+                {/* Live Status Bar */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    {initSteps.clientId ? (
+                      <Check className="h-5 w-5 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Loader2 className="h-5 w-5 text-amber-500 animate-spin shrink-0" />
+                    )}
+                    <span className={initSteps.clientId ? "text-emerald-400" : "text-slate-300"}>
+                      Initializing Client ID...
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    {initSteps.slackChannel ? (
+                      <Check className="h-5 w-5 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Loader2 className="h-5 w-5 text-amber-500 animate-spin shrink-0" />
+                    )}
+                    <span className={initSteps.slackChannel ? "text-emerald-400" : "text-slate-300"}>
+                      Creating #client-name Slack Channel...
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    {initSteps.googleDrive ? (
+                      <Check className="h-5 w-5 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Loader2 className="h-5 w-5 text-amber-500 animate-spin shrink-0" />
+                    )}
+                    <span className={initSteps.googleDrive ? "text-emerald-400" : "text-slate-300"}>
+                      Provisioning Google Drive Folder...
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => setCurrentStep(2)}
+                  disabled={!allInitComplete}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg disabled:opacity-50"
+                >
+                  {allInitComplete ? "Continue to Tech Setup" : "Setting up..."}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Right: Video Placeholder */}
+            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur p-8">
+              <div className="aspect-video bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center group hover:border-emerald-500/50 transition-colors cursor-pointer">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-lg" />
+                <div className="relative flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center group-hover:bg-emerald-400 transition-colors">
+                    <Play className="h-10 w-10 text-white ml-1" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-medium text-slate-200">Welcome Video from Your Fulfillment Lead</p>
+                    <p className="text-sm text-slate-400">Click to watch Luke's Loom intro</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Step 2: The Keys (Tech Stack Intake) */}
+        {currentStep === 2 && (
+          <Card className="bg-slate-900/50 border-slate-800 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="text-2xl text-slate-100">The Keys</CardTitle>
+              <CardDescription className="text-slate-400">
+                A technical configuration form - we need these credentials to set up server-side tracking
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Platform */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">Platform</Label>
+                <select
+                  value={platform}
+                  onChange={(e) => setPlatform(e.target.value)}
+                  className="w-full p-3 rounded-lg bg-slate-950 border border-slate-700 text-slate-100"
+                >
+                  <option value="shopify">Shopify</option>
+                  <option value="woocommerce">WooCommerce</option>
+                  <option value="custom">Custom</option>
+                  <option value="bigcommerce">BigCommerce</option>
+                </select>
+              </div>
+
+              {/* Store URL */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">Store URL</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="https://yourstore.myshopify.com"
+                      value={storeUrl}
+                      onChange={(e) => setStoreUrl(e.target.value)}
+                      className="font-mono bg-slate-950 border-slate-700 text-slate-100 pr-10"
+                    />
+                    {testResults.store && (
+                      <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-500" />
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleTestConnection("store")}
+                    disabled={!isStoreUrlValid || testing !== null}
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800 shrink-0"
+                  >
+                    {testing === "store" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Test"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* GTM Container ID */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">GTM Container ID</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="GTM-XXXXX"
+                      value={gtmId}
+                      onChange={(e) => setGtmId(e.target.value.toUpperCase())}
+                      className="font-mono bg-slate-950 border-slate-700 text-slate-100 pr-10"
+                    />
+                    {testResults.gtm && (
+                      <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-500" />
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleTestConnection("gtm")}
+                    disabled={!isGtmIdValid || testing !== null}
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800 shrink-0"
+                  >
+                    {testing === "gtm" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Test"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Meta Pixel ID */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">Meta Pixel ID</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="1234567890123456"
+                      value={metaPixelId}
+                      onChange={(e) => setMetaPixelId(e.target.value)}
+                      className="font-mono bg-slate-950 border-slate-700 text-slate-100 pr-10"
+                    />
+                    {testResults.meta && (
+                      <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-500" />
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleTestConnection("meta")}
+                    disabled={!isMetaPixelValid || testing !== null}
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800 shrink-0"
+                  >
+                    {testing === "meta" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Test"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Klaviyo Public Key */}
+              <div className="space-y-2">
+                <Label className="text-slate-300">Klaviyo Public Key (Optional)</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="pk_xxxxxxxxxxxx"
+                      value={klaviyoKey}
+                      onChange={(e) => setKlaviyoKey(e.target.value)}
+                      className="font-mono bg-slate-950 border-slate-700 text-slate-100 pr-10"
+                    />
+                    {testResults.klaviyo && (
+                      <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-500" />
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleTestConnection("klaviyo")}
+                    disabled={!isKlaviyoValid || testing !== null || !klaviyoKey}
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800 shrink-0"
+                  >
+                    {testing === "klaviyo" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Test"}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(1)}
+                  className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={() => setCurrentStep(3)}
+                  disabled={!allFieldsValid || !allTestsPassed}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
+                >
+                  Continue
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 3: The Handoff (Access Delegation) */}
+        {currentStep === 3 && (
+          <Card className="bg-slate-900/50 border-slate-800 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="text-2xl text-slate-100">The Handoff</CardTitle>
+              <CardDescription className="text-slate-400">
+                Copy these email addresses to grant agency access
+              </CardDescription>
+
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant={platformType === "shopify" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPlatformType("shopify")}
+                  className={platformType === "shopify" ? "bg-emerald-600 hover:bg-emerald-700" : "border-slate-700"}
+                >
+                  Shopify
+                </Button>
+                <Button
+                  variant={platformType === "custom" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPlatformType("custom")}
+                  className={platformType === "custom" ? "bg-emerald-600 hover:bg-emerald-700" : "border-slate-700"}
+                >
+                  Custom Build
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Meta Business Manager */}
+              <div className="p-5 rounded-lg bg-slate-950 border border-slate-800">
+                <div className="flex items-start gap-3 mb-3">
+                  <Checkbox
+                    id="meta"
+                    checked={accessChecks.meta}
+                    onCheckedChange={(checked) => setAccessChecks({ ...accessChecks, meta: checked as boolean })}
+                    className="mt-1 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="meta" className="text-slate-200 font-medium cursor-pointer text-base">
+                      Meta Business Manager
+                    </Label>
+                    <p className="text-sm text-slate-400 mt-1">
+                      Grant admin access for ad account management and pixel configuration
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ml-8">
+                  <code className="flex-1 p-2 bg-slate-950 border border-slate-700 rounded text-emerald-400 text-sm">
+                    fulfillment@audienceos.io
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyEmail("fulfillment@audienceos.io")}
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Google Ads */}
+              <div className="p-5 rounded-lg bg-slate-950 border border-slate-800">
+                <div className="flex items-start gap-3 mb-3">
+                  <Checkbox
+                    id="google"
+                    checked={accessChecks.google}
+                    onCheckedChange={(checked) => setAccessChecks({ ...accessChecks, google: checked as boolean })}
+                    className="mt-1 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="google" className="text-slate-200 font-medium cursor-pointer text-base">
+                      Google Ads & Tag Manager
+                    </Label>
+                    <p className="text-sm text-slate-400 mt-1">Grant admin access for conversion tracking setup</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ml-8">
+                  <code className="flex-1 p-2 bg-slate-950 border border-slate-700 rounded text-emerald-400 text-sm">
+                    tracking@audienceos.io
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyEmail("tracking@audienceos.io")}
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Shopify Staff */}
+              {platformType === "shopify" && (
+                <div className="p-5 rounded-lg bg-slate-950 border border-slate-800">
+                  <div className="flex items-start gap-3 mb-3">
+                    <Checkbox
+                      id="shopify"
+                      checked={accessChecks.shopify}
+                      onCheckedChange={(checked) => setAccessChecks({ ...accessChecks, shopify: checked as boolean })}
+                      className="mt-1 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="shopify" className="text-slate-200 font-medium cursor-pointer text-base">
+                        Shopify Staff Account
+                      </Label>
+                      <p className="text-sm text-slate-400 mt-1">
+                        Create a staff account for theme and script installation
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-8">
+                    <code className="flex-1 p-2 bg-slate-950 border border-slate-700 rounded text-emerald-400 text-sm">
+                      luke@audienceos.io
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopyEmail("luke@audienceos.io")}
+                      className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {platformType === "custom" && (
+                <div className="p-5 rounded-lg bg-slate-950 border border-slate-800">
+                  <div className="flex items-start gap-3 mb-3">
+                    <Checkbox
+                      id="dns"
+                      checked={accessChecks.dns}
+                      onCheckedChange={(checked) => setAccessChecks({ ...accessChecks, dns: checked as boolean })}
+                      className="mt-1 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="dns" className="text-slate-200 font-medium cursor-pointer text-base">
+                        DNS Configuration (Cloudflare)
+                      </Label>
+                      <p className="text-sm text-slate-400 mt-1">Grant Cloudflare access for server-side tracking</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-8">
+                    <code className="flex-1 p-2 bg-slate-950 border border-slate-700 rounded text-emerald-400 text-sm">
+                      infrastructure@audienceos.io
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopyEmail("infrastructure@audienceos.io")}
+                      className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(2)}
+                  className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleFinish}
+                  disabled={!allAccessGranted}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
+                >
+                  Submit Onboarding
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 4: Success State */}
+        {currentStep === 4 && (
+          <Card className="bg-slate-900/50 border-slate-800 backdrop-blur">
+            <CardHeader className="text-center pb-4">
+              <div className="flex justify-center mb-4">
+                <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                  <Sparkles className="h-10 w-10 text-emerald-500" />
+                </div>
+              </div>
+              <CardTitle className="text-3xl text-slate-100">Onboarding Complete!</CardTitle>
+              <CardDescription className="text-slate-400 text-base mt-3">
+                Your setup has been successfully submitted to the AudienceOS fulfillment team
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Status Card */}
+              <div className="p-6 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/30">
+                <div className="flex items-start gap-4">
+                  <div className="w-3 h-3 bg-amber-500 rounded-full mt-1 animate-pulse shrink-0" />
+                  <div>
+                    <h4 className="text-amber-400 font-semibold mb-2">AI Analysis in Progress</h4>
+                    <p className="text-sm text-slate-300 mb-3">
+                      Our AI is analyzing your GTM container, Meta Pixel configuration, and Shopify theme setup to
+                      identify optimization opportunities.
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      You will receive a detailed implementation plan in your private Slack channel within 2 hours.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submitted Data Summary */}
+              <div>
+                <h4 className="text-sm font-medium text-slate-300 mb-3">Submitted Configuration</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                    <p className="text-xs text-slate-400 mb-1">Platform</p>
+                    <p className="text-sm font-medium text-emerald-400 capitalize">{platform}</p>
+                  </div>
+                  <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                    <p className="text-xs text-slate-400 mb-1">Store URL</p>
+                    <p className="text-sm font-mono text-emerald-400 truncate">{storeUrl}</p>
+                  </div>
+                  <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                    <p className="text-xs text-slate-400 mb-1">GTM Container</p>
+                    <p className="text-sm font-mono text-emerald-400">{gtmId}</p>
+                  </div>
+                  <div className="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                    <p className="text-xs text-slate-400 mb-1">Meta Pixel</p>
+                    <p className="text-sm font-mono text-emerald-400">{metaPixelId}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Steps */}
+              <div className="p-5 rounded-lg bg-slate-950 border border-slate-800">
+                <h4 className="text-sm font-medium text-slate-200 mb-3">What Happens Next?</h4>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>Luke will verify platform access and begin server-side tracking setup</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>You'll receive a custom installation plan in your Slack channel</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>Estimated installation timeline: 3-5 business days</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => window.open("https://slack.com", "_blank")}
+                  variant="outline"
+                  className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800 gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open Slack Channel
+                </Button>
+                <Button
+                  onClick={() => (window.location.href = "/")}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  View Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  )
+}
