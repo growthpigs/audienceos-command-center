@@ -9,7 +9,7 @@ export type Stage =
   | 'Needs Support'
   | 'Off-boarding'
 
-export type HealthStatus = 'green' | 'yellow' | 'red'
+export type HealthStatus = 'Green' | 'Yellow' | 'Red' | 'Blocked'
 
 export interface Client {
   id: string
