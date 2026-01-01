@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import type { Database, IntegrationProvider } from '@/types/database'
+import type { Database } from '@/types/database'
 
 // Extract table types from Database
 type Tables = Database['public']['Tables']
@@ -94,7 +94,7 @@ interface AlertsState {
 
 export const useAlertsStore = create<AlertsState>()(
   devtools(
-    (set, get) => ({
+    (set) => ({
       alerts: [],
       unreadCount: 0,
       isLoading: false,

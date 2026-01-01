@@ -33,12 +33,12 @@ function CommandCenterContent() {
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
 
   // Auth state
-  const { isLoading: authLoading, isAuthenticated, displayName, profile } = useAuth()
+  const { isLoading: _authLoading, isAuthenticated, displayName: _displayName, profile } = useAuth()
 
   // Pipeline store for clients
   const {
     clients: pipelineClients,
-    isLoading: clientsLoading,
+    isLoading: _clientsLoading,
     fetchClients,
     updateClientStage,
   } = usePipelineStore()

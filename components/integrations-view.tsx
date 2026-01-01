@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, CheckCircle2, XCircle, RefreshCw, ExternalLink, Building2, Users, Loader2, AlertCircle, Zap } from "lucide-react"
+import { Settings, CheckCircle2, XCircle, RefreshCw, ExternalLink, Building2, Users, Loader2, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIntegrationsStore, type IntegrationWithMeta } from "@/lib/store"
 import type { IntegrationProvider } from "@/types/database"
@@ -61,13 +61,6 @@ const PROVIDER_ICONS: Record<IntegrationProvider, React.ReactNode> = {
   gmail: <GmailIcon className="h-6 w-6 text-rose-500" />,
   google_ads: <GoogleAdsIcon className="h-6 w-6 text-amber-500" />,
   meta_ads: <MetaIcon className="h-6 w-6 text-blue-500" />,
-}
-
-const PROVIDER_COLORS: Record<IntegrationProvider, string> = {
-  slack: "text-[#4A154B]",
-  gmail: "text-rose-500",
-  google_ads: "text-amber-500",
-  meta_ads: "text-blue-500",
 }
 
 interface ConfigModalState {
