@@ -163,13 +163,13 @@ export function useDashboard(): UseDashboardReturn {
       try {
         const authPromise = getAuthenticatedUser(supabase)
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Auth timeout')), 15000)
+          setTimeout(() => reject(new Error('Auth timeout')), 5000)
         )
         const authResult = await Promise.race([authPromise, timeoutPromise])
         user = authResult.user
         agencyId = authResult.agencyId
-      } catch (authError) {
-        console.error('[use-dashboard] Auth failed:', authError)
+      } catch {
+        // Auth failed or timed out - silently fall back to mock data
       }
 
       let clients: Client[]
@@ -275,7 +275,7 @@ export function useDashboard(): UseDashboardReturn {
       try {
         const authPromise = getAuthenticatedUser(supabase)
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Auth timeout')), 15000)
+          setTimeout(() => reject(new Error('Auth timeout')), 5000)
         )
         const authResult = await Promise.race([authPromise, timeoutPromise])
         agencyId = authResult.agencyId
