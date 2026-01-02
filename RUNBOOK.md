@@ -190,6 +190,73 @@ audienceos-command-center/
 └── stores/                 # Additional stores
 ```
 
+## Verification Commands (RUN THESE BEFORE ANY DEBUGGING)
+
+**CRITICAL:** File existence checks prove NOTHING. These commands prove the system WORKS.
+
+### 1. Supabase Connection & Auth
+```bash
+# Test Supabase connection (not just "env vars exist")
+source .env.local && node -e "
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+supabase.from('client').select('id,name').limit(1).then(r => console.log('✅ DB:', r.data ? 'Connected' : 'No data'));
+"
+
+# Verify auth user exists in BOTH auth.users AND user table
+# This caught the Pipeline view bug where auth existed but user table row didn't
+source .env.local && node -e "
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+supabase.from('user').select('id,email,agency_id').eq('email','dev@audienceos.dev').then(r =>
+  console.log(r.data?.length ? '✅ User in user table' : '❌ User MISSING from user table - RLS will fail!')
+);
+"
+```
+
+### 2. API Endpoint Runtime Test
+```bash
+# Test client list API returns actual data (port 3003 for dev)
+curl -s http://localhost:3003/api/v1/clients | jq '.data | length'
+# Expected: 10 (number of clients)
+
+# Test client detail API schema matches types
+curl -s http://localhost:3003/api/v1/clients/e31041eb-dad4-4ef8-aead-fb2251997fd4 | jq '.data | keys'
+# Expected: ["assignments", "communications", "stage_events", "tasks", ...]
+```
+
+### 3. Schema Alignment Check
+```bash
+# Verify API response matches TypeScript types
+# This caught the sent_at vs received_at mismatch
+curl -s http://localhost:3003/api/v1/clients/e31041eb-dad4-4ef8-aead-fb2251997fd4 | jq '.data.communications[0] | keys'
+# Must include: received_at, subject, content (NOT sent_at, message_preview)
+```
+
+### 4. Browser Runtime Test (Claude in Chrome)
+```
+1. Navigate to http://localhost:3003
+2. Login with dev@audienceos.dev / Test123!
+3. Click Pipeline → Click a client card
+4. VERIFY: Client detail loads (not "Client Not Found")
+5. VERIFY: Overview tab metrics match data (no hardcoded values)
+6. VERIFY: Communications tab matches Overview "Last Contact"
+```
+
+### 5. Seed Data Verification
+```bash
+# Verify stage_event seed data exists (timeline won't be empty)
+source .env.local && node -e "
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+supabase.from('stage_event').select('id,from_stage,to_stage').limit(5).then(r =>
+  console.log('Stage events:', r.data?.length || 0, 'rows')
+);
+"
+```
+
+---
+
 ## Troubleshooting
 
 ### Common Issues

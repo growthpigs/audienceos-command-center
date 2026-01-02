@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, List, Calendar, LayoutGrid, Plus } from "lucide-react"
+import { BarChart3, List, Calendar, LayoutGrid, Users, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -20,13 +20,12 @@ const defaultTabs: Tab[] = [
   { id: "overview", label: "Overview", icon: <BarChart3 className="w-4 h-4" /> },
   { id: "list", label: "List", icon: <List className="w-4 h-4" /> },
   { id: "board", label: "Board", icon: <LayoutGrid className="w-4 h-4" /> },
-  { id: "team", label: "Team" },
+  { id: "team", label: "Team", icon: <Users className="w-4 h-4" /> },
   { id: "calendar", label: "Calendar", icon: <Calendar className="w-4 h-4" /> },
-  { id: "dashboard", label: "Dashboard" },
 ]
 
 export function NavigationTabs({
-  activeTab = "dashboard",
+  activeTab = "overview",
   onTabChange,
   onAddCard,
 }: NavigationTabsProps) {
@@ -48,21 +47,9 @@ export function NavigationTabs({
             {tab.label}
           </Button>
         ))}
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          5 more...
-        </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          View
-        </Button>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          Hide
-        </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          Customize
-        </Button>
         <Button size="sm" onClick={onAddCard}>
           <Plus className="w-4 h-4 mr-1" />
           Add card
