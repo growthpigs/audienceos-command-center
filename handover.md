@@ -4,6 +4,25 @@
 
 ## Completed This Session
 
+### 8. Client List Filters - 10/10 QA (2026-01-02)
+
+**URL Query Params for Shareable Filter States:**
+- Added `useSearchParams`, `useRouter`, `usePathname` to `app/page.tsx`
+- Filters initialize from URL on page load (`?stage=Live&health=Green`)
+- Filter changes update URL without page scroll via `router.replace()`
+- Shareable: copy URL to share exact filter state
+
+**Keyboard Navigation with ARIA Labels:**
+- `components/linear/list-header.tsx` updated with full accessibility
+- `role="toolbar"` on filter container
+- `role="listbox"` and `role="option"` with `aria-selected` on dropdowns
+- `onKeyDown` handlers for Enter/Space key selection
+- `focus-visible:ring-2` for keyboard focus visibility
+
+**Verification:** Build passes, browser tested, no console errors
+
+---
+
 ### 7. Commit + Code Review (2026-01-02)
 
 **Commit `c5f8ab8`:** 25 files, +1,566/-19 lines

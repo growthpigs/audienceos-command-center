@@ -6,9 +6,14 @@ import { useDashboardStore } from '@/lib/stores/dashboard-store'
 import type { DashboardKPIs, DashboardTrends, KPI } from '@/types/dashboard'
 
 const mockKPI: KPI = {
+  id: 'test-kpi',
+  label: 'Test KPI',
   value: 10,
-  trend: 5,
-  sparkline: [1, 2, 3, 4, 5],
+  displayValue: '10',
+  trend: 'up',
+  changePercent: 5,
+  previousValue: 8,
+  drillDownUrl: null,
   lastUpdated: new Date().toISOString(),
 }
 
@@ -21,22 +26,12 @@ const mockKPIs: DashboardKPIs = {
 }
 
 const mockTrends: DashboardTrends = {
-  revenue: [
-    { date: '2024-01-01', value: 10000 },
-    { date: '2024-01-02', value: 12000 },
+  data: [
+    { date: '2024-01-01', newClients: 5, completedInstalls: 3 },
+    { date: '2024-01-02', newClients: 8, completedInstalls: 5 },
   ],
-  clientGrowth: [
-    { date: '2024-01-01', value: 50 },
-    { date: '2024-01-02', value: 55 },
-  ],
-  ticketVolume: [
-    { date: '2024-01-01', value: 10 },
-    { date: '2024-01-02', value: 8 },
-  ],
-  supportLoad: [
-    { date: '2024-01-01', value: 30 },
-    { date: '2024-01-02', value: 35 },
-  ],
+  period: 30,
+  lastUpdated: new Date().toISOString(),
 }
 
 describe('dashboard-store', () => {
@@ -212,10 +207,10 @@ describe('dashboard-store', () => {
 
     it('should update single KPI trend', () => {
       useDashboardStore.getState().setKPIs(mockKPIs)
-      useDashboardStore.getState().updateSingleKPI('at_risk_clients', { trend: -10 })
+      useDashboardStore.getState().updateSingleKPI('at_risk_clients', { trend: 'down' })
 
       const state = useDashboardStore.getState()
-      expect(state.kpis?.atRiskClients.trend).toBe(-10)
+      expect(state.kpis?.atRiskClients.trend).toBe('down')
     })
 
     it('should not update if kpis is null', () => {

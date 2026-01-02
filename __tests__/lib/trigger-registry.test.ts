@@ -99,7 +99,7 @@ describe('trigger-registry', () => {
         id: 't1',
         type: 'stage_change',
         name: 'Stage Change',
-        config: {},
+        config: { toStage: '' },
       }
       const result = validateTriggerConfig(invalidTrigger)
       expect(result.valid).toBe(false)
@@ -145,7 +145,7 @@ describe('trigger-registry', () => {
         id: 't1',
         type: 'kpi_threshold',
         name: 'KPI Threshold',
-        config: { metric: 'roas' },
+        config: { metric: 'roas' } as any,
       }
       const result = validateTriggerConfig(invalidTrigger)
       expect(result.valid).toBe(false)
@@ -170,7 +170,7 @@ describe('trigger-registry', () => {
         type: 'unknown_type',
         name: 'Unknown',
         config: {},
-      } as WorkflowTrigger
+      } as unknown as WorkflowTrigger
       const result = validateTriggerConfig(invalidTrigger)
       expect(result.valid).toBe(false)
       expect(result.errors[0]).toContain('Unknown trigger type')

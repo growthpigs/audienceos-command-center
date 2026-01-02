@@ -261,6 +261,35 @@ supabase.from('stage_event').select('id,from_stage,to_stage').limit(5).then(r =>
 
 ### Common Issues
 
+**Phantom numbers/badges appearing in sidebar (UI-001):**
+
+*Symptoms:* Random numbers (e.g., 61, 12, 8, 4) appear next to or under navigation menu items in the sidebar. Numbers don't correspond to any feature logic.
+
+*Root cause:* NOT a code issue. The sidebar.tsx has no count/badge logic. Likely causes:
+- Browser extension (Vimium, accessibility tools showing keyboard indices)
+- Cached build artifacts
+- React DevTools accessibility overlay
+- Browser DevTools element inspector residue
+
+*Resolution:*
+```bash
+# 1. Clear Next.js cache
+rm -rf .next && npm run dev
+
+# 2. Hard refresh browser
+# Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows)
+
+# 3. Disable browser extensions temporarily
+# Check if numbers disappear - if yes, one of your extensions is the cause
+
+# 4. Check for React DevTools accessibility features
+# Disable any "accessibility tree" overlays
+```
+
+*Verification:* Sidebar code has NO count logic - confirmed via `grep -r "count\|badge\|\.length" components/sidebar.tsx` returns nothing relevant.
+
+---
+
 **Build errors after dependency updates:**
 ```bash
 rm -rf node_modules package-lock.json

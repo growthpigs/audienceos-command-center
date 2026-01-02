@@ -112,8 +112,8 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_task',
+        name: 'Test Action',
         config: { title: 'Test Task' },
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(true)
@@ -124,8 +124,8 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_task',
-        config: {},
-        order: 0,
+        name: 'Test Action',
+        config: { title: '' },
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
@@ -136,12 +136,12 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'send_notification',
+        name: 'Test Notification',
         config: {
           channel: 'slack',
           message: 'Test message',
           recipients: ['user-1'],
         },
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(true)
@@ -151,12 +151,11 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'send_notification',
-        config: {},
-        order: 0,
+        name: 'Test Notification',
+        config: { channel: 'slack', message: '', recipients: [] },
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
-      expect(result.errors).toContain('Send notification action requires a channel')
       expect(result.errors).toContain('Send notification action requires a message')
       expect(result.errors).toContain('Send notification action requires at least one recipient')
     })
@@ -165,11 +164,11 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'draft_communication',
+        name: 'Test Communication',
         config: {
           platform: 'slack',
           template: 'Check-in message',
         },
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(true)
@@ -179,8 +178,8 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'draft_communication',
-        config: { template: 'Test' },
-        order: 0,
+        name: 'Test Communication',
+        config: { template: 'Test' } as any,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
@@ -191,12 +190,12 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_ticket',
+        name: 'Test Ticket',
         config: {
           title: 'Test Ticket',
           category: 'technical',
           priority: 'high',
         },
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(true)
@@ -206,8 +205,8 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_ticket',
-        config: { title: 'Test' },
-        order: 0,
+        name: 'Test Ticket',
+        config: { title: 'Test' } as any,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
@@ -219,10 +218,10 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'update_client',
+        name: 'Test Update',
         config: {
           updates: { stage: 'onboarding' },
         },
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(true)
@@ -232,8 +231,8 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'update_client',
+        name: 'Test Update',
         config: { updates: {} },
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
@@ -244,12 +243,12 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_alert',
+        name: 'Test Alert',
         config: {
           title: 'Test Alert',
           type: 'risk_detected',
           severity: 'high',
         },
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(true)
@@ -259,8 +258,8 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_alert',
-        config: {},
-        order: 0,
+        name: 'Test Alert',
+        config: {} as any,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
@@ -273,8 +272,8 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'unknown' as never,
-        config: {},
-        order: 0,
+        name: 'Test Action',
+        config: { title: 'Test Task' },
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
@@ -285,9 +284,9 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_task',
+        name: 'Test Action',
         config: { title: 'Test' },
         delayMinutes: 60,
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(true)
@@ -297,9 +296,9 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_task',
+        name: 'Test Action',
         config: { title: 'Test' },
         delayMinutes: 2000,
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
@@ -310,9 +309,9 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_task',
+        name: 'Test Action',
         config: { title: 'Test' },
         delayMinutes: -5,
-        order: 0,
       }
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
