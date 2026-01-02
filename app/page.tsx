@@ -14,7 +14,7 @@ import {
 import { mockClients, type Client, owners } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { Toaster } from "@/components/ui/toaster"
+import { ToastProvider } from "@/components/linear"
 import { IntelligenceCenter } from "@/components/views/intelligence-center"
 import { OnboardingHub } from "@/components/views/onboarding-hub"
 import { SupportTickets } from "@/components/views/support-tickets"
@@ -203,7 +203,6 @@ function CommandCenterContent() {
         onOpenChange={setCommandPaletteOpen}
         context={selectedClient ? `${selectedClient.logo} - ${selectedClient.name}` : undefined}
       />
-      <Toaster />
     </>
   )
 }
@@ -219,8 +218,10 @@ function CommandCenterLoading() {
 
 export default function CommandCenter() {
   return (
-    <Suspense fallback={<CommandCenterLoading />}>
-      <CommandCenterContent />
-    </Suspense>
+    <ToastProvider position="bottom-right">
+      <Suspense fallback={<CommandCenterLoading />}>
+        <CommandCenterContent />
+      </Suspense>
+    </ToastProvider>
   )
 }
