@@ -23,9 +23,9 @@ export function DataHealthDashboard() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Widget A: Signal Recovery */}
-      <Card className="bg-card border-border">
+      <Card className="border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -54,7 +54,7 @@ export function DataHealthDashboard() {
       </Card>
 
       {/* Widget B: Event Match Quality */}
-      <Card className="bg-card border-border">
+      <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Gauge className="h-4 w-4 text-primary" />
@@ -87,7 +87,7 @@ export function DataHealthDashboard() {
       </Card>
 
       {/* Widget C: API Uptime */}
-      <Card className="bg-card border-border">
+      <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">API Uptime</CardTitle>
         </CardHeader>

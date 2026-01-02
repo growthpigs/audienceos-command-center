@@ -103,9 +103,9 @@ export function KPICard({
   return (
     <Card
       className={cn(
-        "bg-card border-border transition-all",
-        isNorthStar && "ring-1 ring-primary/50",
-        kpi.drillDownUrl && onDrillDown && "cursor-pointer hover:border-primary/50",
+        "border-border transition-all",
+        isNorthStar && "ring-1 ring-primary/30",
+        kpi.drillDownUrl && onDrillDown && "cursor-pointer hover:shadow-sm",
         className
       )}
       onClick={handleClick}
@@ -119,22 +119,22 @@ export function KPICard({
       }}
       aria-label={`${kpi.label}: ${kpi.displayValue}. ${kpi.drillDownUrl ? "Click to view details." : ""}`}
     >
-      <CardContent className="p-5">
+      <CardContent className="p-3">
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">{kpi.label}</p>
-            <p className={cn("text-3xl font-bold", colors.text)}>
+          <div className="space-y-1">
+            <p className="text-[11px] text-muted-foreground">{kpi.label}</p>
+            <p className={cn("text-xl font-semibold", colors.text)}>
               {kpi.displayValue}
             </p>
             {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
+              <p className="text-[10px] text-muted-foreground">{subtitle}</p>
             )}
           </div>
-          <div className={cn("p-2.5 rounded-lg", colors.bg)}>
-            <Icon className={cn("h-5 w-5", colors.text)} aria-hidden="true" />
+          <div className={cn("p-1.5 rounded-md", colors.bg)}>
+            <Icon className={cn("h-3.5 w-3.5", colors.text)} aria-hidden="true" />
           </div>
         </div>
-        <div className="mt-3">
+        <div className="mt-2">
           <TrendIndicator
             trend={kpi.trend}
             changePercent={kpi.changePercent}
@@ -148,18 +148,18 @@ export function KPICard({
 
 export function KPICardSkeleton() {
   return (
-    <Card className="bg-card border-border">
-      <CardContent className="p-5">
+    <Card className="border-border">
+      <CardContent className="p-3">
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-9 w-16" />
+          <div className="space-y-1">
             <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-5 w-12" />
+            <Skeleton className="h-2.5 w-14" />
           </div>
-          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-6 w-6 rounded-md" />
         </div>
-        <div className="mt-3">
-          <Skeleton className="h-4 w-16" />
+        <div className="mt-2">
+          <Skeleton className="h-3 w-12" />
         </div>
       </CardContent>
     </Card>

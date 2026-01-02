@@ -1,7 +1,7 @@
 # AudienceOS Command Center - Runbook
 
 > **Operational reference for development, deployment, and troubleshooting**
-> Last Updated: 2026-01-01
+> Last Updated: 2026-01-02
 
 ---
 
@@ -153,6 +153,74 @@ supabase db push --linked
 
 ---
 
+## ⚠️ Schema Migration (CRITICAL - 2026-01-02)
+
+### Current State
+
+The Supabase project (`qwlhdeiigwnbmqcydpvu`) has **legacy War Room schema** from November 2025:
+- `agencies` (plural) instead of `agency`
+- `clients` with subscription_tier, unipile fields
+- `users` with roles array, unipile_account_id
+
+The AudienceOS schema (`supabase/migrations/001_initial_schema.sql`) was **never applied**.
+
+### Option A: Fresh Supabase Project (Recommended)
+
+1. Create new Supabase project at supabase.com
+2. Update `.env.local` with new credentials:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://NEW_PROJECT.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=new_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=new_service_key
+   ```
+3. Apply migration:
+   ```bash
+   # Via Supabase Dashboard SQL Editor
+   # Paste contents of supabase/migrations/001_initial_schema.sql
+
+   # Or via CLI
+   supabase link --project-ref NEW_PROJECT_ID
+   supabase db push
+   ```
+4. Regenerate types:
+   ```bash
+   supabase gen types typescript --project-id NEW_PROJECT_ID > types/database.ts
+   ```
+
+### Option B: Migrate In Place
+
+1. Backup existing data (if needed)
+2. Drop legacy tables:
+   ```sql
+   DROP TABLE IF EXISTS users CASCADE;
+   DROP TABLE IF EXISTS clients CASCADE;
+   DROP TABLE IF EXISTS agencies CASCADE;
+   -- etc
+   ```
+3. Apply migration via SQL Editor
+4. Regenerate types
+
+### Seed Data
+
+After migration, seed with test data:
+```sql
+-- Insert test agency
+INSERT INTO agency (name, slug) VALUES ('Acme Marketing', 'acme-marketing');
+
+-- Insert test user (link to Supabase Auth user)
+INSERT INTO "user" (id, agency_id, email, first_name, last_name, role)
+VALUES (
+  'YOUR_AUTH_USER_ID',
+  (SELECT id FROM agency WHERE slug = 'acme-marketing'),
+  'you@example.com',
+  'Your',
+  'Name',
+  'admin'
+);
+```
+
+---
+
 ## API Routes
 
 | Route | Method | Description |
@@ -241,6 +309,75 @@ supabase gen types typescript --project-id YOUR_PROJECT_ID > types/database.ts
 - [ ] Store OAuth tokens encrypted
 - [ ] Rotate API keys every 90 days
 - [ ] Review Supabase auth policies
+
+---
+
+## Verification Commands
+
+Commands for diagnosing and verifying fixes. Use these when troubleshooting issues.
+
+### Dev Server Stability Check
+
+When suspecting infinite loops or excessive re-renders:
+
+```bash
+# 1. Start dev server and capture output
+npm run dev 2>&1 | tee /tmp/nextjs-output.log
+
+# 2. In another terminal, monitor log line count (should stabilize)
+watch -n 1 'wc -l /tmp/nextjs-output.log'
+
+# Healthy: Line count stabilizes (e.g., 37 lines after page load)
+# Unhealthy: Line count grows continuously (1000+ lines/minute = infinite loop)
+```
+
+### Network Request Monitoring (Claude in Chrome)
+
+When RSC/API requests seem excessive:
+
+1. Open Claude in Chrome tab context
+2. Navigate to app URL
+3. Use `read_network_requests` with `urlPattern: "RSC"` or `urlPattern: "/api/"`
+4. Check for:
+   - 503 errors (server overwhelmed)
+   - Request count growing rapidly
+   - Repeated identical requests
+
+```
+# Expected: Single RSC request per navigation
+# Problem: 1000+ RSC requests = infinite re-render loop
+```
+
+### API Response Verification
+
+```bash
+# Test unauthenticated API returns mock data (demo mode)
+curl -s http://localhost:3000/api/v1/workflows | jq '.demo, .workflows | length'
+# Expected: true, 5 (or number of mock workflows)
+
+# Test with authentication
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/workflows | jq '.demo'
+# Expected: null or absent (not demo mode)
+```
+
+### Console Log Monitoring (Claude in Chrome)
+
+```javascript
+// Check for React hook warnings
+mcp__claude-in-chrome__read_console_messages({
+  tabId: TAB_ID,
+  pattern: "Maximum update depth|Cannot update|infinite loop"
+})
+```
+
+### Root Cause Patterns (EP-057)
+
+When infinite loops occur, check:
+1. **Singleton clients**: `lib/supabase.ts` - does `createClient()` return same instance?
+2. **Effect dependencies**: Check for router/URL state in useEffect deps
+3. **State-URL sync**: Does updating URL cause state change that updates URL again?
+
+See `~/.claude/troubleshooting/error-patterns.md` EP-057 for full pattern.
 
 ---
 

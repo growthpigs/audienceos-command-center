@@ -45,12 +45,12 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
   const atRiskClients = clients.filter((c) => c.health === "Red" || c.health === "Blocked")
 
   return (
-    <div className="space-y-6">
-      {/* Page Header with Refresh Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Command Center</h1>
-          <p className="text-muted-foreground">Real-time overview of client fulfillment operations</p>
+          <h1 className="text-lg font-semibold text-foreground">Command Center</h1>
+          <p className="text-[12px] text-muted-foreground">Real-time overview of client fulfillment operations</p>
         </div>
         <LastUpdated
           lastUpdated={refresh.lastRefreshed}
@@ -67,7 +67,7 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
       <DataHealthDashboard />
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Chart - Takes 2 columns */}
         <div className="lg:col-span-2">
           <TimeSeriesChart
@@ -79,18 +79,18 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
         </div>
 
         {/* At Risk Clients */}
-        <Card className="bg-card border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center justify-between">
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[12px] font-medium flex items-center justify-between">
               <span className="text-foreground">Clients Needing Attention</span>
-              <Badge variant="destructive" className="bg-status-red text-red-950">
+              <Badge variant="destructive" className="bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30 text-[10px]">
                 {atRiskClients.length}
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-1.5">
             {atRiskClients.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">All clients are healthy!</p>
+              <p className="text-[11px] text-muted-foreground text-center py-4">All clients are healthy!</p>
             ) : (
               atRiskClients.map((client) => {
                 const owner = owners.find((o) => o.name === client.owner)
@@ -98,22 +98,22 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
                   <button
                     key={client.id}
                     onClick={() => onClientClick(client)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border hover:border-primary/50 transition-colors text-left"
+                    className="w-full flex items-center gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors text-left"
                   >
-                    <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-secondary-foreground">{client.logo}</span>
+                    <div className="w-5 h-5 rounded bg-muted flex items-center justify-center shrink-0">
+                      <span className="text-[9px] font-semibold text-muted-foreground">{client.logo}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{client.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{client.statusNote || client.stage}</p>
+                      <p className="text-[11px] font-medium text-foreground truncate">{client.name}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{client.statusNote || client.stage}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Avatar className={cn("h-5 w-5", owner?.color)}>
-                        <AvatarFallback className={cn(owner?.color, "text-xs text-white")}>
+                    <div className="flex items-center gap-1">
+                      <Avatar className={cn("h-4 w-4", owner?.color)}>
+                        <AvatarFallback className={cn(owner?.color, "text-[8px] text-white")}>
                           {owner?.avatar}
                         </AvatarFallback>
                       </Avatar>
-                      <span className={cn("text-xs font-medium", getHealthColor(client.health))}>{client.health}</span>
+                      <span className={cn("text-[10px] font-medium", getHealthColor(client.health))}>{client.health}</span>
                     </div>
                   </button>
                 )
