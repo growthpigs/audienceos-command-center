@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo, Suspense } from "react"
+import { useState, useMemo, Suspense, useEffect, useCallback } from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import {
   LinearShell,
   type LinearView,
@@ -10,8 +11,55 @@ import {
   KanbanBoard,
   CommandPalette,
   useCommandPalette,
+  type FilterConfig,
+  type ActiveFilters,
 } from "@/components/linear"
-import { mockClients, type Client, owners } from "@/lib/mock-data"
+import { mockClients, type Client, owners, type Stage, type HealthStatus, type Owner, type Tier } from "@/lib/mock-data"
+
+// Filter configurations for Client List
+const clientFiltersConfig: FilterConfig[] = [
+  {
+    id: "stage",
+    label: "Stage",
+    options: [
+      { label: "Onboarding", value: "Onboarding" },
+      { label: "Installation", value: "Installation" },
+      { label: "Audit", value: "Audit" },
+      { label: "Live", value: "Live" },
+      { label: "Needs Support", value: "Needs Support" },
+      { label: "Off-boarding", value: "Off-boarding" },
+    ],
+  },
+  {
+    id: "health",
+    label: "Health",
+    options: [
+      { label: "Green", value: "Green" },
+      { label: "Yellow", value: "Yellow" },
+      { label: "Red", value: "Red" },
+      { label: "Blocked", value: "Blocked" },
+    ],
+  },
+  {
+    id: "owner",
+    label: "Owner",
+    options: [
+      { label: "Luke", value: "Luke" },
+      { label: "Garrett", value: "Garrett" },
+      { label: "Josh", value: "Josh" },
+      { label: "Jeff", value: "Jeff" },
+    ],
+  },
+  {
+    id: "tier",
+    label: "Tier",
+    options: [
+      { label: "Enterprise", value: "Enterprise" },
+      { label: "Core", value: "Core" },
+      { label: "Starter", value: "Starter" },
+    ],
+  },
+]
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { ToastProvider } from "@/components/linear"
@@ -20,28 +68,102 @@ import { OnboardingHub } from "@/components/views/onboarding-hub"
 import { SupportTickets } from "@/components/views/support-tickets"
 import { IntegrationsHub } from "@/components/views/integrations-hub"
 import { KnowledgeBase } from "@/components/views/knowledge-base"
+import { AutomationsHub } from "@/components/views/automations-hub"
+import { ClickUpDashboard } from "@/components/dashboard/clickup"
+import { SettingsView } from "@/components/settings-view"
+
+// Valid filter keys for URL params
+const FILTER_KEYS = ["stage", "health", "owner", "tier"] as const
 
 function CommandCenterContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
   const [activeView, setActiveView] = useState<LinearView>("pipeline")
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [viewMode, setViewMode] = useState<"list" | "board">("list")
+  // Separate view modes: Pipeline defaults to board (Kanban), Clients defaults to list
+  const [pipelineViewMode, setPipelineViewMode] = useState<"list" | "board">("board")
+  const [clientsViewMode, setClientsViewMode] = useState<"list" | "board">("list")
+  // Filter state for Client List - initialized from URL params
+  const [clientFilters, setClientFilters] = useState<ActiveFilters>(() => {
+    const initial: ActiveFilters = {}
+    FILTER_KEYS.forEach(key => {
+      const value = searchParams.get(key)
+      if (value) initial[key] = value
+    })
+    return initial
+  })
   const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette()
 
   // Use mock clients for now
   const clients = mockClients
 
-  // Filter clients based on search
+  // Sync URL params when filters change
+  const updateUrlParams = useCallback((filters: ActiveFilters) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    // Update filter params
+    FILTER_KEYS.forEach(key => {
+      if (filters[key]) {
+        params.set(key, filters[key] as string)
+      } else {
+        params.delete(key)
+      }
+    })
+
+    // Preserve view param if present
+    const view = searchParams.get("view")
+    if (view) params.set("view", view)
+
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl, { scroll: false })
+  }, [searchParams, pathname, router])
+
+  // Handle filter changes - updates both state and URL
+  const handleFilterChange = useCallback((filterId: string, value: string | null) => {
+    setClientFilters(prev => {
+      const newFilters = { ...prev, [filterId]: value }
+      // Update URL in next tick to avoid state/render conflicts
+      setTimeout(() => updateUrlParams(newFilters), 0)
+      return newFilters
+    })
+  }, [updateUrlParams])
+
+  // Filter clients based on search (for Pipeline) or search + filters (for Client List)
   const filteredClients = useMemo(() => {
-    if (!searchQuery) return clients
-    const query = searchQuery.toLowerCase()
-    return clients.filter(
-      (client) =>
-        client.name.toLowerCase().includes(query) ||
-        client.owner.toLowerCase().includes(query) ||
-        client.stage.toLowerCase().includes(query)
-    )
-  }, [clients, searchQuery])
+    let result = clients
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(
+        (client) =>
+          client.name.toLowerCase().includes(query) ||
+          client.owner.toLowerCase().includes(query) ||
+          client.stage.toLowerCase().includes(query)
+      )
+    }
+
+    // Apply dropdown filters only for Client List view
+    if (activeView === "clients") {
+      if (clientFilters.stage) {
+        result = result.filter(client => client.stage === clientFilters.stage)
+      }
+      if (clientFilters.health) {
+        result = result.filter(client => client.health === clientFilters.health)
+      }
+      if (clientFilters.owner) {
+        result = result.filter(client => client.owner === clientFilters.owner)
+      }
+      if (clientFilters.tier) {
+        result = result.filter(client => client.tier === clientFilters.tier)
+      }
+    }
+
+    return result
+  }, [clients, searchQuery, activeView, clientFilters])
 
   // Transform client to detail panel format
   const clientForPanel = useMemo(() => {
@@ -69,18 +191,27 @@ function CommandCenterContent() {
   }, [selectedClient])
 
   const renderContent = () => {
+    // Get the correct view mode and setter based on active view
+    const isPipeline = activeView === "pipeline"
+    const viewMode = isPipeline ? pipelineViewMode : clientsViewMode
+    const setViewMode = isPipeline ? setPipelineViewMode : setClientsViewMode
+
     switch (activeView) {
       case "pipeline":
       case "clients":
         return (
           <>
             <ListHeader
-              title={activeView === "pipeline" ? "Pipeline" : "Clients"}
+              title={isPipeline ? "Pipeline" : "Client List"}
               count={filteredClients.length}
               onSearch={setSearchQuery}
               searchValue={searchQuery}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
+              // Show filters only for Client List, not Pipeline
+              filters={!isPipeline ? clientFiltersConfig : undefined}
+              activeFilters={!isPipeline ? clientFilters : undefined}
+              onFilterChange={!isPipeline ? handleFilterChange : undefined}
               actions={
                 <Button size="sm" className="h-8 gap-1.5">
                   <Plus className="h-4 w-4" />
@@ -132,9 +263,8 @@ function CommandCenterContent() {
 
       case "dashboard":
         return (
-          <div className="p-6">
-            <h1 className="text-lg font-semibold mb-4">Dashboard</h1>
-            <p className="text-muted-foreground">Dashboard view - wire up existing component...</p>
+          <div className="flex-1 overflow-y-auto p-4">
+            <ClickUpDashboard />
           </div>
         )
 
@@ -160,13 +290,11 @@ function CommandCenterContent() {
       case "knowledge":
         return <KnowledgeBase />
 
+      case "automations":
+        return <AutomationsHub />
+
       case "settings":
-        return (
-          <div className="p-6">
-            <h1 className="text-lg font-semibold mb-4">Settings</h1>
-            <p className="text-muted-foreground">Settings view - wire up existing component...</p>
-          </div>
-        )
+        return <SettingsView />
 
       default:
         return (
