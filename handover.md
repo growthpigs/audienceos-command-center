@@ -50,22 +50,41 @@
 
 #### AI Intelligence Panel ✅
 - Quick action buttons work (populate input field)
-- Chat input with send button
+- Chat input with send button + Enter key support
 - Expand/collapse controls
-- ⚠️ AI backend not connected (no response on submit - expected for MVP)
+- ✅ Toast feedback when submitting (backend not yet connected)
 
 ---
 
-### UX Issues Found
+### UX Issues Found & Fixed
 
-| Issue | Severity | Location | Description |
-|-------|----------|----------|-------------|
-| Data inconsistency | Medium | Client Detail | Overview shows "Last Contact: 2hrs ago (Slack)" but Communications tab shows "No communications yet" |
-| Empty timeline | Low | Client Detail | "No stage history yet" shown for client in Audit stage - should show at least one transition |
-| Generic avatars | Low | Pipeline | All client cards show same "L" avatar - no differentiation |
-| Hidden tabs | Low | Dashboard | "5 more..." dropdown may cause discoverability issues |
-| AI not connected | Expected | Dashboard | AI panel accepts input but doesn't respond (MVP limitation) |
-| Owner unassigned | Low | Client Detail | "Owner: Unassigned" could prompt user to assign |
+| Issue | Severity | Status | Fix |
+|-------|----------|--------|-----|
+| Data inconsistency | Medium | ✅ FIXED | Made "Last Contact" dynamic based on actual communications array |
+| Empty timeline | Low | ✅ FIXED | Seeded stage_event table with client journey data (Lead→Onboarding→Installation→Audit) |
+| AI not connected | Expected | ✅ FIXED | Added toast notification: "AI-powered insights coming soon!" |
+| Generic avatars | Low | Deferred | All client cards show same "L" avatar - cosmetic |
+| Hidden tabs | Low | Deferred | "5 more..." dropdown - acceptable UX |
+| Owner unassigned | Low | Deferred | Could prompt user to assign - nice-to-have |
+
+### 6. UX Fixes Applied (2026-01-02)
+
+**Fix 1: Data Inconsistency**
+- Issue: Overview showed hardcoded "Last Contact: 2hrs ago (Slack)" but Communications was empty
+- Fix: `app/client/[id]/page.tsx` now dynamically computes Last Contact from `client.communications` array
+- Shows "No contact" with "No messages yet" when communications is empty
+
+**Fix 2: Empty Timeline**
+- Issue: Client in Audit stage showed "No stage history yet"
+- Fix: Created `supabase/migrations/004_seed_stage_events.sql` with stage transitions
+- Inserted via Node.js script using service role key to bypass RLS
+- Sunset Realty now shows: Lead (Nov 15) → Onboarding (Nov 20) → Installation (Dec 1) → Audit (Dec 28)
+
+**Fix 3: AI Panel Feedback**
+- Issue: Users clicking Send got no response (backend not connected)
+- Fix: `components/ai-bar.tsx` now shows toast: "AI-powered insights coming soon! We're training on your client data."
+- Added Enter key support for sending queries
+- Input clears after submission
 
 ---
 
