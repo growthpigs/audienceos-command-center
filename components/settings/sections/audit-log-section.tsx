@@ -191,45 +191,45 @@ export function AuditLogSection() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Section Header */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <Shield className="h-5 w-5" />
+        <h2 className="text-[12px] font-medium text-foreground flex items-center gap-1.5">
+          <Shield className="h-3.5 w-3.5" />
           Audit Log
         </h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-[10px] text-muted-foreground mt-0.5">
           View history of all settings changes
         </p>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
           <Input
             placeholder="Search by user, action, or entity..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-secondary border-border"
+            className="pl-7 bg-secondary border-border h-7 text-[11px]"
           />
         </div>
-        <Button variant="outline" className="gap-2">
-          <Calendar className="h-4 w-4" />
+        <Button variant="outline" className="gap-1.5 h-7 text-[10px] bg-transparent">
+          <Calendar className="h-3 w-3" />
           Filter by Date
         </Button>
       </div>
 
       {/* Audit Log Entries */}
-      <Card className="bg-card border-border">
-        <CardHeader className="py-3">
-          <CardTitle className="text-sm font-medium">
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="text-[11px] font-medium">
             Recent Changes ({filteredEntries.length})
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 px-3 pb-3">
           {filteredEntries.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-6 text-[11px] text-muted-foreground">
               No audit log entries found
             </div>
           ) : (
@@ -241,35 +241,35 @@ export function AuditLogSection() {
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-start gap-4 py-4 first:pt-0 last:pb-0 group cursor-pointer hover:bg-muted/30 -mx-3 px-3 rounded-lg transition-colors"
+                    className="flex items-start gap-2.5 py-2.5 first:pt-0 last:pb-0 group cursor-pointer hover:bg-muted/30 -mx-2 px-2 rounded-md transition-colors"
                     onClick={() => setSelectedEntry(entry)}
                   >
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <Icon className="h-5 w-5 text-muted-foreground" />
+                    <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+                      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">{entry.user_name}</span>
-                        <Badge variant={actionBadge.variant} className="text-xs">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[11px] font-medium">{entry.user_name}</span>
+                        <Badge variant={actionBadge.variant} className="text-[9px] px-1 py-0">
                           {actionBadge.label}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-[10px] text-muted-foreground">
                           {formatEntityType(entry.entity_type)}
                         </span>
                       </div>
 
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-[10px] text-muted-foreground truncate">
                         {formatChanges(entry.changes)}
                       </p>
 
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-[9px] text-muted-foreground mt-0.5">
                         {formatRelativeTime(entry.created_at)}
                         {entry.ip_address && ` • ${entry.ip_address}`}
                       </p>
                     </div>
 
-                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-3" />
+                    <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-2" />
                   </div>
                 )
               })}
@@ -281,7 +281,7 @@ export function AuditLogSection() {
       {/* Load More */}
       {filteredEntries.length > 0 && (
         <div className="flex justify-center">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="h-7 text-[10px] bg-transparent">
             Load More
           </Button>
         </div>

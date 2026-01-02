@@ -97,34 +97,34 @@ export function OnboardingHubView({ onClientClick }: OnboardingHubViewProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Onboarding & Intake Hub</h1>
-          <p className="text-muted-foreground">Manage client onboarding pipeline and intake forms</p>
+          <h1 className="text-lg font-semibold text-foreground">Onboarding & Intake Hub</h1>
+          <p className="text-[12px] text-muted-foreground">Manage client onboarding pipeline and intake forms</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowTriggerDialog(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
+          <Button size="sm" onClick={() => setShowTriggerDialog(true)} className="gap-1.5 h-8 text-[11px]">
+            <Plus className="h-3.5 w-3.5" />
             Trigger Onboarding
           </Button>
-          <Button onClick={handleCopyLink} variant="outline" className="gap-2 bg-transparent">
-            <Copy className="h-4 w-4" />
+          <Button size="sm" onClick={handleCopyLink} variant="outline" className="gap-1.5 bg-transparent h-8 text-[11px]">
+            <Copy className="h-3.5 w-3.5" />
             Copy Portal Link
           </Button>
-          <Button onClick={handleViewAsClient} variant="outline" className="gap-2 bg-transparent">
-            {viewMode === "agency" ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          <Button size="sm" onClick={handleViewAsClient} variant="outline" className="gap-1.5 bg-transparent h-8 text-[11px]">
+            {viewMode === "agency" ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
             {viewMode === "agency" ? "View as Client" : "Back to Agency View"}
           </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border">
+      <div className="flex gap-1 border-b border-border">
         <button
           onClick={() => setActiveTab("active")}
-          className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+          className={`px-3 py-1.5 text-[11px] font-medium transition-colors relative ${
             activeTab === "active" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -133,7 +133,7 @@ export function OnboardingHubView({ onClientClick }: OnboardingHubViewProps) {
         </button>
         <button
           onClick={() => setActiveTab("journey")}
-          className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+          className={`px-3 py-1.5 text-[11px] font-medium transition-colors relative ${
             activeTab === "journey" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -142,7 +142,7 @@ export function OnboardingHubView({ onClientClick }: OnboardingHubViewProps) {
         </button>
         <button
           onClick={() => setActiveTab("builder")}
-          className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+          className={`px-3 py-1.5 text-[11px] font-medium transition-colors relative ${
             activeTab === "builder" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -166,52 +166,54 @@ export function OnboardingHubView({ onClientClick }: OnboardingHubViewProps) {
       )}
 
       <Dialog open={showTriggerDialog} onOpenChange={setShowTriggerDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Trigger New Client Onboarding</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-[14px] font-semibold">Trigger New Client Onboarding</DialogTitle>
+            <DialogDescription className="text-[11px]">
               Send onboarding portal link to a new client to begin their intake process
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="clientName">Client Name</Label>
+          <div className="space-y-3 py-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="clientName" className="text-[11px]">Client Name</Label>
               <Input
                 id="clientName"
                 placeholder="Enter client or company name"
                 value={newClientName}
                 onChange={(e) => setNewClientName(e.target.value)}
+                className="h-8 text-[11px]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="clientEmail">Primary Contact Email</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="clientEmail" className="text-[11px]">Primary Contact Email</Label>
               <Input
                 id="clientEmail"
                 type="email"
                 placeholder="contact@clientcompany.com"
                 value={newClientEmail}
                 onChange={(e) => setNewClientEmail(e.target.value)}
+                className="h-8 text-[11px]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="clientTier">Client Tier</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="clientTier" className="text-[11px]">Client Tier</Label>
               <Select value={newClientTier} onValueChange={(v) => setNewClientTier(v as "Enterprise" | "Core" | "Starter")}>
-                <SelectTrigger id="clientTier">
+                <SelectTrigger id="clientTier" className="h-8 text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Starter">Starter</SelectItem>
-                  <SelectItem value="Core">Core</SelectItem>
-                  <SelectItem value="Enterprise">Enterprise</SelectItem>
+                  <SelectItem value="Starter" className="text-[11px]">Starter</SelectItem>
+                  <SelectItem value="Core" className="text-[11px]">Core</SelectItem>
+                  <SelectItem value="Enterprise" className="text-[11px]">Enterprise</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Card className="p-4 bg-muted/30">
-              <div className="flex gap-3">
-                <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div className="text-sm space-y-1">
-                  <p className="font-medium">What happens next?</p>
-                  <p className="text-muted-foreground">
+            <Card className="p-3 bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 shadow-sm">
+              <div className="flex gap-2">
+                <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-medium text-blue-700 dark:text-blue-300">What happens next?</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">
                     Client will receive a welcome email with a personalized onboarding portal link to complete their
                     intake form and grant access to their accounts.
                   </p>
@@ -219,12 +221,12 @@ export function OnboardingHubView({ onClientClick }: OnboardingHubViewProps) {
               </div>
             </Card>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTriggerDialog(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowTriggerDialog(false)} className="h-8 text-[11px] bg-transparent">
               Cancel
             </Button>
-            <Button onClick={handleTriggerOnboarding} className="gap-2">
-              <Send className="h-4 w-4" />
+            <Button onClick={handleTriggerOnboarding} className="gap-1.5 h-8 text-[11px]">
+              <Send className="h-3 w-3" />
               Send Onboarding Link
             </Button>
           </DialogFooter>
@@ -298,84 +300,84 @@ function ActiveOnboardingsTab({
   }
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
       {/* Client Pipeline Cards */}
-      <div className="xl:col-span-2 space-y-4">
+      <div className="xl:col-span-2 space-y-3">
         {clients.map((client) => {
           const isSelected = selectedClient?.id === client.id
           return (
             <Card
               key={client.id}
-              className={`p-6 cursor-pointer transition-colors ${
+              className={`p-4 cursor-pointer transition-colors shadow-sm ${
                 isSelected ? "border-primary ring-1 ring-primary" : "hover:border-muted-foreground/50"
               }`}
               onClick={() => onClientSelect(client)}
             >
               {/* Client Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 bg-muted">
-                    <AvatarFallback className="bg-muted text-foreground font-semibold">{client.logo}</AvatarFallback>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-7 w-7 bg-muted">
+                    <AvatarFallback className="bg-muted text-foreground text-[10px] font-semibold">{client.logo}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold text-foreground">{client.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
+                    <h3 className="text-[12px] font-medium text-foreground">{client.name}</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <Badge variant="outline" className="text-[9px] px-1 py-0">
                         {client.tier}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">{client.daysInStage}d in stage</span>
+                      <span className="text-[10px] text-muted-foreground">{client.daysInStage}d in stage</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6 bg-muted border border-border">
-                    <AvatarFallback className="bg-muted text-foreground text-xs">{client.owner[0]}</AvatarFallback>
+                <div className="flex items-center gap-1.5">
+                  <Avatar className="h-5 w-5 bg-muted border border-border">
+                    <AvatarFallback className="bg-muted text-foreground text-[9px]">{client.owner[0]}</AvatarFallback>
                   </Avatar>
-                  <span className="text-sm text-muted-foreground">{client.owner}</span>
+                  <span className="text-[10px] text-muted-foreground">{client.owner}</span>
                 </div>
               </div>
 
               {/* Workflow Stages */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {stages.map((stage, idx) => {
                   const status = getStageStatus(client, stage.id)
                   const StageIcon = stage.icon
                   return (
                     <div key={stage.id} className="flex items-center flex-1">
                       <div
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border flex-1 cursor-pointer hover:opacity-80 transition-opacity ${
+                        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md border flex-1 cursor-pointer hover:opacity-80 transition-opacity ${
                           status === "complete"
-                            ? "bg-emerald-500/10 border-emerald-500/50"
+                            ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/50"
                             : status === "error"
-                              ? "bg-rose-500/10 border-rose-500/50"
+                              ? "bg-rose-50 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/50"
                               : status === "active"
-                                ? "bg-blue-500/10 border-blue-500/50"
+                                ? "bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/50"
                                 : "bg-muted/50 border-border"
                         }`}
                         onClick={(e) => handleStageClick(client, stage.id, e)}
                       >
                         {status === "complete" ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500 shrink-0" />
                         ) : status === "error" ? (
-                          <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
+                          <AlertCircle className="h-3 w-3 text-rose-600 dark:text-rose-500 shrink-0" />
                         ) : (
-                          <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <Circle className="h-3 w-3 text-muted-foreground shrink-0" />
                         )}
-                        <span className="text-xs font-medium truncate">{stage.label}</span>
+                        <span className="text-[10px] font-medium truncate">{stage.label}</span>
                         {stage.id === "access" && status === "error" && (
-                          <div className="flex gap-1 ml-auto">
+                          <div className="flex gap-0.5 ml-auto">
                             {!client.onboardingData?.metaAccessVerified && (
-                              <Badge variant="outline" className="text-[10px] px-1 py-0 border-rose-500/50">
+                              <Badge variant="outline" className="text-[8px] px-0.5 py-0 border-rose-300 text-rose-600 dark:border-rose-500/50 dark:text-rose-400">
                                 FB
                               </Badge>
                             )}
                             {!client.onboardingData?.gtmAccessVerified && (
-                              <Badge variant="outline" className="text-[10px] px-1 py-0 border-rose-500/50">
+                              <Badge variant="outline" className="text-[8px] px-0.5 py-0 border-rose-300 text-rose-600 dark:border-rose-500/50 dark:text-rose-400">
                                 GA
                               </Badge>
                             )}
                             {!client.onboardingData?.shopifyAccessVerified && (
-                              <Badge variant="outline" className="text-[10px] px-1 py-0 border-rose-500/50">
+                              <Badge variant="outline" className="text-[8px] px-0.5 py-0 border-rose-300 text-rose-600 dark:border-rose-500/50 dark:text-rose-400">
                                 SH
                               </Badge>
                             )}
@@ -383,7 +385,7 @@ function ActiveOnboardingsTab({
                         )}
                       </div>
                       {/* Connector */}
-                      {idx < stages.length - 1 && <div className="h-px w-4 bg-border shrink-0" />}
+                      {idx < stages.length - 1 && <div className="h-px w-3 bg-border shrink-0" />}
                     </div>
                   )
                 })}
@@ -395,12 +397,12 @@ function ActiveOnboardingsTab({
 
       {/* Client Journey Panel */}
       {selectedClient ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <ClientJourneyPanel client={selectedClient} onClientClick={onClientClick} />
         </div>
       ) : (
-        <Card className="p-8 flex items-center justify-center h-64">
-          <p className="text-muted-foreground text-center">Select a client to view their journey</p>
+        <Card className="p-6 flex items-center justify-center h-48 shadow-sm">
+          <p className="text-[11px] text-muted-foreground text-center">Select a client to view their journey</p>
         </Card>
       )}
     </div>
@@ -416,94 +418,94 @@ function ClientJourneyPanel({
   onClientClick?: (client: Client, tab?: string) => void
 }) {
   return (
-    <Card className="p-6 space-y-6">
+    <Card className="p-4 space-y-4 shadow-sm">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Avatar className="h-6 w-6 bg-muted border border-border">
-            <AvatarFallback className="bg-muted text-foreground text-xs">{client.owner[0]}</AvatarFallback>
+        <div className="flex items-center gap-1.5 mb-1">
+          <Avatar className="h-5 w-5 bg-muted border border-border">
+            <AvatarFallback className="bg-muted text-foreground text-[9px]">{client.owner[0]}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground">{client.owner}</span>
+          <span className="text-[10px] text-muted-foreground">{client.owner}</span>
         </div>
-        <h3 className="font-semibold text-lg">Client Journey</h3>
+        <h3 className="text-[12px] font-medium text-foreground">Client Journey</h3>
       </div>
 
       {/* Welcome Video */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Video className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Welcome Video</span>
+          <div className="flex items-center gap-1.5">
+            <Video className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[11px] font-medium">Welcome Video</span>
           </div>
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/50">
+          <Badge variant="outline" className="text-[9px] px-1 py-0 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/50">
             Completed
           </Badge>
         </div>
-        <Card className="p-4 bg-muted/30">
-          <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+        <Card className="p-3 bg-muted/30 shadow-sm">
+          <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-2">
-                <Video className="h-6 w-6 text-primary" />
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-1.5">
+                <Video className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-xs text-muted-foreground">Welcome Video Placeholder</p>
-              <p className="text-xs text-muted-foreground">Watched by client on Dec 1</p>
+              <p className="text-[10px] text-muted-foreground">Welcome Video Placeholder</p>
+              <p className="text-[9px] text-muted-foreground">Watched by client on Dec 1</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Intake Form */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Intake Form</span>
+          <div className="flex items-center gap-1.5">
+            <FileText className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[11px] font-medium">Intake Form</span>
           </div>
-          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/50">
+          <Badge variant="outline" className="text-[9px] px-1 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/50">
             Submitted
           </Badge>
         </div>
-        <Card className="p-4 bg-muted/30 space-y-2">
-          <div className="flex justify-between text-sm">
+        <Card className="p-3 bg-muted/30 space-y-1.5 shadow-sm">
+          <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">Submitted:</span>
             <span className="text-foreground">{client.onboardingData?.submittedAt}</span>
           </div>
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">Shopify URL:</span>
-            <span className="text-foreground font-mono text-xs">{client.onboardingData?.shopifyUrl}</span>
+            <span className="text-foreground font-mono text-[9px]">{client.onboardingData?.shopifyUrl}</span>
           </div>
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-[10px]">
             <span className="text-muted-foreground">Contact:</span>
-            <span className="text-foreground text-xs">{client.onboardingData?.contactEmail}</span>
+            <span className="text-foreground text-[9px]">{client.onboardingData?.contactEmail}</span>
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="w-full mt-2 bg-transparent"
+            className="w-full mt-1.5 bg-transparent h-7 text-[10px]"
             onClick={() => onClientClick?.(client, "techsetup")}
           >
-            <ExternalLink className="h-3 w-3 mr-2" />
+            <ExternalLink className="h-3 w-3 mr-1.5" />
             View Full Details
           </Button>
         </Card>
       </div>
 
       {/* Access Grant */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <LinkIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Access Grant</span>
+          <div className="flex items-center gap-1.5">
+            <LinkIcon className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[11px] font-medium">Access Grant</span>
           </div>
           <Badge
             variant="outline"
-            className={
+            className={`text-[9px] px-1 py-0 ${
               client.onboardingData?.metaAccessVerified &&
               client.onboardingData?.gtmAccessVerified &&
               client.onboardingData?.shopifyAccessVerified
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/50"
-                : "bg-amber-500/10 text-amber-600 border-amber-500/50"
-            }
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/50"
+                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/50"
+            }`}
           >
             {client.onboardingData?.metaAccessVerified &&
             client.onboardingData?.gtmAccessVerified &&
@@ -512,42 +514,42 @@ function ClientJourneyPanel({
               : "Pending"}
           </Badge>
         </div>
-        <Card className="p-4 bg-muted/30 space-y-2">
-          <div className="flex items-center justify-between text-sm">
+        <Card className="p-3 bg-muted/30 space-y-1.5 shadow-sm">
+          <div className="flex items-center justify-between text-[10px]">
             <span className="text-muted-foreground">Meta Ads Manager</span>
             {client.onboardingData?.metaAccessVerified ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
             ) : (
-              <Circle className="h-4 w-4 text-muted-foreground" />
+              <Circle className="h-3 w-3 text-muted-foreground" />
             )}
           </div>
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-[10px]">
             <span className="text-muted-foreground">Google Tag Manager</span>
             {client.onboardingData?.gtmAccessVerified ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
             ) : (
-              <Circle className="h-4 w-4 text-muted-foreground" />
+              <Circle className="h-3 w-3 text-muted-foreground" />
             )}
           </div>
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-[10px]">
             <span className="text-muted-foreground">Shopify Admin</span>
             {client.onboardingData?.shopifyAccessVerified ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
             ) : (
-              <Circle className="h-4 w-4 text-muted-foreground" />
+              <Circle className="h-3 w-3 text-muted-foreground" />
             )}
           </div>
         </Card>
       </div>
 
       {/* AI Brand Guide Generation - Placeholder for future */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">AI Brand Guide Generation</span>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="h-3 w-3 text-primary" />
+          <span className="text-[11px] font-medium">AI Brand Guide Generation</span>
         </div>
-        <Card className="p-4 bg-muted/30">
-          <p className="text-xs text-muted-foreground text-center py-2">
+        <Card className="p-3 bg-muted/30 shadow-sm">
+          <p className="text-[10px] text-muted-foreground text-center py-1">
             AI analysis will appear here once intake form is complete
           </p>
         </Card>
@@ -628,22 +630,22 @@ function FormBuilderTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-2">Intake Form Fields</h2>
-        <p className="text-sm text-muted-foreground mb-4">Customize the questions clients answer during onboarding</p>
+      <Card className="p-4 shadow-sm">
+        <h2 className="text-[12px] font-medium mb-1">Intake Form Fields</h2>
+        <p className="text-[10px] text-muted-foreground mb-3">Customize the questions clients answer during onboarding</p>
 
         {/* Form Fields List */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {formFields.map((field) => (
-            <div key={field.id} className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg border border-border">
-              <div className="flex-1 grid grid-cols-2 gap-4">
+            <div key={field.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-md border border-border">
+              <div className="flex-1 grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs text-muted-foreground mb-1">Field Label</Label>
+                  <Label className="text-[9px] text-muted-foreground mb-0.5 block">Field Label</Label>
                   <Input
                     value={field.label}
-                    className="h-9 bg-background"
+                    className="h-7 text-[11px] bg-background"
                     onChange={(e) =>
                       setFormFields((prev) =>
                         prev.map((f) => (f.id === field.id ? { ...f, label: e.target.value } : f)),
@@ -652,10 +654,10 @@ function FormBuilderTab() {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground mb-1">Placeholder Text</Label>
+                  <Label className="text-[9px] text-muted-foreground mb-0.5 block">Placeholder Text</Label>
                   <Input
                     value={field.placeholder}
-                    className="h-9 bg-background"
+                    className="h-7 text-[11px] bg-background"
                     onChange={(e) =>
                       setFormFields((prev) =>
                         prev.map((f) => (f.id === field.id ? { ...f, placeholder: e.target.value } : f)),
@@ -664,35 +666,35 @@ function FormBuilderTab() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={field.required} onCheckedChange={() => handleToggleRequired(field.id)} />
-                <Label className="text-sm text-muted-foreground">Required</Label>
+              <div className="flex items-center gap-1.5">
+                <Switch checked={field.required} onCheckedChange={() => handleToggleRequired(field.id)} className="scale-90" />
+                <Label className="text-[10px] text-muted-foreground">Required</Label>
               </div>
             </div>
           ))}
         </div>
 
-        <Button variant="outline" className="w-full mt-4 gap-2 bg-transparent">
-          <Plus className="h-4 w-4" />
+        <Button variant="outline" className="w-full mt-3 gap-1.5 bg-transparent h-8 text-[11px]">
+          <Plus className="h-3 w-3" />
           Add Field
         </Button>
       </Card>
 
       {/* Preview Section */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-2">Form Preview</h2>
-        <p className="text-sm text-muted-foreground mb-4">This is how the form will appear to clients</p>
-        <div className="bg-muted/30 rounded-lg p-6 space-y-4">
+      <Card className="p-4 shadow-sm">
+        <h2 className="text-[12px] font-medium mb-1">Form Preview</h2>
+        <p className="text-[10px] text-muted-foreground mb-3">This is how the form will appear to clients</p>
+        <div className="bg-muted/30 rounded-md p-4 space-y-3">
           {formFields.slice(0, 3).map((field) => (
             <div key={field.id}>
-              <Label className="text-sm mb-2 flex items-center gap-1">
+              <Label className="text-[10px] mb-1 flex items-center gap-0.5 block">
                 {field.label}
-                {field.required && <span className="text-rose-500">*</span>}
+                {field.required && <span className="text-rose-500 dark:text-rose-400">*</span>}
               </Label>
-              <Input placeholder={field.placeholder} className="bg-background" disabled />
+              <Input placeholder={field.placeholder} className="bg-background h-7 text-[11px]" disabled />
             </div>
           ))}
-          <p className="text-xs text-muted-foreground text-center pt-2">+ {formFields.length - 3} more fields...</p>
+          <p className="text-[9px] text-muted-foreground text-center pt-1">+ {formFields.length - 3} more fields...</p>
         </div>
       </Card>
     </div>
@@ -715,20 +717,21 @@ function ClientJourneyTab({ viewMode }: { viewMode: "agency" | "client" }) {
 
   if (viewMode === "agency") {
     return (
-      <div className="space-y-6">
-        <Card className="p-6 space-y-6">
+      <div className="space-y-4">
+        <Card className="p-4 space-y-4 shadow-sm">
           <div>
-            <h3 className="font-semibold text-lg mb-4">Welcome Video Configuration</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="videoUrl">Video URL (Vimeo or YouTube)</Label>
+            <h3 className="text-[12px] font-medium mb-3">Welcome Video Configuration</h3>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="videoUrl" className="text-[11px]">Video URL (Vimeo or YouTube)</Label>
                 <Input
                   id="videoUrl"
                   placeholder="https://vimeo.com/..."
                   value={welcomeVideoUrl}
                   onChange={(e) => setWelcomeVideoUrl(e.target.value)}
+                  className="h-8 text-[11px]"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[9px] text-muted-foreground">
                   This welcome video will be shown to clients at the start of their onboarding experience
                 </p>
               </div>
@@ -736,19 +739,19 @@ function ClientJourneyTab({ viewMode }: { viewMode: "agency" | "client" }) {
           </div>
 
           <div>
-            <h3 className="font-semibold text-lg mb-4">AI Analysis Configuration</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="aiPrompt">Analysis Prompt Template</Label>
+            <h3 className="text-[12px] font-medium mb-3">AI Analysis Configuration</h3>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="aiPrompt" className="text-[11px]">Analysis Prompt Template</Label>
                 <Textarea
                   id="aiPrompt"
-                  rows={6}
+                  rows={5}
                   placeholder="Enter AI prompt for analyzing client intake forms..."
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
-                  className="font-mono text-sm"
+                  className="font-mono text-[10px]"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[9px] text-muted-foreground">
                   This prompt will be used to analyze incoming client data and generate installation recommendations
                 </p>
               </div>
@@ -762,76 +765,76 @@ function ClientJourneyTab({ viewMode }: { viewMode: "agency" | "client" }) {
                 description: "Welcome video and AI prompt have been updated",
               })
             }}
-            className="w-full"
+            className="w-full h-8 text-[11px]"
           >
             Save Configuration
           </Button>
         </Card>
 
-        <Card className="p-6 space-y-4">
+        <Card className="p-4 space-y-3 shadow-sm">
           <div>
-            <h3 className="font-semibold text-lg mb-2">AI Analysis Preview</h3>
-            <p className="text-sm text-muted-foreground">Example output from analyzing client intake forms</p>
+            <h3 className="text-[12px] font-medium mb-1">AI Analysis Preview</h3>
+            <p className="text-[10px] text-muted-foreground">Example output from analyzing client intake forms</p>
           </div>
 
-          <Card className="p-4 bg-muted/30 space-y-4">
+          <Card className="p-3 bg-muted/30 space-y-3 shadow-sm">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-purple-500" />
-                <span className="font-medium text-sm">Tracking Setup Analysis</span>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                <span className="text-[11px] font-medium">Tracking Setup Analysis</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-3">Generated from intake form on Dec 4, 2024</p>
+              <p className="text-[10px] text-muted-foreground mb-2">Generated from intake form on Dec 4, 2024</p>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div>
-                  <h4 className="text-sm font-medium mb-2 text-emerald-400">Current Setup</h4>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <h4 className="text-[10px] font-medium mb-1.5 text-emerald-700 dark:text-emerald-400">Current Setup</h4>
+                  <ul className="space-y-0.5 text-[10px] text-muted-foreground">
+                    <li className="flex items-start gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500 shrink-0 mt-0.5" />
                       <span>Shopify store active with standard theme</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <li className="flex items-start gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500 shrink-0 mt-0.5" />
                       <span>Meta Pixel present but not firing correctly</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <li className="flex items-start gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500 shrink-0 mt-0.5" />
                       <span>GTM container needs migration to GA4</span>
                     </li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium mb-2 text-blue-400">Recommended Actions</h4>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-500 shrink-0">1.</span>
+                  <h4 className="text-[10px] font-medium mb-1.5 text-blue-700 dark:text-blue-400">Recommended Actions</h4>
+                  <ul className="space-y-0.5 text-[10px] text-muted-foreground">
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-blue-600 dark:text-blue-400 shrink-0">1.</span>
                       <span>Reinstall Meta Pixel with server-side tracking</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-500 shrink-0">2.</span>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-blue-600 dark:text-blue-400 shrink-0">2.</span>
                       <span>Set up GA4 property and conversion tracking</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-500 shrink-0">3.</span>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-blue-600 dark:text-blue-400 shrink-0">3.</span>
                       <span>Implement enhanced e-commerce tracking</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-500 shrink-0">4.</span>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-blue-600 dark:text-blue-400 shrink-0">4.</span>
                       <span>Configure Klaviyo integration for email attribution</span>
                     </li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium mb-2 text-amber-400">Potential Issues</h4>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <h4 className="text-[10px] font-medium mb-1.5 text-amber-700 dark:text-amber-400">Potential Issues</h4>
+                  <ul className="space-y-0.5 text-[10px] text-muted-foreground">
+                    <li className="flex items-start gap-1.5">
+                      <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
                       <span>Ad blocker detection may impact pixel accuracy</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                    <li className="flex items-start gap-1.5">
+                      <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
                       <span>iOS 14+ privacy settings limiting attribution</span>
                     </li>
                   </ul>
@@ -839,8 +842,8 @@ function ClientJourneyTab({ viewMode }: { viewMode: "agency" | "client" }) {
               </div>
             </div>
 
-            <Button variant="outline" className="w-full bg-transparent gap-2">
-              <Sparkles className="h-4 w-4" />
+            <Button variant="outline" className="w-full bg-transparent gap-1.5 h-7 text-[10px]">
+              <Sparkles className="h-3 w-3" />
               Generate Installation Plan
             </Button>
           </Card>
@@ -849,82 +852,82 @@ function ClientJourneyTab({ viewMode }: { viewMode: "agency" | "client" }) {
     )
   } else {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Welcome Section */}
-        <Card className="p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">Welcome to AudienceOS</h2>
-          <p className="text-muted-foreground">Your marketing fulfillment command center</p>
+        <Card className="p-4 space-y-3 shadow-sm">
+          <h2 className="text-[14px] font-semibold text-foreground">Welcome to AudienceOS</h2>
+          <p className="text-[11px] text-muted-foreground">Your marketing fulfillment command center</p>
 
           {/* Video Player */}
-          <div className="relative aspect-video bg-slate-950 rounded-lg border border-border flex items-center justify-center">
+          <div className="relative aspect-video bg-slate-950 rounded-md border border-border flex items-center justify-center">
             <div className="text-center">
-              <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Play className="h-8 w-8 text-rose-500" />
+              <div className="w-10 h-10 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Play className="h-5 w-5 text-rose-500" />
               </div>
-              <p className="text-sm text-slate-300">Welcome Video from Your Fulfillment Lead</p>
-              <p className="text-xs text-slate-400 mt-1">Click to watch</p>
+              <p className="text-[11px] text-slate-300">Welcome Video from Your Fulfillment Lead</p>
+              <p className="text-[9px] text-slate-400 mt-0.5">Click to watch</p>
             </div>
           </div>
         </Card>
 
         {/* Current Tracking Status */}
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Current Tracking Status</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-4 space-y-2">
+          <h3 className="text-[12px] font-medium text-foreground mb-3">Current Tracking Status</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Card className="p-3 space-y-1.5 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Meta Pixel</span>
-                <div className="w-3 h-3 bg-emerald-500 rounded-full" />
+                <span className="text-[10px] text-muted-foreground">Meta Pixel</span>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
               </div>
-              <p className="text-2xl font-bold text-foreground">98.2%</p>
-              <p className="text-xs text-muted-foreground">Event Match Quality</p>
+              <p className="text-lg font-bold text-foreground">98.2%</p>
+              <p className="text-[9px] text-muted-foreground">Event Match Quality</p>
             </Card>
 
-            <Card className="p-4 space-y-2">
+            <Card className="p-3 space-y-1.5 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Google Enhanced</span>
-                <div className="w-3 h-3 bg-emerald-500 rounded-full" />
+                <span className="text-[10px] text-muted-foreground">Google Enhanced</span>
+                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
               </div>
-              <p className="text-2xl font-bold text-foreground">Active</p>
-              <p className="text-xs text-muted-foreground">Server-side tracking</p>
+              <p className="text-lg font-bold text-foreground">Active</p>
+              <p className="text-[9px] text-muted-foreground">Server-side tracking</p>
             </Card>
 
-            <Card className="p-4 space-y-2">
+            <Card className="p-3 space-y-1.5 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Ad Spend (30d)</span>
-                <TrendingUp className="h-4 w-4 text-emerald-500" />
+                <span className="text-[10px] text-muted-foreground">Ad Spend (30d)</span>
+                <TrendingUp className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
               </div>
-              <p className="text-2xl font-bold text-foreground">$45.2k</p>
-              <p className="text-xs text-emerald-400">+12% vs last month</p>
+              <p className="text-lg font-bold text-foreground">$45.2k</p>
+              <p className="text-[9px] text-emerald-700 dark:text-emerald-400">+12% vs last month</p>
             </Card>
           </div>
         </div>
 
         {/* Next Steps */}
-        <Card className="p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Next Steps</h3>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-secondary/30 border border-border rounded-lg">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+        <Card className="p-4 space-y-3 shadow-sm">
+          <h3 className="text-[12px] font-medium text-foreground">Next Steps</h3>
+          <div className="space-y-2">
+            <div className="flex items-start gap-2 p-2.5 bg-emerald-50 dark:bg-secondary/30 border border-emerald-200 dark:border-border rounded-md">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-foreground">Pixel Installation Complete</p>
-                <p className="text-xs text-muted-foreground">Your Meta and Google tracking is live</p>
+                <p className="text-[11px] font-medium text-foreground">Pixel Installation Complete</p>
+                <p className="text-[9px] text-muted-foreground">Your Meta and Google tracking is live</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-              <Circle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 p-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-md">
+              <Circle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-foreground">Audit in Progress</p>
-                <p className="text-xs text-muted-foreground">Luke is reviewing your conversion tracking setup</p>
+                <p className="text-[11px] font-medium text-foreground">Audit in Progress</p>
+                <p className="text-[9px] text-muted-foreground">Luke is reviewing your conversion tracking setup</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-secondary/30 border border-border rounded-lg">
-              <Circle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 p-2.5 bg-secondary/30 border border-border rounded-md">
+              <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-foreground">Weekly Sync Call</p>
-                <p className="text-xs text-muted-foreground">Scheduled for Friday at 2pm EST</p>
+                <p className="text-[11px] font-medium text-foreground">Weekly Sync Call</p>
+                <p className="text-[9px] text-muted-foreground">Scheduled for Friday at 2pm EST</p>
               </div>
             </div>
           </div>

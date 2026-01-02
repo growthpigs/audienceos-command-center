@@ -114,70 +114,70 @@ export function TeamMembersSection() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <Users className="h-5 w-5" />
+          <h2 className="text-[12px] font-medium text-foreground flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5" />
             Team Members
           </h2>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             Manage your agency's team and access permissions
           </p>
         </div>
-        <Button className="gap-2">
-          <UserPlus className="h-4 w-4" />
+        <Button className="gap-1.5 h-7 text-[10px]">
+          <UserPlus className="h-3 w-3" />
           Invite User
         </Button>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
         <Input
           placeholder="Search team members..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 bg-secondary border-border"
+          className="pl-7 bg-secondary border-border h-7 text-[11px]"
         />
       </div>
 
       {/* Pending Invitations */}
       {invitations.length > 0 && (
-        <Card className="bg-card border-border">
-          <CardHeader className="py-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Mail className="h-4 w-4 text-amber-500" />
+        <Card className="bg-card border-border shadow-sm">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-[11px] font-medium flex items-center gap-1.5">
+              <Mail className="h-3 w-3 text-amber-600 dark:text-amber-500" />
               Pending Invitations ({invitations.length})
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 px-3 pb-3">
             <div className="space-y-2">
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/20"
+                  className="flex items-center justify-between p-2.5 rounded-md bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                      <Mail className="h-4 w-4 text-amber-500" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                      <Mail className="h-3 w-3 text-amber-600 dark:text-amber-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{invitation.email}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[11px] font-medium">{invitation.email}</p>
+                      <p className="text-[9px] text-muted-foreground">
                         Invited by {invitation.inviter_name} • Expires in 6 days
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-[9px] px-1 py-0">
                       {invitation.role}
                     </Badge>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px]">
                       Resend
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px] text-destructive hover:text-destructive">
                       Cancel
                     </Button>
                   </div>
@@ -189,63 +189,63 @@ export function TeamMembersSection() {
       )}
 
       {/* Team Members List */}
-      <Card className="bg-card border-border">
-        <CardHeader className="py-3">
-          <CardTitle className="text-sm font-medium">
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="text-[11px] font-medium">
             Active Members ({filteredMembers.length})
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 px-3 pb-3">
           <div className="divide-y divide-border">
             {filteredMembers.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                className="flex items-center justify-between py-2 first:pt-0 last:pb-0"
               >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 bg-primary/20">
-                    <AvatarFallback className="bg-primary/20 text-primary font-medium text-sm">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-7 w-7 bg-primary/20">
+                    <AvatarFallback className="bg-primary/20 text-primary font-medium text-[10px]">
                       {getInitials(member.first_name, member.last_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[11px] font-medium">
                         {member.first_name} {member.last_name}
                       </p>
                       {member.role === "admin" && (
-                        <Badge variant="secondary" className="text-xs gap-1">
-                          <Shield className="h-3 w-3" />
+                        <Badge variant="secondary" className="text-[9px] gap-0.5 px-1 py-0">
+                          <Shield className="h-2.5 w-2.5" />
                           Admin
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">{member.email}</p>
+                    <p className="text-[9px] text-muted-foreground">{member.email}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                       {member.client_count} clients
                     </p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
-                      <Clock className="h-3 w-3" />
+                    <p className="text-[9px] text-muted-foreground flex items-center gap-0.5 justify-end">
+                      <Clock className="h-2.5 w-2.5" />
                       {formatLastActive(member.last_active_at)}
                     </p>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <MoreHorizontal className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Edit User</DropdownMenuItem>
-                      <DropdownMenuItem>Change Role</DropdownMenuItem>
-                      <DropdownMenuItem>View Activity</DropdownMenuItem>
+                      <DropdownMenuItem className="text-[11px]">Edit User</DropdownMenuItem>
+                      <DropdownMenuItem className="text-[11px]">Change Role</DropdownMenuItem>
+                      <DropdownMenuItem className="text-[11px]">View Activity</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">
+                      <DropdownMenuItem className="text-[11px] text-destructive">
                         Deactivate User
                       </DropdownMenuItem>
                     </DropdownMenuContent>

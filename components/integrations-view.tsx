@@ -344,38 +344,38 @@ export function IntegrationsView() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-4 max-w-5xl">
       {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Integrations</h1>
-          <p className="text-muted-foreground">Manage your connected services and sync settings</p>
+          <h1 className="text-lg font-semibold text-foreground">Integrations</h1>
+          <p className="text-[12px] text-muted-foreground">Manage your connected services and sync settings</p>
         </div>
 
-        <div className="flex items-center bg-secondary rounded-lg p-1">
+        <div className="flex items-center bg-secondary rounded-md p-0.5">
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 px-3 gap-2", scopeView === "agency" && "bg-background")}
+            className={cn("h-7 px-2 gap-1.5 text-[11px]", scopeView === "agency" && "bg-background")}
             onClick={() => setScopeView("agency")}
           >
-            <Building2 className="h-4 w-4" />
+            <Building2 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Agency View</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-8 px-3 gap-2", scopeView === "client" && "bg-background")}
+            className={cn("h-7 px-2 gap-1.5 text-[11px]", scopeView === "client" && "bg-background")}
             onClick={() => setScopeView("client")}
           >
-            <Users className="h-4 w-4" />
+            <Users className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Client View</span>
           </Button>
         </div>
       </div>
 
       {/* Integration Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {displayIntegrations.map((integration) => {
           const isConnected = integration.is_connected
           const isTestingThis = isTesting[integration.id] || false
@@ -386,41 +386,41 @@ export function IntegrationsView() {
             <Card
               key={integration.id}
               className={cn(
-                "bg-card border-border transition-all",
-                isConnected && "cursor-pointer hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5",
+                "bg-card border-border transition-all shadow-sm",
+                isConnected && "cursor-pointer hover:border-primary/50 hover:shadow-md hover:shadow-primary/5",
               )}
               onClick={() => isConnected && openConfigModal(integration as IntegrationWithMeta)}
             >
-              <CardContent className="p-4">
+              <CardContent className="p-3">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-secondary">{integration.icon}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-secondary">{integration.icon}</div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground">{integration.name}</h4>
-                      <p className="text-xs text-muted-foreground">{integration.description}</p>
+                      <h4 className="text-[11px] font-medium text-foreground">{integration.name}</h4>
+                      <p className="text-[10px] text-muted-foreground">{integration.description}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* MCP Fallback Badge */}
                 {integration.supportsMcpFallback && !isConnected && (
-                  <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                    <Zap className="h-3 w-3" />
+                  <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <Zap className="h-2.5 w-2.5" />
                     <span>MCP available: {integration.mcpFallbackNote}</span>
                   </div>
                 )}
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
                     {isConnected ? (
                       <>
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        <span className="text-xs text-emerald-500">Connected</span>
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                        <span className="text-[10px] text-emerald-500">Connected</span>
                       </>
                     ) : (
                       <>
-                        <XCircle className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Not connected</span>
+                        <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground">Not connected</span>
                       </>
                     )}
                   </div>
@@ -428,6 +428,7 @@ export function IntegrationsView() {
                   {isAvailable ? (
                     <Button
                       size="sm"
+                      className="h-7 text-[10px]"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleConnect(integration.provider as IntegrationProvider)
@@ -446,38 +447,39 @@ export function IntegrationsView() {
                         }
                       }}
                       onClick={(e) => e.stopPropagation()}
+                      className="scale-90"
                     />
                   )}
                 </div>
 
                 {isConnected && (
-                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
+                  <div className="mt-2 pt-2 border-t border-border flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground">
                       Last sync: {formatRelativeTime(integration.last_sync_at)}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-6 w-6"
                         disabled={isSyncingThis}
                         onClick={(e) => {
                           e.stopPropagation()
                           handleSync(integration.id)
                         }}
                       >
-                        <RefreshCw className={cn("h-3.5 w-3.5", isSyncingThis && "animate-spin")} />
+                        <RefreshCw className={cn("h-3 w-3", isSyncingThis && "animate-spin")} />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-6 w-6"
                         onClick={(e) => {
                           e.stopPropagation()
                           openConfigModal(integration as IntegrationWithMeta)
                         }}
                       >
-                        <Settings className="h-3.5 w-3.5" />
+                        <Settings className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
@@ -490,90 +492,90 @@ export function IntegrationsView() {
 
       {/* Config Modal */}
       <Dialog open={configModal.isOpen} onOpenChange={(open) => setConfigModal((prev) => ({ ...prev, isOpen: open }))}>
-        <DialogContent className="bg-card border-border sm:max-w-[500px]">
+        <DialogContent className="bg-card border-border sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle className="text-foreground">
+            <DialogTitle className="text-foreground text-[14px] font-semibold">
               Configure {configModal.integration?.provider && INTEGRATION_META[configModal.integration.provider]?.name}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-[11px]">
               Manage integration settings and test connection
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 py-3">
             {/* Provider-specific config fields */}
             {configModal.integration?.provider === "meta_ads" && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="adAccountId" className="text-foreground">Ad Account ID</Label>
-                  <Input id="adAccountId" placeholder="act_123456789" className="bg-secondary border-border" />
+                <div className="space-y-1.5">
+                  <Label htmlFor="adAccountId" className="text-foreground text-[11px]">Ad Account ID</Label>
+                  <Input id="adAccountId" placeholder="act_123456789" className="bg-secondary border-border h-8 text-[11px]" />
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
+                <div className="flex items-center justify-between p-2 rounded-md bg-secondary/30 border border-border">
                   <div>
-                    <p className="text-sm font-medium text-foreground">Enable Daily ROAS Sync</p>
-                    <p className="text-xs text-muted-foreground">Automatically pull ROAS data every 24 hours</p>
+                    <p className="text-[11px] font-medium text-foreground">Enable Daily ROAS Sync</p>
+                    <p className="text-[10px] text-muted-foreground">Automatically pull ROAS data every 24 hours</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch defaultChecked className="scale-90" />
                 </div>
               </>
             )}
 
             {configModal.integration?.provider === "slack" && (
               <>
-                <div className="space-y-2">
-                  <Label className="text-foreground">Default Channel</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-[11px]">Default Channel</Label>
                   <Select defaultValue="channel1">
-                    <SelectTrigger className="bg-secondary border-border">
+                    <SelectTrigger className="bg-secondary border-border h-8 text-[11px]">
                       <SelectValue placeholder="Select channel" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="channel1">#general</SelectItem>
-                      <SelectItem value="channel2">#support</SelectItem>
+                      <SelectItem value="channel1" className="text-[11px]">#general</SelectItem>
+                      <SelectItem value="channel2" className="text-[11px]">#support</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
+                <div className="flex items-center justify-between p-2 rounded-md bg-secondary/30 border border-border">
                   <div>
-                    <p className="text-sm font-medium text-foreground">Sync Message History</p>
-                    <p className="text-xs text-muted-foreground">Import last 30 days of messages</p>
+                    <p className="text-[11px] font-medium text-foreground">Sync Message History</p>
+                    <p className="text-[10px] text-muted-foreground">Import last 30 days of messages</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch defaultChecked className="scale-90" />
                 </div>
               </>
             )}
 
             {configModal.integration?.provider === "gmail" && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="emailFilter" className="text-foreground">Email Filter</Label>
-                  <Input id="emailFilter" placeholder="from:client@example.com" className="bg-secondary border-border" />
+                <div className="space-y-1.5">
+                  <Label htmlFor="emailFilter" className="text-foreground text-[11px]">Email Filter</Label>
+                  <Input id="emailFilter" placeholder="from:client@example.com" className="bg-secondary border-border h-8 text-[11px]" />
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
+                <div className="flex items-center justify-between p-2 rounded-md bg-secondary/30 border border-border">
                   <div>
-                    <p className="text-sm font-medium text-foreground">Auto-archive synced emails</p>
-                    <p className="text-xs text-muted-foreground">Move processed emails to archive folder</p>
+                    <p className="text-[11px] font-medium text-foreground">Auto-archive synced emails</p>
+                    <p className="text-[10px] text-muted-foreground">Move processed emails to archive folder</p>
                   </div>
-                  <Switch />
+                  <Switch className="scale-90" />
                 </div>
               </>
             )}
 
             {configModal.integration?.provider === "google_ads" && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="customerId" className="text-foreground">Customer ID</Label>
-                  <Input id="customerId" placeholder="123-456-7890" className="bg-secondary border-border" />
+                <div className="space-y-1.5">
+                  <Label htmlFor="customerId" className="text-foreground text-[11px]">Customer ID</Label>
+                  <Input id="customerId" placeholder="123-456-7890" className="bg-secondary border-border h-8 text-[11px]" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-foreground">Campaign Scope</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-[11px]">Campaign Scope</Label>
                   <Select defaultValue="all">
-                    <SelectTrigger className="bg-secondary border-border">
+                    <SelectTrigger className="bg-secondary border-border h-8 text-[11px]">
                       <SelectValue placeholder="Select scope" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Campaigns</SelectItem>
-                      <SelectItem value="search">Search Only</SelectItem>
-                      <SelectItem value="display">Display Only</SelectItem>
+                      <SelectItem value="all" className="text-[11px]">All Campaigns</SelectItem>
+                      <SelectItem value="search" className="text-[11px]">Search Only</SelectItem>
+                      <SelectItem value="display" className="text-[11px]">Display Only</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -581,24 +583,25 @@ export function IntegrationsView() {
             )}
 
             {/* Test Connection Button */}
-            <div className="pt-2">
+            <div className="pt-1">
               <Button
                 variant="outline"
+                size="sm"
                 className={cn(
-                  "w-full border-border",
-                  connectionTested && "border-emerald-500 bg-emerald-500/10 text-emerald-400",
+                  "w-full border-border h-8 text-[11px]",
+                  connectionTested && "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
                 )}
                 disabled={isTesting[configModal.integration?.id || '']}
                 onClick={() => configModal.integration && handleTestConnection(configModal.integration.id)}
               >
                 {isTesting[configModal.integration?.id || ''] ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                     Testing...
                   </>
                 ) : connectionTested ? (
                   <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
                     Connection Verified
                   </>
                 ) : (
@@ -609,11 +612,12 @@ export function IntegrationsView() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfigModal((prev) => ({ ...prev, isOpen: false }))}>
+            <Button variant="outline" size="sm" className="h-8 text-[11px]" onClick={() => setConfigModal((prev) => ({ ...prev, isOpen: false }))}>
               Cancel
             </Button>
             <Button
-              className="bg-primary text-primary-foreground"
+              size="sm"
+              className="bg-primary text-primary-foreground h-8 text-[11px]"
               onClick={() => {
                 setConfigModal((prev) => ({ ...prev, isOpen: false }))
                 toast({
@@ -629,39 +633,39 @@ export function IntegrationsView() {
       </Dialog>
 
       {/* AI Settings Card */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-foreground">AI Settings</CardTitle>
-          <CardDescription>Configure how AudienceOS Intelligence processes your data</CardDescription>
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[12px] font-medium text-foreground">AI Settings</CardTitle>
+          <CardDescription className="text-[10px]">Configure how AudienceOS Intelligence processes your data</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
+        <CardContent className="space-y-3 px-3 pb-3">
+          <div className="flex items-center justify-between p-2 rounded-md bg-secondary/30 border border-border">
             <div>
-              <p className="text-sm font-medium text-foreground">Auto-tag incoming messages</p>
-              <p className="text-xs text-muted-foreground">Automatically categorize messages as Urgent, Bug, Feedback, etc.</p>
+              <p className="text-[11px] font-medium text-foreground">Auto-tag incoming messages</p>
+              <p className="text-[10px] text-muted-foreground">Automatically categorize messages as Urgent, Bug, Feedback, etc.</p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked className="scale-90" />
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
+          <div className="flex items-center justify-between p-2 rounded-md bg-secondary/30 border border-border">
             <div>
-              <p className="text-sm font-medium text-foreground">Draft replies automatically</p>
-              <p className="text-xs text-muted-foreground">Generate suggested responses for client messages</p>
+              <p className="text-[11px] font-medium text-foreground">Draft replies automatically</p>
+              <p className="text-[10px] text-muted-foreground">Generate suggested responses for client messages</p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked className="scale-90" />
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
+          <div className="flex items-center justify-between p-2 rounded-md bg-secondary/30 border border-border">
             <div>
-              <p className="text-sm font-medium text-foreground">Flag negative sentiment</p>
-              <p className="text-xs text-muted-foreground">Alert when client messages indicate frustration or urgency</p>
+              <p className="text-[11px] font-medium text-foreground">Flag negative sentiment</p>
+              <p className="text-[10px] text-muted-foreground">Alert when client messages indicate frustration or urgency</p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked className="scale-90" />
           </div>
 
-          <div className="pt-4 border-t border-border">
-            <Button variant="outline" className="border-border bg-transparent">
-              <ExternalLink className="h-4 w-4 mr-2" />
+          <div className="pt-3 border-t border-border">
+            <Button variant="outline" size="sm" className="border-border bg-transparent h-8 text-[11px]">
+              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
               Manage SOPs for AI Training
             </Button>
           </div>

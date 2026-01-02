@@ -119,11 +119,11 @@ export function KnowledgeBaseDashboard() {
     return (
       <Badge
         variant="outline"
-        className={cn("text-xs", info.color, info.bgColor, "border-transparent")}
+        className={cn("text-[9px] px-1 py-0", info.color, info.bgColor, "border-transparent")}
       >
-        {status === "indexing" && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-        {status === "indexed" && <CheckCircle2 className="mr-1 h-3 w-3" />}
-        {status === "failed" && <AlertCircle className="mr-1 h-3 w-3" />}
+        {status === "indexing" && <Loader2 className="mr-0.5 h-2.5 w-2.5 animate-spin" />}
+        {status === "indexed" && <CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />}
+        {status === "failed" && <AlertCircle className="mr-0.5 h-2.5 w-2.5" />}
         {info.label}
       </Badge>
     )
@@ -134,13 +134,13 @@ export function KnowledgeBaseDashboard() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Knowledge Base</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-lg font-semibold text-foreground">Knowledge Base</h1>
+          <p className="text-[12px] text-muted-foreground">
             SOPs, training materials, and documentation for AI-powered search
           </p>
         </div>
-        <Button onClick={openUploadModal}>
-          <Upload className="mr-2 h-4 w-4" />
+        <Button onClick={openUploadModal} className="h-8 text-[11px]">
+          <Upload className="mr-1.5 h-3.5 w-3.5" />
           Upload Document
         </Button>
       </div>
@@ -149,24 +149,24 @@ export function KnowledgeBaseDashboard() {
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
           <Input
             placeholder="Search documents..."
             value={filters.query}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-7 bg-secondary border-border h-7 text-[11px]"
           />
         </div>
 
         {/* Category Pills */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {categories.map((cat) => (
             <Button
               key={cat.category}
               variant="outline"
               size="sm"
               className={cn(
-                "h-8",
+                "h-7 text-[10px]",
                 filters.category === cat.category
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-transparent"
@@ -176,7 +176,7 @@ export function KnowledgeBaseDashboard() {
               {cat.label}
               <Badge
                 variant="secondary"
-                className="ml-2 h-5 px-1.5 text-xs bg-background/50"
+                className="ml-1.5 h-4 px-1 text-[9px] bg-background/50"
               >
                 {cat.count}
               </Badge>
@@ -193,27 +193,27 @@ export function KnowledgeBaseDashboard() {
             value={filters.indexStatus}
             onValueChange={(value) => setIndexStatus(value as IndexStatus | "all")}
           >
-            <SelectTrigger className="w-[140px] h-8">
-              <Filter className="mr-2 h-3.5 w-3.5" />
+            <SelectTrigger className="w-[130px] h-7 text-[11px]">
+              <Filter className="mr-1.5 h-3 w-3" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="indexed">Indexed</SelectItem>
-              <SelectItem value="indexing">Indexing</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="all" className="text-[11px]">All Status</SelectItem>
+              <SelectItem value="indexed" className="text-[11px]">Indexed</SelectItem>
+              <SelectItem value="indexing" className="text-[11px]">Indexing</SelectItem>
+              <SelectItem value="pending" className="text-[11px]">Pending</SelectItem>
+              <SelectItem value="failed" className="text-[11px]">Failed</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Sort */}
           <Select value={sort.field} onValueChange={(value) => setSortField(value as DocumentSortField)}>
-            <SelectTrigger className="w-[160px] h-8">
+            <SelectTrigger className="w-[150px] h-7 text-[11px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
               {SORT_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem key={option.value} value={option.value} className="text-[11px]">
                   {option.label}
                 </SelectItem>
               ))}
@@ -223,34 +223,34 @@ export function KnowledgeBaseDashboard() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-7 w-7"
             onClick={toggleSortDirection}
           >
             {sort.direction === "asc" ? (
-              <SortAsc className="h-4 w-4" />
+              <SortAsc className="h-3.5 w-3.5" />
             ) : (
-              <SortDesc className="h-4 w-4" />
+              <SortDesc className="h-3.5 w-3.5" />
             )}
           </Button>
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center gap-1 bg-muted p-1 rounded-md">
+        <div className="flex items-center gap-1 bg-muted p-0.5 rounded-md">
           <Button
             variant="ghost"
             size="icon"
-            className={cn("h-7 w-7", viewMode === "grid" && "bg-background shadow-sm")}
+            className={cn("h-6 w-6", viewMode === "grid" && "bg-background shadow-sm")}
             onClick={() => setViewMode("grid")}
           >
-            <Grid3X3 className="h-4 w-4" />
+            <Grid3X3 className="h-3 w-3" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className={cn("h-7 w-7", viewMode === "list" && "bg-background shadow-sm")}
+            className={cn("h-6 w-6", viewMode === "list" && "bg-background shadow-sm")}
             onClick={() => setViewMode("list")}
           >
-            <List className="h-4 w-4" />
+            <List className="h-3 w-3" />
           </Button>
         </div>
       </div>
@@ -258,12 +258,12 @@ export function KnowledgeBaseDashboard() {
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       )}
 
       {/* Results Count */}
-      <div className="text-sm text-muted-foreground">
+      <div className="text-[10px] text-muted-foreground">
         {filteredDocuments.length} document{filteredDocuments.length !== 1 ? "s" : ""} found
       </div>
 
@@ -299,16 +299,16 @@ export function KnowledgeBaseDashboard() {
       {/* Empty State */}
       {filteredDocuments.length === 0 && !isLoading && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-1">No documents found</h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <FolderOpen className="h-10 w-10 text-muted-foreground mb-3" />
+          <h3 className="text-[12px] font-medium text-foreground mb-1">No documents found</h3>
+          <p className="text-[10px] text-muted-foreground mb-4">
             {filters.query
               ? "Try adjusting your search or filters"
               : "Upload your first document to get started"}
           </p>
           {!filters.query && (
-            <Button onClick={openUploadModal}>
-              <Upload className="mr-2 h-4 w-4" />
+            <Button onClick={openUploadModal} className="h-7 text-[10px]">
+              <Upload className="mr-1.5 h-3 w-3" />
               Upload Document
             </Button>
           )}
@@ -316,23 +316,23 @@ export function KnowledgeBaseDashboard() {
       )}
 
       {/* Quick Links */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium">Quick Links</CardTitle>
-          <CardDescription>Frequently accessed resources</CardDescription>
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium">Quick Links</CardTitle>
+          <CardDescription className="text-[10px]">Frequently accessed resources</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <CardContent className="px-3 pb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {quickLinks.map((link) => (
               <Button
                 key={link.title}
                 variant="outline"
-                className="justify-start h-auto py-3"
+                className="justify-start h-auto py-2 text-[10px] bg-transparent"
                 asChild
               >
                 <a href={link.url} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
-                  <span className="text-sm truncate">{link.title}</span>
+                  <ExternalLink className="h-3 w-3 mr-1.5 shrink-0" />
+                  <span className="truncate">{link.title}</span>
                 </a>
               </Button>
             ))}

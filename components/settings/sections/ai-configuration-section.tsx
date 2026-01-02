@@ -105,48 +105,48 @@ export function AIConfigurationSection() {
   const usagePercent = tokenUsage?.percent_used || 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Section Header */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <Bot className="h-5 w-5" />
+        <h2 className="text-[12px] font-medium text-foreground flex items-center gap-1.5">
+          <Bot className="h-3.5 w-3.5" />
           AI Configuration
         </h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-[10px] text-muted-foreground mt-0.5">
           Customize AI behavior and monitor usage
         </p>
       </div>
 
       {/* Token Usage Card */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium flex items-center justify-between">
             <span>Token Usage This Month</span>
-            <span className="text-sm font-normal text-muted-foreground">
+            <span className="text-[10px] font-normal text-muted-foreground">
               Resets Jan 1
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           {/* Usage Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[10px]">
               <span className="text-muted-foreground">
                 {tokenUsage?.current_usage.toLocaleString()} / {tokenUsage?.limit.toLocaleString()} tokens
               </span>
               <span
                 className={
                   usagePercent > 90
-                    ? "text-red-500 font-medium"
+                    ? "text-red-600 dark:text-red-500 font-medium"
                     : usagePercent > 75
-                      ? "text-amber-500"
-                      : "text-emerald-500"
+                      ? "text-amber-600 dark:text-amber-500"
+                      : "text-emerald-600 dark:text-emerald-500"
                 }
               >
                 {usagePercent.toFixed(1)}% used
               </span>
             </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all ${
                   usagePercent > 90
@@ -161,11 +161,11 @@ export function AIConfigurationSection() {
           </div>
 
           {/* Usage by Feature */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {Object.entries(tokenUsage?.usage_by_feature || {}).map(([feature, tokens]) => (
-              <div key={feature} className="flex items-center justify-between p-2 rounded bg-muted/50">
-                <span className="text-sm">{feature}</span>
-                <span className="text-sm text-muted-foreground">{tokens.toLocaleString()}</span>
+              <div key={feature} className="flex items-center justify-between p-1.5 rounded bg-muted/50">
+                <span className="text-[10px]">{feature}</span>
+                <span className="text-[10px] text-muted-foreground">{tokens.toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -173,15 +173,15 @@ export function AIConfigurationSection() {
       </Card>
 
       {/* AI Behavior Card */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base">AI Behavior</CardTitle>
-          <CardDescription>Configure how the AI assistant responds</CardDescription>
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium">AI Behavior</CardTitle>
+          <CardDescription className="text-[10px]">Configure how the AI assistant responds</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           {/* Assistant Name */}
-          <div className="space-y-2">
-            <Label htmlFor="assistant-name">Assistant Name</Label>
+          <div className="space-y-1">
+            <Label htmlFor="assistant-name" className="text-[10px]">Assistant Name</Label>
             <Input
               id="assistant-name"
               value={assistantName}
@@ -190,17 +190,17 @@ export function AIConfigurationSection() {
                 setHasUnsavedChanges(true)
               }}
               placeholder="Chi"
-              className="bg-secondary border-border max-w-xs"
+              className="bg-secondary border-border max-w-xs h-7 text-[11px]"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[9px] text-muted-foreground">
               The name used when the AI introduces itself
             </p>
           </div>
 
           {/* Response Tone */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Response Tone</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-[10px]">Response Tone</Label>
               <Select
                 value={responseTone}
                 onValueChange={(value: "professional" | "casual" | "technical") => {
@@ -208,19 +208,19 @@ export function AIConfigurationSection() {
                   setHasUnsavedChanges(true)
                 }}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-secondary border-border h-7 text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="casual">Casual</SelectItem>
-                  <SelectItem value="technical">Technical</SelectItem>
+                  <SelectItem value="professional" className="text-[11px]">Professional</SelectItem>
+                  <SelectItem value="casual" className="text-[11px]">Casual</SelectItem>
+                  <SelectItem value="technical" className="text-[11px]">Technical</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Response Length</Label>
+            <div className="space-y-1">
+              <Label className="text-[10px]">Response Length</Label>
               <Select
                 value={responseLength}
                 onValueChange={(value: "brief" | "detailed" | "comprehensive") => {
@@ -228,13 +228,13 @@ export function AIConfigurationSection() {
                   setHasUnsavedChanges(true)
                 }}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-secondary border-border h-7 text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="brief">Brief</SelectItem>
-                  <SelectItem value="detailed">Detailed</SelectItem>
-                  <SelectItem value="comprehensive">Comprehensive</SelectItem>
+                  <SelectItem value="brief" className="text-[11px]">Brief</SelectItem>
+                  <SelectItem value="detailed" className="text-[11px]">Detailed</SelectItem>
+                  <SelectItem value="comprehensive" className="text-[11px]">Comprehensive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -243,12 +243,12 @@ export function AIConfigurationSection() {
       </Card>
 
       {/* AI Features Card */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base">AI Features</CardTitle>
-          <CardDescription>Enable or disable specific AI capabilities</CardDescription>
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium">AI Features</CardTitle>
+          <CardDescription className="text-[10px]">Enable or disable specific AI capabilities</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2 px-3 pb-3">
           {AI_FEATURES.map((feature) => {
             const Icon = feature.icon
             const isEnabled = enabledFeatures.includes(feature.id)
@@ -256,18 +256,19 @@ export function AIConfigurationSection() {
             return (
               <div
                 key={feature.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border"
+                className="flex items-center justify-between p-2.5 rounded-md bg-secondary/30 border border-border"
               >
-                <div className="flex items-start gap-3">
-                  <Icon className={`h-5 w-5 mt-0.5 ${isEnabled ? "text-primary" : "text-muted-foreground"}`} />
+                <div className="flex items-start gap-2">
+                  <Icon className={`h-3.5 w-3.5 mt-0.5 ${isEnabled ? "text-primary" : "text-muted-foreground"}`} />
                   <div>
-                    <p className="text-sm font-medium">{feature.name}</p>
-                    <p className="text-xs text-muted-foreground">{feature.description}</p>
+                    <p className="text-[11px] font-medium">{feature.name}</p>
+                    <p className="text-[9px] text-muted-foreground">{feature.description}</p>
                   </div>
                 </div>
                 <Switch
                   checked={isEnabled}
                   onCheckedChange={() => handleFeatureToggle(feature.id)}
+                  className="scale-90"
                 />
               </div>
             )
@@ -276,19 +277,19 @@ export function AIConfigurationSection() {
       </Card>
 
       {/* Save Button */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-border">
-        <Button variant="outline" disabled={isSaving}>
+      <div className="flex justify-end gap-2 pt-3 border-t border-border">
+        <Button variant="outline" disabled={isSaving} className="h-7 text-[10px] bg-transparent">
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving} className="h-7 text-[10px]">
           {isSaving ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
+              <CheckCircle2 className="h-3 w-3 mr-1.5" />
               Save Changes
             </>
           )}

@@ -580,153 +580,156 @@ export function AutomationsView() {
 
       {/* Workflow Builder Sheet */}
       <Sheet open={showBuilder} onOpenChange={setShowBuilder}>
-        <SheetContent side="right" className="w-full sm:max-w-[800px] bg-background border-border overflow-y-auto">
-          <SheetHeader className="pb-6">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-foreground">{workflowName}</SheetTitle>
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                <Play className="h-3 w-3 mr-2" />
-                Save & Activate
-              </Button>
-            </div>
-            <Input
-              value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
-              className="mt-2"
-              placeholder="Workflow name"
-            />
-          </SheetHeader>
+        <SheetContent side="right" className="w-full sm:max-w-[600px] bg-background border-border overflow-y-auto p-0">
+          <div className="p-4">
+            <SheetHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-foreground text-[14px] font-semibold">{workflowName}</SheetTitle>
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-7 text-[10px]">
+                  <Play className="h-2.5 w-2.5 mr-1.5" />
+                  Save & Activate
+                </Button>
+              </div>
+              <Input
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                className="mt-2 h-8 text-[11px]"
+                placeholder="Workflow name"
+              />
+            </SheetHeader>
 
-          {/* Node Builder */}
-          <div className="space-y-4 pb-6">
-            {builderNodes.map((node, idx) => {
-              const Icon = node.icon
-              return (
-                <div key={node.id} className="relative">
-                  {/* Connection Line */}
-                  {idx < builderNodes.length - 1 && (
-                    <div className="absolute left-8 top-[calc(100%+0.5rem)] w-0.5 h-4 bg-border z-0" />
-                  )}
+            {/* Node Builder */}
+            <div className="space-y-3 pb-4">
+              {builderNodes.map((node, idx) => {
+                const Icon = node.icon
+                return (
+                  <div key={node.id} className="relative">
+                    {/* Connection Line */}
+                    {idx < builderNodes.length - 1 && (
+                      <div className="absolute left-6 top-[calc(100%+0.25rem)] w-0.5 h-3 bg-border z-0" />
+                    )}
 
-                  {/* Node Card */}
-                  <Card className={cn("relative z-10 border-2", getNodeBorderColor(node.type))}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-lg bg-secondary shrink-0">
-                          <Icon className="h-5 w-5 text-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-xs",
-                                node.type === "trigger" && "border-blue-500/50 text-blue-400",
-                                node.type === "ai" && "border-purple-500/50 text-purple-400",
-                                node.type === "action" && "border-emerald-500/50 text-emerald-400",
-                                node.type === "condition" && "border-amber-500/50 text-amber-400",
-                              )}
-                            >
-                              {node.type.toUpperCase()}
-                            </Badge>
-                            {idx > 0 && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => removeNode(node.id)}
+                    {/* Node Card */}
+                    <Card className={cn("relative z-10 border-2 shadow-sm", getNodeBorderColor(node.type))}>
+                      <CardContent className="p-3">
+                        <div className="flex items-start gap-2">
+                          <div className="p-1.5 rounded-md bg-secondary shrink-0">
+                            <Icon className="h-3.5 w-3.5 text-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-[9px] px-1 py-0",
+                                  node.type === "trigger" && "border-blue-500/50 text-blue-600 dark:text-blue-400",
+                                  node.type === "ai" && "border-purple-500/50 text-purple-600 dark:text-purple-400",
+                                  node.type === "action" && "border-emerald-500/50 text-emerald-600 dark:text-emerald-400",
+                                  node.type === "condition" && "border-amber-500/50 text-amber-600 dark:text-amber-400",
+                                )}
                               >
-                                <X className="h-3 w-3" />
-                              </Button>
+                                {node.type.toUpperCase()}
+                              </Badge>
+                              {idx > 0 && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5"
+                                  onClick={() => removeNode(node.id)}
+                                >
+                                  <X className="h-2.5 w-2.5" />
+                                </Button>
+                              )}
+                            </div>
+
+                            <Input
+                              value={node.label}
+                              onChange={(e) => {
+                                setBuilderNodes(
+                                  builderNodes.map((n) => (n.id === node.id ? { ...n, label: e.target.value } : n)),
+                                )
+                              }}
+                              placeholder="Node label"
+                              className="h-7 text-[11px]"
+                            />
+
+                            {/* AI Node Special Config */}
+                            {node.type === "ai" && (
+                              <div className="space-y-2 p-2 rounded-md bg-purple-50 dark:bg-purple-500/5 border border-purple-200 dark:border-purple-500/20">
+                                <div className="flex items-center gap-1.5">
+                                  <Brain className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                                  <span className="text-[9px] font-semibold text-purple-600 dark:text-purple-400">AI AGENT CONFIGURATION</span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-[10px]">Model</Label>
+                                  <Select defaultValue="gpt-4o">
+                                    <SelectTrigger className="bg-background h-7 text-[10px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="gpt-4o" className="text-[11px]">GPT-4o</SelectItem>
+                                      <SelectItem value="claude-3.5-sonnet" className="text-[11px]">Claude 3.5 Sonnet</SelectItem>
+                                      <SelectItem value="gpt-4-turbo" className="text-[11px]">GPT-4 Turbo</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-[10px]">System Prompt</Label>
+                                  <Textarea
+                                    placeholder="You are a tracking engineer analyzing client data..."
+                                    className="font-mono text-[10px] bg-background min-h-[80px]"
+                                    defaultValue={node.config?.prompt}
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-[10px]">Output Variable</Label>
+                                  <Input placeholder="analysis_result" className="font-mono text-[10px] h-7" />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Standard Action Config */}
+                            {node.type === "action" && node.config && (
+                              <div className="space-y-1.5">
+                                {Object.entries(node.config).map(([key, value]) => (
+                                  <div key={key} className="p-1.5 rounded bg-secondary/50 border border-border">
+                                    <span className="text-[10px] text-muted-foreground">{key}: </span>
+                                    <code className="text-[10px] text-foreground font-mono">{String(value)}</code>
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </div>
-
-                          <Input
-                            value={node.label}
-                            onChange={(e) => {
-                              setBuilderNodes(
-                                builderNodes.map((n) => (n.id === node.id ? { ...n, label: e.target.value } : n)),
-                              )
-                            }}
-                            placeholder="Node label"
-                          />
-
-                          {/* AI Node Special Config */}
-                          {node.type === "ai" && (
-                            <div className="space-y-3 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                              <div className="flex items-center gap-2">
-                                <Brain className="h-4 w-4 text-purple-400" />
-                                <span className="text-xs font-semibold text-purple-400">AI AGENT CONFIGURATION</span>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs">Model</Label>
-                                <Select defaultValue="gpt-4o">
-                                  <SelectTrigger className="bg-background">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                                    <SelectItem value="claude-3.5-sonnet">Claude 3.5 Sonnet</SelectItem>
-                                    <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs">System Prompt</Label>
-                                <Textarea
-                                  placeholder="You are a tracking engineer analyzing client data..."
-                                  className="font-mono text-xs bg-background min-h-[120px]"
-                                  defaultValue={node.config?.prompt}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs">Output Variable</Label>
-                                <Input placeholder="analysis_result" className="font-mono text-xs" />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Standard Action Config */}
-                          {node.type === "action" && node.config && (
-                            <div className="space-y-2">
-                              {Object.entries(node.config).map(([key, value]) => (
-                                <div key={key} className="p-2 rounded bg-secondary/50 border border-border">
-                                  <span className="text-xs text-muted-foreground">{key}: </span>
-                                  <code className="text-xs text-foreground font-mono">{String(value)}</code>
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
 
-                  {/* Add Node Button */}
-                  {idx === builderNodes.length - 1 && (
-                    <div className="flex items-center justify-center mt-4 gap-2">
-                      <Button variant="outline" size="sm" onClick={() => addNode("action")}>
-                        <PlusCircle className="h-3 w-3 mr-2" />
-                        Action
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addNode("ai")}
-                        className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
-                      >
-                        <Brain className="h-3 w-3 mr-2" />
-                        AI Agent
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => addNode("condition")}>
-                        <AlertTriangle className="h-3 w-3 mr-2" />
-                        Condition
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                    {/* Add Node Button */}
+                    {idx === builderNodes.length - 1 && (
+                      <div className="flex items-center justify-center mt-3 gap-1.5">
+                        <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => addNode("action")}>
+                          <PlusCircle className="h-2.5 w-2.5 mr-1" />
+                          Action
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addNode("ai")}
+                          className="border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 h-7 text-[10px]"
+                        >
+                          <Brain className="h-2.5 w-2.5 mr-1" />
+                          AI Agent
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => addNode("condition")}>
+                          <AlertTriangle className="h-2.5 w-2.5 mr-1" />
+                          Condition
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </SheetContent>
       </Sheet>

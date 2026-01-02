@@ -128,54 +128,54 @@ export function AgencyProfileSection() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Section Header */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
+        <h2 className="text-[12px] font-medium text-foreground flex items-center gap-1.5">
+          <Building2 className="h-3.5 w-3.5" />
           Agency Profile
         </h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-[10px] text-muted-foreground mt-0.5">
           Configure your agency's identity and default settings
         </p>
       </div>
 
       {/* Basic Info Card */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base">Basic Information</CardTitle>
-          <CardDescription>Your agency's public identity</CardDescription>
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium">Basic Information</CardTitle>
+          <CardDescription className="text-[10px]">Your agency's public identity</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           {/* Logo Upload */}
-          <div className="space-y-2">
-            <Label className="text-foreground">Logo</Label>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] text-foreground">Logo</Label>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-md bg-muted border-2 border-dashed border-border flex items-center justify-center">
                 {formData.logo_url ? (
                   <img
                     src={formData.logo_url}
                     alt="Agency logo"
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-cover rounded-md"
                   />
                 ) : (
-                  <Building2 className="h-8 w-8 text-muted-foreground" />
+                  <Building2 className="h-5 w-5 text-muted-foreground" />
                 )}
               </div>
-              <Button variant="outline" disabled={!isAdmin} className="gap-2">
-                <Upload className="h-4 w-4" />
+              <Button variant="outline" disabled={!isAdmin} className="gap-1.5 h-7 text-[10px] bg-transparent">
+                <Upload className="h-3 w-3" />
                 Upload Logo
               </Button>
               {!isAdmin && (
-                <p className="text-xs text-muted-foreground">Admin only</p>
+                <p className="text-[9px] text-muted-foreground">Admin only</p>
               )}
             </div>
           </div>
 
           {/* Agency Name */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="agency-name" className="text-foreground">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="agency-name" className="text-[10px] text-foreground">
                 Agency Name
               </Label>
               <Input
@@ -183,11 +183,11 @@ export function AgencyProfileSection() {
                 value={formData.name || ""}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 disabled={!isAdmin}
-                className="bg-secondary border-border text-foreground"
+                className="bg-secondary border-border text-foreground h-7 text-[11px]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="agency-slug" className="text-foreground">
+            <div className="space-y-1">
+              <Label htmlFor="agency-slug" className="text-[10px] text-foreground">
                 URL Slug
               </Label>
               <Input
@@ -195,25 +195,25 @@ export function AgencyProfileSection() {
                 value={formData.slug || ""}
                 onChange={(e) => handleInputChange("slug", e.target.value)}
                 disabled={!isAdmin}
-                className="bg-secondary border-border text-foreground"
+                className="bg-secondary border-border text-foreground h-7 text-[11px]"
               />
             </div>
           </div>
 
           {/* Domain */}
-          <div className="space-y-2">
-            <Label htmlFor="domain" className="text-foreground">
+          <div className="space-y-1">
+            <Label htmlFor="domain" className="text-[10px] text-foreground">
               Custom Domain
             </Label>
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-1.5">
+              <Globe className="h-3 w-3 text-muted-foreground" />
               <Input
                 id="domain"
                 value={formData.domain || ""}
                 onChange={(e) => handleInputChange("domain", e.target.value)}
                 disabled={!isAdmin}
                 placeholder="youragency.com"
-                className="bg-secondary border-border text-foreground"
+                className="bg-secondary border-border text-foreground h-7 text-[11px]"
               />
             </div>
           </div>
@@ -221,20 +221,20 @@ export function AgencyProfileSection() {
       </Card>
 
       {/* Timezone & Business Hours */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium flex items-center gap-1.5">
+            <Clock className="h-3 w-3" />
             Timezone & Business Hours
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-[10px]">
             Set your agency's timezone and operating hours
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           {/* Timezone */}
-          <div className="space-y-2">
-            <Label htmlFor="timezone" className="text-foreground">
+          <div className="space-y-1">
+            <Label htmlFor="timezone" className="text-[10px] text-foreground">
               Timezone
             </Label>
             <Select
@@ -242,12 +242,12 @@ export function AgencyProfileSection() {
               onValueChange={(value) => handleInputChange("timezone", value)}
               disabled={!isAdmin}
             >
-              <SelectTrigger className="w-full bg-secondary border-border">
+              <SelectTrigger className="w-full bg-secondary border-border h-7 text-[11px]">
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
               <SelectContent>
                 {TIMEZONES.map((tz) => (
-                  <SelectItem key={tz.value} value={tz.value}>
+                  <SelectItem key={tz.value} value={tz.value} className="text-[11px]">
                     {tz.label}
                   </SelectItem>
                 ))}
@@ -256,9 +256,9 @@ export function AgencyProfileSection() {
           </div>
 
           {/* Business Hours */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="business-start" className="text-foreground">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="business-start" className="text-[10px] text-foreground">
                 Business Hours Start
               </Label>
               <Input
@@ -267,11 +267,11 @@ export function AgencyProfileSection() {
                 value={formData.business_hours?.start || "09:00"}
                 onChange={(e) => handleBusinessHoursChange("start", e.target.value)}
                 disabled={!isAdmin}
-                className="bg-secondary border-border text-foreground"
+                className="bg-secondary border-border text-foreground h-7 text-[11px]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="business-end" className="text-foreground">
+            <div className="space-y-1">
+              <Label htmlFor="business-end" className="text-[10px] text-foreground">
                 Business Hours End
               </Label>
               <Input
@@ -280,7 +280,7 @@ export function AgencyProfileSection() {
                 value={formData.business_hours?.end || "17:00"}
                 onChange={(e) => handleBusinessHoursChange("end", e.target.value)}
                 disabled={!isAdmin}
-                className="bg-secondary border-border text-foreground"
+                className="bg-secondary border-border text-foreground h-7 text-[11px]"
               />
             </div>
           </div>
@@ -289,19 +289,19 @@ export function AgencyProfileSection() {
 
       {/* Action Buttons */}
       {isAdmin && (
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
-          <Button variant="outline" onClick={handleCancel} disabled={isSavingAgency}>
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
+          <Button variant="outline" onClick={handleCancel} disabled={isSavingAgency} className="h-7 text-[10px] bg-transparent">
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSavingAgency}>
+          <Button onClick={handleSave} disabled={isSavingAgency} className="h-7 text-[10px]">
             {isSavingAgency ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <CheckCircle2 className="h-4 w-4 mr-2" />
+                <CheckCircle2 className="h-3 w-3 mr-1.5" />
                 Save Changes
               </>
             )}

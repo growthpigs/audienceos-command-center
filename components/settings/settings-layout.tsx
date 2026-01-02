@@ -103,10 +103,10 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
   }
 
   return (
-    <div className="flex h-full gap-6">
+    <div className="flex h-full gap-4">
       {/* Settings Sidebar */}
-      <aside className="w-64 shrink-0">
-        <nav className="space-y-1">
+      <aside className="w-56 shrink-0">
+        <nav className="space-y-0.5">
           {visibleNavItems.map((item) => {
             const Icon = item.icon
             const isActive = activeSection === item.id
@@ -116,23 +116,23 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
                 key={item.id}
                 onClick={() => handleSectionChange(item.id)}
                 className={cn(
-                  "flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-colors text-left",
+                  "flex items-center gap-2 w-full px-2.5 py-2 rounded-md transition-colors text-left",
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <Icon className="h-5 w-5 shrink-0" />
+                <Icon className="h-3.5 w-3.5 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className={cn("text-sm font-medium", isActive && "text-primary")}>
+                  <p className={cn("text-[11px] font-medium", isActive && "text-primary")}>
                     {item.label}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-[9px] text-muted-foreground truncate">
                     {item.description}
                   </p>
                 </div>
                 {isActive && (
-                  <ChevronRight className="h-4 w-4 shrink-0 text-primary" />
+                  <ChevronRight className="h-3 w-3 shrink-0 text-primary" />
                 )}
               </button>
             )
@@ -141,9 +141,9 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
 
         {/* Unsaved changes indicator */}
         {hasUnsavedChanges && (
-          <div className="mt-4 px-3">
-            <div className="flex items-center gap-2 text-xs text-amber-500">
-              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          <div className="mt-3 px-2.5">
+            <div className="flex items-center gap-1.5 text-[10px] text-amber-600 dark:text-amber-500">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               Unsaved changes
             </div>
           </div>

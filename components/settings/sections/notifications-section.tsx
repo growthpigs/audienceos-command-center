@@ -55,37 +55,37 @@ export function NotificationsSection() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Section Header */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <Bell className="h-5 w-5" />
+        <h2 className="text-[12px] font-medium text-foreground flex items-center gap-1.5">
+          <Bell className="h-3.5 w-3.5" />
           Notifications
         </h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-[10px] text-muted-foreground mt-0.5">
           Configure how and when you receive alerts
         </p>
       </div>
 
       {/* Email Notifications */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Mail className="h-4 w-4" />
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium flex items-center gap-1.5">
+            <Mail className="h-3 w-3" />
             Email Notifications
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-[10px]">
             Choose which events trigger email notifications
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-2 px-3 pb-3">
           {/* Alert Emails */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
+          <div className="flex items-center justify-between p-2.5 rounded-md bg-secondary/30 border border-border">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-500 mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Risk Alerts</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] font-medium">Risk Alerts</p>
+                <p className="text-[9px] text-muted-foreground">
                   Get notified when clients are flagged as at-risk
                 </p>
               </div>
@@ -96,16 +96,17 @@ export function NotificationsSection() {
                 setEmailAlerts(checked)
                 handleChange()
               }}
+              className="scale-90"
             />
           </div>
 
           {/* Ticket Emails */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
-            <div className="flex items-start gap-3">
-              <Ticket className="h-5 w-5 text-blue-500 mt-0.5" />
+          <div className="flex items-center justify-between p-2.5 rounded-md bg-secondary/30 border border-border">
+            <div className="flex items-start gap-2">
+              <Ticket className="h-3.5 w-3.5 text-blue-600 dark:text-blue-500 mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Support Tickets</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] font-medium">Support Tickets</p>
+                <p className="text-[9px] text-muted-foreground">
                   Notifications for new and updated tickets
                 </p>
               </div>
@@ -116,16 +117,17 @@ export function NotificationsSection() {
                 setEmailTickets(checked)
                 handleChange()
               }}
+              className="scale-90"
             />
           </div>
 
           {/* Mention Emails */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border">
-            <div className="flex items-start gap-3">
-              <AtSign className="h-5 w-5 text-emerald-500 mt-0.5" />
+          <div className="flex items-center justify-between p-2.5 rounded-md bg-secondary/30 border border-border">
+            <div className="flex items-start gap-2">
+              <AtSign className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-500 mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Mentions</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] font-medium">Mentions</p>
+                <p className="text-[9px] text-muted-foreground">
                   When someone mentions you in a note or comment
                 </p>
               </div>
@@ -136,25 +138,26 @@ export function NotificationsSection() {
                 setEmailMentions(checked)
                 handleChange()
               }}
+              className="scale-90"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Slack Integration */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium flex items-center gap-1.5">
+            <MessageSquare className="h-3 w-3" />
             Slack Notifications
           </CardTitle>
-          <CardDescription>Send notifications to a Slack channel</CardDescription>
+          <CardDescription className="text-[10px]">Send notifications to a Slack channel</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Enable Slack Notifications</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] font-medium">Enable Slack Notifications</p>
+              <p className="text-[9px] text-muted-foreground">
                 Send alerts to your connected Slack workspace
               </p>
             </div>
@@ -164,12 +167,13 @@ export function NotificationsSection() {
                 setSlackEnabled(checked)
                 handleChange()
               }}
+              className="scale-90"
             />
           </div>
 
           {slackEnabled && (
-            <div className="space-y-2">
-              <Label htmlFor="slack-channel">Slack Channel</Label>
+            <div className="space-y-1">
+              <Label htmlFor="slack-channel" className="text-[10px]">Slack Channel</Label>
               <Input
                 id="slack-channel"
                 value={slackChannel}
@@ -178,9 +182,9 @@ export function NotificationsSection() {
                   handleChange()
                 }}
                 placeholder="#alerts"
-                className="bg-secondary border-border max-w-xs"
+                className="bg-secondary border-border max-w-xs h-7 text-[11px]"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[9px] text-muted-foreground">
                 Enter the channel name or ID to receive notifications
               </p>
             </div>
@@ -189,21 +193,21 @@ export function NotificationsSection() {
       </Card>
 
       {/* Digest Mode */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium flex items-center gap-1.5">
+            <Clock className="h-3 w-3" />
             Daily Digest
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-[10px]">
             Receive a summary instead of real-time notifications
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Enable Digest Mode</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] font-medium">Enable Digest Mode</p>
+              <p className="text-[9px] text-muted-foreground">
                 Bundle non-urgent notifications into a daily summary
               </p>
             </div>
@@ -213,12 +217,13 @@ export function NotificationsSection() {
                 setDigestMode(checked)
                 handleChange()
               }}
+              className="scale-90"
             />
           </div>
 
           {digestMode && (
-            <div className="space-y-2">
-              <Label htmlFor="digest-time">Delivery Time</Label>
+            <div className="space-y-1">
+              <Label htmlFor="digest-time" className="text-[10px]">Delivery Time</Label>
               <Input
                 id="digest-time"
                 type="time"
@@ -227,7 +232,7 @@ export function NotificationsSection() {
                   setDigestTime(e.target.value)
                   handleChange()
                 }}
-                className="bg-secondary border-border max-w-xs"
+                className="bg-secondary border-border max-w-xs h-7 text-[11px]"
               />
             </div>
           )}
@@ -235,19 +240,19 @@ export function NotificationsSection() {
       </Card>
 
       {/* Quiet Hours */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <VolumeX className="h-4 w-4" />
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="text-[11px] font-medium flex items-center gap-1.5">
+            <VolumeX className="h-3 w-3" />
             Quiet Hours
           </CardTitle>
-          <CardDescription>Pause notifications during specific times</CardDescription>
+          <CardDescription className="text-[10px]">Pause notifications during specific times</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Enable Quiet Hours</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] font-medium">Enable Quiet Hours</p>
+              <p className="text-[9px] text-muted-foreground">
                 No notifications will be sent during quiet hours
               </p>
             </div>
@@ -257,13 +262,14 @@ export function NotificationsSection() {
                 setQuietHoursEnabled(checked)
                 handleChange()
               }}
+              className="scale-90"
             />
           </div>
 
           {quietHoursEnabled && (
-            <div className="grid grid-cols-2 gap-4 max-w-md">
-              <div className="space-y-2">
-                <Label htmlFor="quiet-start">Start Time</Label>
+            <div className="grid grid-cols-2 gap-3 max-w-md">
+              <div className="space-y-1">
+                <Label htmlFor="quiet-start" className="text-[10px]">Start Time</Label>
                 <Input
                   id="quiet-start"
                   type="time"
@@ -272,11 +278,11 @@ export function NotificationsSection() {
                     setQuietStart(e.target.value)
                     handleChange()
                   }}
-                  className="bg-secondary border-border"
+                  className="bg-secondary border-border h-7 text-[11px]"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="quiet-end">End Time</Label>
+              <div className="space-y-1">
+                <Label htmlFor="quiet-end" className="text-[10px]">End Time</Label>
                 <Input
                   id="quiet-end"
                   type="time"
@@ -285,7 +291,7 @@ export function NotificationsSection() {
                     setQuietEnd(e.target.value)
                     handleChange()
                   }}
-                  className="bg-secondary border-border"
+                  className="bg-secondary border-border h-7 text-[11px]"
                 />
               </div>
             </div>
@@ -294,19 +300,19 @@ export function NotificationsSection() {
       </Card>
 
       {/* Save Button */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-border">
-        <Button variant="outline" disabled={isSaving}>
+      <div className="flex justify-end gap-2 pt-3 border-t border-border">
+        <Button variant="outline" disabled={isSaving} className="h-7 text-[10px] bg-transparent">
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving} className="h-7 text-[10px]">
           {isSaving ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
+              <CheckCircle2 className="h-3 w-3 mr-1.5" />
               Save Changes
             </>
           )}
