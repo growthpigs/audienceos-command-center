@@ -68,13 +68,13 @@ import { toast } from "sonner"
 function getPriorityColor(priority: TicketPriority) {
   switch (priority) {
     case "critical":
-      return "bg-rose-500/20 text-rose-400 border-rose-500/30"
+      return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30"
     case "high":
-      return "bg-orange-500/20 text-orange-400 border-orange-500/30"
+      return "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30"
     case "medium":
-      return "bg-amber-500/20 text-amber-400 border-amber-500/30"
+      return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30"
     case "low":
-      return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+      return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30"
     default:
       return "bg-muted text-muted-foreground"
   }
@@ -84,13 +84,13 @@ function getPriorityColor(priority: TicketPriority) {
 function getStatusColor(status: TicketStatus) {
   switch (status) {
     case "new":
-      return "bg-blue-500/20 text-blue-400 border-blue-500/30"
+      return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30"
     case "in_progress":
-      return "bg-amber-500/20 text-amber-400 border-amber-500/30"
+      return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30"
     case "waiting_client":
-      return "bg-purple-500/20 text-purple-400 border-purple-500/30"
+      return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30"
     case "resolved":
-      return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+      return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30"
     default:
       return "bg-muted text-muted-foreground"
   }
@@ -131,7 +131,7 @@ function DraggableTicketCard({ ticket, onClick, isDragOverlay = false }: Draggab
 
   if (isDragOverlay) {
     return (
-      <div className="bg-card border border-border rounded-lg p-4 cursor-grabbing transition-all shadow-xl ring-2 ring-primary/50 scale-105">
+      <div className="bg-card border border-border rounded-md p-3 cursor-grabbing transition-all shadow-lg ring-2 ring-primary/50 scale-105">
         <TicketCardContent ticket={ticket} />
       </div>
     )
@@ -142,15 +142,15 @@ function DraggableTicketCard({ ticket, onClick, isDragOverlay = false }: Draggab
       ref={setNodeRef}
       style={style}
       className={cn(
-        "bg-card border border-border rounded-lg p-4 cursor-grab transition-all hover:border-primary/50 hover:bg-card/80 touch-none",
+        "bg-card border border-border rounded-md p-3 cursor-grab transition-all hover:border-primary/50 hover:bg-card/80 touch-none shadow-sm",
         isDragging && "opacity-30"
       )}
       onClick={(e) => {
         if (!isDragging) onClick()
       }}
     >
-      <div className="flex items-start gap-2" {...attributes} {...listeners}>
-        <GripVertical className="h-4 w-4 text-muted-foreground/50 cursor-grab mt-0.5 shrink-0" />
+      <div className="flex items-start gap-1.5" {...attributes} {...listeners}>
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 cursor-grab mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">
           <TicketCardContent ticket={ticket} />
         </div>
@@ -170,36 +170,36 @@ function TicketCardContent({ ticket }: { ticket: Ticket }) {
 
   return (
     <>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-start justify-between gap-1.5 mb-1.5">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span className="font-mono">#{ticket.number}</span>
         </div>
-        <Badge variant="outline" className={cn("text-xs shrink-0", getPriorityColor(ticket.priority))}>
+        <Badge variant="outline" className={cn("text-[9px] px-1 py-0 shrink-0", getPriorityColor(ticket.priority))}>
           {TICKET_PRIORITY_LABELS[ticket.priority]}
         </Badge>
       </div>
 
-      <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-2">{ticket.title}</h4>
+      <h4 className="text-[11px] font-medium text-foreground line-clamp-2 mb-1.5">{ticket.title}</h4>
 
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-6 h-6 rounded bg-secondary flex items-center justify-center shrink-0">
-          <span className="text-xs font-medium text-secondary-foreground">
+      <div className="flex items-center gap-1.5 mb-2">
+        <div className="w-5 h-5 rounded bg-secondary flex items-center justify-center shrink-0">
+          <span className="text-[9px] font-medium text-secondary-foreground">
             {ticket.client?.name.slice(0, 2).toUpperCase()}
           </span>
         </div>
-        <span className="text-xs text-muted-foreground truncate">{ticket.client?.name}</span>
+        <span className="text-[10px] text-muted-foreground truncate">{ticket.client?.name}</span>
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Avatar className="h-5 w-5 bg-primary">
-            <AvatarFallback className="text-[10px] text-primary-foreground bg-primary">
+        <div className="flex items-center gap-1.5">
+          <Avatar className="h-4 w-4 bg-primary">
+            <AvatarFallback className="text-[8px] text-primary-foreground bg-primary">
               {assigneeInitials}
             </AvatarFallback>
           </Avatar>
-          <span className="text-xs text-muted-foreground">{formatRelativeTime(ticket.created_at)}</span>
+          <span className="text-[10px] text-muted-foreground">{formatRelativeTime(ticket.created_at)}</span>
         </div>
-        <Badge variant="outline" className={cn("text-[10px]", getStatusColor(ticket.status))}>
+        <Badge variant="outline" className={cn("text-[9px] px-1 py-0", getStatusColor(ticket.status))}>
           {TICKET_STATUS_LABELS[ticket.status]}
         </Badge>
       </div>
@@ -220,22 +220,22 @@ function DroppableColumn({ status, tickets, onTicketClick }: DroppableColumnProp
   })
 
   return (
-    <div className="w-full md:flex-shrink-0 md:w-72">
+    <div className="w-full md:flex-shrink-0 md:w-64">
       <Card
         className={cn(
-          "bg-secondary/30 border-border transition-colors duration-200",
+          "bg-secondary/30 border-border transition-colors duration-200 shadow-sm",
           isOver && "border-primary bg-primary/5 ring-2 ring-primary/20"
         )}
       >
-        <CardHeader className="py-3 px-4">
-          <CardTitle className="text-sm font-medium flex items-center justify-between">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="text-[11px] font-medium flex items-center justify-between">
             <span className="text-foreground">{TICKET_STATUS_LABELS[status]}</span>
-            <Badge variant="secondary" className="bg-muted text-muted-foreground">
+            <Badge variant="secondary" className="bg-muted text-muted-foreground text-[9px] px-1 py-0">
               {tickets.length}
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent ref={setNodeRef} className="p-2 space-y-2 min-h-[400px]">
+        <CardContent ref={setNodeRef} className="p-2 space-y-2 min-h-[350px]">
           {tickets.map((ticket) => (
             <DraggableTicketCard
               key={ticket.id}
@@ -244,7 +244,7 @@ function DroppableColumn({ status, tickets, onTicketClick }: DroppableColumnProp
             />
           ))}
           {tickets.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-sm">No tickets</div>
+            <div className="text-center py-6 text-muted-foreground text-[11px]">No tickets</div>
           )}
         </CardContent>
       </Card>
@@ -336,56 +336,56 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
   return (
     <>
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className="bg-card border-border w-full sm:max-w-[600px] overflow-y-auto p-0">
-          <div className="p-6">
-            <SheetHeader className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-muted-foreground font-mono">#{ticket.number}</span>
-                <Badge variant="outline" className={cn("text-xs", getStatusColor(ticket.status))}>
+        <SheetContent className="bg-card border-border w-full sm:max-w-[500px] overflow-y-auto p-0">
+          <div className="p-4">
+            <SheetHeader className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] text-muted-foreground font-mono">#{ticket.number}</span>
+                <Badge variant="outline" className={cn("text-[9px] px-1 py-0", getStatusColor(ticket.status))}>
                   {TICKET_STATUS_LABELS[ticket.status]}
                 </Badge>
-                <Badge variant="outline" className={cn("text-xs", getPriorityColor(ticket.priority))}>
+                <Badge variant="outline" className={cn("text-[9px] px-1 py-0", getPriorityColor(ticket.priority))}>
                   {TICKET_PRIORITY_LABELS[ticket.priority]}
                 </Badge>
               </div>
-              <SheetTitle className="text-foreground text-left text-lg">{ticket.title}</SheetTitle>
-              <SheetDescription className="text-left">
+              <SheetTitle className="text-foreground text-left text-[14px] font-semibold">{ticket.title}</SheetTitle>
+              <SheetDescription className="text-left text-[11px]">
                 {ticket.client?.name} • Assigned to {assigneeName}
               </SheetDescription>
             </SheetHeader>
 
-            <div className="mt-6 space-y-6">
+            <div className="mt-4 space-y-4">
               {/* Client Context */}
-              <div className="p-4 rounded-lg bg-secondary/30 border border-border space-y-3">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
-                  <span className="text-sm font-medium text-foreground">Client Context</span>
+              <div className="p-3 rounded-md bg-secondary/30 border border-border space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                  <span className="text-[11px] font-medium text-foreground">Client Context</span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
                   <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">Category</p>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-[10px] text-muted-foreground">Category</p>
+                    <p className="text-[11px] font-medium text-foreground">
                       {TICKET_CATEGORY_LABELS[ticket.category]}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">Created</p>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-[10px] text-muted-foreground">Created</p>
+                    <p className="text-[11px] font-medium text-foreground">
                       {new Date(ticket.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   {ticket.due_date && (
                     <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Due Date</p>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-[10px] text-muted-foreground">Due Date</p>
+                      <p className="text-[11px] font-medium text-foreground">
                         {new Date(ticket.due_date).toLocaleDateString()}
                       </p>
                     </div>
                   )}
                   {ticket.time_spent_minutes && (
                     <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Time Spent</p>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-[10px] text-muted-foreground">Time Spent</p>
+                      <p className="text-[11px] font-medium text-foreground">
                         {Math.floor(ticket.time_spent_minutes / 60)}h {ticket.time_spent_minutes % 60}m
                       </p>
                     </div>
@@ -394,21 +394,21 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
               </div>
 
               {/* Description */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-foreground">Issue Description</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{ticket.description}</p>
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-medium text-foreground">Issue Description</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{ticket.description}</p>
               </div>
 
               {/* Resolution Notes (if resolved) */}
               {ticket.status === "resolved" && ticket.resolution_notes && (
-                <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-emerald-500" />
-                    <span className="text-sm font-medium text-foreground">Resolution</span>
+                <div className="p-3 rounded-md bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-[11px] font-medium text-foreground">Resolution</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{ticket.resolution_notes}</p>
+                  <p className="text-[11px] text-muted-foreground">{ticket.resolution_notes}</p>
                   {ticket.resolved_at && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                       Resolved on {new Date(ticket.resolved_at).toLocaleDateString()}
                     </p>
                   )}
@@ -416,40 +416,40 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
               )}
 
               {/* AI Suggestion Panel */}
-              <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
-                <div className="flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-sm font-medium text-foreground">AI Assistance</span>
+              <div className="p-3 rounded-md bg-muted/50 border border-border space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Brain className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="text-[11px] font-medium text-foreground">AI Assistance</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground">
                   AI-powered suggestions require Knowledge Base integration.
                 </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Button size="sm" variant="outline" className="text-xs h-8 bg-transparent" disabled>
-                    <Sparkles className="h-3 w-3 mr-1" />
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  <Button size="sm" variant="outline" className="text-[10px] h-6 bg-transparent px-2" disabled>
+                    <Sparkles className="h-2.5 w-2.5 mr-1" />
                     Suggest Solution
                   </Button>
-                  <Button size="sm" variant="outline" className="text-xs h-8 bg-transparent" disabled>
+                  <Button size="sm" variant="outline" className="text-[10px] h-6 bg-transparent px-2" disabled>
                     Draft Response
                   </Button>
                 </div>
               </div>
 
               {/* Notes */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="text-sm font-medium text-foreground">Internal Notes</span>
+                  <div className="flex items-center gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[11px] font-medium text-foreground">Internal Notes</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{notes.length} notes</span>
+                  <span className="text-[10px] text-muted-foreground">{notes.length} notes</span>
                 </div>
 
-                <div className="space-y-3 max-h-[200px] overflow-y-auto">
+                <div className="space-y-2 max-h-[150px] overflow-y-auto">
                   {isLoadingNotes ? (
                     <div className="space-y-2">
-                      <Skeleton className="h-16 w-full" />
-                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
                     </div>
                   ) : notes.length > 0 ? (
                     notes.map((note) => {
@@ -461,25 +461,25 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
                         : "?"
 
                       return (
-                        <div key={note.id} className="flex gap-3">
-                          <Avatar className="h-7 w-7 shrink-0 bg-primary">
-                            <AvatarFallback className="text-xs text-primary-foreground bg-primary">
+                        <div key={note.id} className="flex gap-2">
+                          <Avatar className="h-5 w-5 shrink-0 bg-primary">
+                            <AvatarFallback className="text-[8px] text-primary-foreground bg-primary">
                               {authorInitials}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium text-foreground">{authorName}</span>
-                              <span className="text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[11px] font-medium text-foreground">{authorName}</span>
+                              <span className="text-[10px] text-muted-foreground">
                                 {formatRelativeTime(note.created_at)}
                               </span>
                               {!note.is_internal && (
-                                <Badge variant="outline" className="text-[10px]">
+                                <Badge variant="outline" className="text-[8px] px-1 py-0">
                                   Client-facing
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-0.5 break-words">
+                            <p className="text-[10px] text-muted-foreground mt-0.5 break-words">
                               {note.content}
                             </p>
                           </div>
@@ -487,17 +487,17 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
                       )
                     })
                   ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">No notes yet</p>
+                    <p className="text-[11px] text-muted-foreground text-center py-3">No notes yet</p>
                   )}
                 </div>
 
                 {/* Note input */}
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-1">
                   <Input
                     placeholder="Add an internal note..."
                     value={noteInput}
                     onChange={(e) => setNoteInput(e.target.value)}
-                    className="flex-1 bg-secondary border-border h-9"
+                    className="flex-1 bg-secondary border-border h-7 text-[11px]"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault()
@@ -507,37 +507,39 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
                   />
                   <Button
                     size="sm"
-                    className="h-9 bg-primary text-primary-foreground shrink-0"
+                    className="h-7 w-7 p-0 bg-primary text-primary-foreground shrink-0"
                     onClick={handleAddNote}
                     disabled={isSubmitting || !noteInput.trim()}
                   >
-                    <Send className="h-3.5 w-3.5" />
+                    <Send className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
 
               {/* Action buttons */}
-              <div className="flex gap-2 pt-4 border-t border-border">
+              <div className="flex gap-2 pt-3 border-t border-border">
                 {ticket.status === "resolved" ? (
                   <Button
                     variant="outline"
-                    className="flex-1 bg-transparent"
+                    size="sm"
+                    className="flex-1 bg-transparent h-8 text-[11px]"
                     onClick={handleReopen}
                     disabled={isSubmitting}
                   >
-                    <RefreshCw className="h-4 w-4 mr-2" />
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                     Reopen Ticket
                   </Button>
                 ) : (
                   <>
-                    <Button variant="outline" className="flex-1 bg-transparent">
+                    <Button variant="outline" size="sm" className="flex-1 bg-transparent h-8 text-[11px]">
                       Escalate
                     </Button>
                     <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      size="sm"
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-[11px]"
                       onClick={() => setShowResolveDialog(true)}
                     >
-                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                       Mark Resolved
                     </Button>
                   </>
@@ -550,16 +552,16 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
 
       {/* Resolution Dialog */}
       <Dialog open={showResolveDialog} onOpenChange={setShowResolveDialog}>
-        <DialogContent className="bg-card border-border">
+        <DialogContent className="bg-card border-border sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Resolve Ticket #{ticket.number}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-foreground text-[14px] font-semibold">Resolve Ticket #{ticket.number}</DialogTitle>
+            <DialogDescription className="text-[11px]">
               Please provide resolution notes. This will be recorded in the ticket history.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="resolution" className="text-foreground">
+          <div className="space-y-3 py-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="resolution" className="text-foreground text-[11px]">
                 Resolution Notes <span className="text-rose-500">*</span>
               </Label>
               <Textarea
@@ -567,11 +569,11 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
                 placeholder="Describe how the issue was resolved..."
                 value={resolutionNotes}
                 onChange={(e) => setResolutionNotes(e.target.value)}
-                className="bg-secondary border-border min-h-[100px]"
+                className="bg-secondary border-border min-h-[80px] text-[11px]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="time" className="text-foreground">
+            <div className="space-y-1.5">
+              <Label htmlFor="time" className="text-foreground text-[11px]">
                 Time Spent (minutes)
               </Label>
               <Input
@@ -580,16 +582,17 @@ function TicketDetailSheet({ ticket, isOpen, onClose }: TicketDetailSheetProps) 
                 placeholder="Optional"
                 value={timeSpent}
                 onChange={(e) => setTimeSpent(e.target.value)}
-                className="bg-secondary border-border"
+                className="bg-secondary border-border h-8 text-[11px]"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowResolveDialog(false)}>
+            <Button variant="outline" size="sm" className="h-8 text-[11px]" onClick={() => setShowResolveDialog(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-[11px]"
               onClick={handleResolve}
               disabled={isSubmitting || !resolutionNotes.trim()}
             >
@@ -653,14 +656,14 @@ function CreateTicketModal({ isOpen, onClose, clients, users }: CreateTicketModa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-card border-border">
+      <DialogContent className="bg-card border-border sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Create New Ticket</DialogTitle>
-          <DialogDescription>Add a new support ticket</DialogDescription>
+          <DialogTitle className="text-foreground text-[14px] font-semibold">Create New Ticket</DialogTitle>
+          <DialogDescription className="text-[11px]">Add a new support ticket</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-foreground">
+        <div className="space-y-3 py-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="title" className="text-foreground text-[11px]">
               Title <span className="text-rose-500">*</span>
             </Label>
             <Input
@@ -668,80 +671,80 @@ function CreateTicketModal({ isOpen, onClose, clients, users }: CreateTicketModa
               placeholder="Describe the issue..."
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="bg-secondary border-border"
+              className="bg-secondary border-border h-8 text-[11px]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-foreground">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-[11px]">
                 Client <span className="text-rose-500">*</span>
               </Label>
               <Select
                 value={formData.client_id}
                 onValueChange={(value) => setFormData({ ...formData, client_id: value })}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-secondary border-border h-8 text-[11px]">
                   <SelectValue placeholder="Select client" />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
+                    <SelectItem key={client.id} value={client.id} className="text-[11px]">
                       {client.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-foreground">Priority</Label>
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-[11px]">Priority</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => setFormData({ ...formData, priority: value as TicketPriority })}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-secondary border-border h-8 text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="low" className="text-[11px]">Low</SelectItem>
+                  <SelectItem value="medium" className="text-[11px]">Medium</SelectItem>
+                  <SelectItem value="high" className="text-[11px]">High</SelectItem>
+                  <SelectItem value="critical" className="text-[11px]">Critical</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-foreground">Category</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-[11px]">Category</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value as TicketCategory })}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-secondary border-border h-8 text-[11px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="technical">Technical</SelectItem>
-                  <SelectItem value="billing">Billing</SelectItem>
-                  <SelectItem value="campaign">Campaign</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="escalation">Escalation</SelectItem>
+                  <SelectItem value="technical" className="text-[11px]">Technical</SelectItem>
+                  <SelectItem value="billing" className="text-[11px]">Billing</SelectItem>
+                  <SelectItem value="campaign" className="text-[11px]">Campaign</SelectItem>
+                  <SelectItem value="general" className="text-[11px]">General</SelectItem>
+                  <SelectItem value="escalation" className="text-[11px]">Escalation</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-foreground">Assignee</Label>
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-[11px]">Assignee</Label>
               <Select
                 value={formData.assignee_id}
                 onValueChange={(value) => setFormData({ ...formData, assignee_id: value })}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-secondary border-border h-8 text-[11px]">
                   <SelectValue placeholder="Unassigned" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="" className="text-[11px]">Unassigned</SelectItem>
                   {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
+                    <SelectItem key={user.id} value={user.id} className="text-[11px]">
                       {user.name}
                     </SelectItem>
                   ))}
@@ -749,8 +752,8 @@ function CreateTicketModal({ isOpen, onClose, clients, users }: CreateTicketModa
               </Select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-foreground">
+          <div className="space-y-1.5">
+            <Label htmlFor="description" className="text-foreground text-[11px]">
               Description <span className="text-rose-500">*</span>
             </Label>
             <Textarea
@@ -758,16 +761,17 @@ function CreateTicketModal({ isOpen, onClose, clients, users }: CreateTicketModa
               placeholder="Provide more details..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-secondary border-border min-h-[100px]"
+              className="bg-secondary border-border min-h-[80px] text-[11px]"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" size="sm" className="h-8 text-[11px]" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            className="bg-primary text-primary-foreground"
+            size="sm"
+            className="bg-primary text-primary-foreground h-8 text-[11px]"
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
@@ -938,75 +942,76 @@ export function SupportTicketsView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Support Tickets</h1>
-          <p className="text-muted-foreground">Track and resolve client issues</p>
+          <h1 className="text-lg font-semibold text-foreground">Support Tickets</h1>
+          <p className="text-[12px] text-muted-foreground">Track and resolve client issues</p>
         </div>
 
         <Button
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          size="sm"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 text-[11px]"
           onClick={() => setIsNewTicketOpen(true)}
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-3.5 w-3.5 mr-1.5" />
           New Ticket
         </Button>
       </div>
 
       {/* Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
           {/* View Toggle */}
-          <div className="flex items-center bg-secondary rounded-lg p-1">
+          <div className="flex items-center bg-secondary rounded-md p-0.5">
             <Button
               variant="ghost"
               size="sm"
-              className={cn("h-8 px-3", viewMode === "kanban" && "bg-background")}
+              className={cn("h-7 px-2", viewMode === "kanban" && "bg-background")}
               onClick={() => setViewMode("kanban")}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className={cn("h-8 px-3", viewMode === "list" && "bg-background")}
+              className={cn("h-7 px-2", viewMode === "list" && "bg-background")}
               onClick={() => setViewMode("list")}
             >
-              <List className="h-4 w-4" />
+              <List className="h-3.5 w-3.5" />
             </Button>
           </div>
 
           {/* Filter by Priority */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-1.5">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
             <Select
               value={filters.priority}
               onValueChange={(value) => setFilter("priority", value as TicketPriority | "all")}
             >
-              <SelectTrigger className="w-[140px] bg-secondary border-border h-9">
+              <SelectTrigger className="w-[120px] bg-secondary border-border h-7 text-[10px]">
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="all" className="text-[11px]">All Priorities</SelectItem>
+                <SelectItem value="critical" className="text-[11px]">Critical</SelectItem>
+                <SelectItem value="high" className="text-[11px]">High</SelectItem>
+                <SelectItem value="medium" className="text-[11px]">Medium</SelectItem>
+                <SelectItem value="low" className="text-[11px]">Low</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         {/* Search */}
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative w-48">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search tickets..."
             value={filters.search}
             onChange={(e) => setFilter("search", e.target.value)}
-            className="pl-9 bg-secondary border-border h-9"
+            className="pl-8 bg-secondary border-border h-8 text-[11px]"
           />
         </div>
       </div>
@@ -1048,19 +1053,19 @@ export function SupportTicketsView() {
 
       {/* List View */}
       {viewMode === "list" && (
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border shadow-sm">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground">#</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground">Ticket</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground">Client</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground">Status</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground">Priority</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground">Assignee</th>
-                    <th className="text-left p-4 text-xs font-medium text-muted-foreground">Created</th>
+                    <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground">#</th>
+                    <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground">Ticket</th>
+                    <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground">Client</th>
+                    <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground">Status</th>
+                    <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground">Priority</th>
+                    <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground">Assignee</th>
+                    <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground">Created</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1075,43 +1080,43 @@ export function SupportTicketsView() {
                     return (
                       <tr
                         key={ticket.id}
-                        className="border-b border-border hover:bg-secondary/50 cursor-pointer transition-colors"
+                        className="border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"
                         onClick={() => handleTicketClick(ticket)}
                       >
-                        <td className="p-4">
-                          <span className="text-xs text-muted-foreground font-mono">#{ticket.number}</span>
+                        <td className="py-2 px-3">
+                          <span className="text-[10px] text-muted-foreground font-mono">#{ticket.number}</span>
                         </td>
-                        <td className="p-4">
-                          <p className="text-sm font-medium text-foreground line-clamp-1">{ticket.title}</p>
-                          <p className="text-xs text-muted-foreground">
+                        <td className="py-2 px-3">
+                          <p className="text-[11px] font-medium text-foreground line-clamp-1">{ticket.title}</p>
+                          <p className="text-[10px] text-muted-foreground">
                             {TICKET_CATEGORY_LABELS[ticket.category]}
                           </p>
                         </td>
-                        <td className="p-4">
-                          <span className="text-sm text-foreground">{ticket.client?.name}</span>
+                        <td className="py-2 px-3">
+                          <span className="text-[11px] text-foreground">{ticket.client?.name}</span>
                         </td>
-                        <td className="p-4">
-                          <Badge variant="outline" className={cn("text-xs", getStatusColor(ticket.status))}>
+                        <td className="py-2 px-3">
+                          <Badge variant="outline" className={cn("text-[9px] px-1 py-0", getStatusColor(ticket.status))}>
                             {TICKET_STATUS_LABELS[ticket.status]}
                           </Badge>
                         </td>
-                        <td className="p-4">
-                          <Badge variant="outline" className={cn("text-xs", getPriorityColor(ticket.priority))}>
+                        <td className="py-2 px-3">
+                          <Badge variant="outline" className={cn("text-[9px] px-1 py-0", getPriorityColor(ticket.priority))}>
                             {TICKET_PRIORITY_LABELS[ticket.priority]}
                           </Badge>
                         </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-5 w-5 bg-primary">
-                              <AvatarFallback className="text-[10px] text-primary-foreground bg-primary">
+                        <td className="py-2 px-3">
+                          <div className="flex items-center gap-1.5">
+                            <Avatar className="h-4 w-4 bg-primary">
+                              <AvatarFallback className="text-[8px] text-primary-foreground bg-primary">
                                 {assigneeInitials}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm text-foreground">{assigneeName}</span>
+                            <span className="text-[10px] text-foreground">{assigneeName}</span>
                           </div>
                         </td>
-                        <td className="p-4">
-                          <span className="text-sm text-muted-foreground">
+                        <td className="py-2 px-3">
+                          <span className="text-[10px] text-muted-foreground">
                             {formatRelativeTime(ticket.created_at)}
                           </span>
                         </td>
@@ -1120,7 +1125,7 @@ export function SupportTicketsView() {
                   })}
                   {filteredTickets.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-6 text-center text-muted-foreground text-[11px]">
                         No tickets found
                       </td>
                     </tr>

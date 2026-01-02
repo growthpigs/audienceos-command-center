@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense, useRef } from "react"
+import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { DashboardView } from "@/components/dashboard-view"
@@ -43,8 +43,6 @@ function CommandCenterContent() {
     updateClientStage,
   } = usePipelineStore()
 
-  // Local clients state for optimistic updates
-  const [clients, setClients] = useState<Client[]>(mockClients)
   const { toast } = useToast()
 
   // Fetch clients from API when authenticated
@@ -54,60 +52,72 @@ function CommandCenterContent() {
     }
   }, [isAuthenticated, fetchClients])
 
-  // Sync pipeline store clients to local state
-  // Using setTimeout to move setState outside effect execution
-  useEffect(() => {
-    if (pipelineClients.length > 0) {
-      const transformedClients = pipelineClients.map((pc) => ({
-        ...mockClients[0],
-        id: pc.id,
-        name: pc.name,
-        stage: pc.stage as Stage,
-        health: pc.health_status as HealthStatus,
-        owner: (pc.owner || 'Luke') as Owner,
-        daysInStage: pc.days_in_stage,
-      })) as Client[]
-      setTimeout(() => setClients(transformedClients), 0)
-    }
+  // Transform pipeline clients to Client type using useMemo (TD-001, TD-002 fix)
+  // Use mockClients as fallback when no API data available
+  const baseClients = useMemo(() => {
+    if (pipelineClients.length === 0) return mockClients
+    return pipelineClients.map((pc) => ({
+      ...mockClients[0],
+      id: pc.id,
+      name: pc.name,
+      stage: pc.stage as Stage,
+      health: pc.health_status as HealthStatus,
+      owner: (pc.owner || 'Luke') as Owner,
+      daysInStage: pc.days_in_stage,
+    })) as Client[]
   }, [pipelineClients])
+
+  // Local overrides for optimistic updates (only tracks changes, not full state)
+  const [clientOverrides, setClientOverrides] = useState<Map<string, Partial<Client>>>(new Map())
+
+  // Merge base clients with any optimistic overrides
+  const clients = useMemo(() => {
+    if (clientOverrides.size === 0) return baseClients
+    return baseClients.map((client) => {
+      const override = clientOverrides.get(client.id)
+      return override ? { ...client, ...override } : client
+    })
+  }, [baseClients, clientOverrides])
 
   // Pipeline filters state
   const [filters, setFilters] = useState<PipelineFilters>(defaultFilters)
   const currentUser: Owner = (profile?.first_name as Owner) || "Luke"
 
-  // Filter clients based on current filters
-  const filteredClients = clients.filter((client) => {
-    // Stage filter
-    if (filters.stage !== "all" && client.stage !== filters.stage) return false
+  // Filter clients based on current filters (TD-009 fix: memoized)
+  const filteredClients = useMemo(() => {
+    return clients.filter((client) => {
+      // Stage filter
+      if (filters.stage !== "all" && client.stage !== filters.stage) return false
 
-    // Health filter
-    if (filters.health !== "all" && client.health !== filters.health) return false
+      // Health filter
+      if (filters.health !== "all" && client.health !== filters.health) return false
 
-    // Owner filter
-    if (filters.owner !== "all" && client.owner !== filters.owner) return false
+      // Owner filter
+      if (filters.owner !== "all" && client.owner !== filters.owner) return false
 
-    // Search filter
-    if (filters.search) {
-      const search = filters.search.toLowerCase()
-      if (!client.name.toLowerCase().includes(search)) return false
-    }
+      // Search filter
+      if (filters.search) {
+        const search = filters.search.toLowerCase()
+        if (!client.name.toLowerCase().includes(search)) return false
+      }
 
-    // My Clients filter
-    if (filters.showMyClients && client.owner !== currentUser) return false
+      // My Clients filter
+      if (filters.showMyClients && client.owner !== currentUser) return false
 
-    // At Risk filter (Yellow or Red health, or high days in stage)
-    if (filters.showAtRisk) {
-      const isAtRisk = client.health === "Yellow" || client.health === "Red" || client.daysInStage > 4
-      if (!isAtRisk) return false
-    }
+      // At Risk filter (Yellow or Red health, or high days in stage)
+      if (filters.showAtRisk) {
+        const isAtRisk = client.health === "Yellow" || client.health === "Red" || client.daysInStage > 4
+        if (!isAtRisk) return false
+      }
 
-    // Blocked filter
-    if (filters.showBlocked) {
-      if (client.health !== "Blocked" && !client.blocker) return false
-    }
+      // Blocked filter
+      if (filters.showBlocked) {
+        if (client.health !== "Blocked" && !client.blocker) return false
+      }
 
-    return true
-  })
+      return true
+    })
+  }, [clients, filters, currentUser])
 
   // Handle filter changes
   const handleFilterChange = <K extends keyof PipelineFilters>(key: K, value: PipelineFilters[K]) => {
@@ -143,7 +153,8 @@ function CommandCenterContent() {
   // Track URL state restoration
   const urlRestoredRef = useRef(false)
 
-  // Restore state from URL on mount
+  // Restore state from URL on mount (TD-001 fix: removed setTimeout antipattern)
+  // React 18+ automatically batches state updates, no setTimeout needed
   useEffect(() => {
     if (urlRestoredRef.current) return
     urlRestoredRef.current = true
@@ -155,12 +166,9 @@ function CommandCenterContent() {
     if (clientId) {
       const client = clients.find((c) => c.id === clientId)
       if (client) {
-        // Use timeout to batch state updates outside effect
-        setTimeout(() => {
-          setSelectedClient(client)
-          setDefaultTab(tab)
-          setIsSheetOpen(true)
-        }, 0)
+        setSelectedClient(client)
+        setDefaultTab(tab)
+        setIsSheetOpen(true)
       }
     }
 
@@ -174,23 +182,21 @@ function CommandCenterContent() {
     const blocked = searchParams.get("blocked") === "true"
 
     if (stage || health || owner || search || myClients || atRisk || blocked) {
-      setTimeout(() => {
-        setFilters({
-          stage: stage || "all",
-          health: health || "all",
-          owner: owner || "all",
-          search: search || "",
-          showMyClients: myClients,
-          showAtRisk: atRisk,
-          showBlocked: blocked,
-        })
-      }, 0)
+      setFilters({
+        stage: stage || "all",
+        health: health || "all",
+        owner: owner || "all",
+        search: search || "",
+        showMyClients: myClients,
+        showAtRisk: atRisk,
+        showBlocked: blocked,
+      })
     }
 
     // Restore active view
     const view = searchParams.get("view")
     if (view && ["dashboard", "pipeline", "clients", "onboarding", "intelligence", "tickets", "knowledge", "automations", "integrations", "settings"].includes(view)) {
-      setTimeout(() => setActiveView(view), 0)
+      setActiveView(view)
     }
   }, [clients, searchParams]) // Include deps but guard with ref
 
@@ -221,21 +227,19 @@ function CommandCenterContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- updateURL is stable, including it causes infinite loop
   }, [filters])
 
-  // Optimistic update handler for drag-drop
-  const handleClientMove = async (clientId: string, toStage: Stage, notes?: string) => {
+  // Optimistic update handler for drag-drop (TD-002 fix: uses override pattern)
+  const handleClientMove = useCallback(async (clientId: string, toStage: Stage, notes?: string) => {
     const client = clients.find((c) => c.id === clientId)
     if (!client) return
 
     const fromStage = client.stage
 
-    // Optimistic update - update UI immediately
-    setClients((prev) =>
-      prev.map((c) =>
-        c.id === clientId
-          ? { ...c, stage: toStage, daysInStage: 0, statusNote: notes || c.statusNote }
-          : c
-      )
-    )
+    // Optimistic update - apply override immediately
+    setClientOverrides((prev) => {
+      const next = new Map(prev)
+      next.set(clientId, { stage: toStage, daysInStage: 0, statusNote: notes || client.statusNote })
+      return next
+    })
 
     // Show toast notification with notes if provided
     toast({
@@ -249,37 +253,43 @@ function CommandCenterContent() {
     if (isAuthenticated) {
       const success = await updateClientStage(clientId, toStage as Stage)
       if (!success) {
-        // Rollback on error
-        setClients((prev) =>
-          prev.map((c) =>
-            c.id === clientId
-              ? { ...c, stage: fromStage }
-              : c
-          )
-        )
+        // Rollback on error - remove the override
+        setClientOverrides((prev) => {
+          const next = new Map(prev)
+          next.delete(clientId)
+          return next
+        })
         toast({
           title: "Error",
           description: "Failed to move client. Changes reverted.",
           variant: "destructive",
         })
+      } else {
+        // Success - clear override (store will have the updated value)
+        setClientOverrides((prev) => {
+          const next = new Map(prev)
+          next.delete(clientId)
+          return next
+        })
       }
     }
-  }
+  }, [clients, isAuthenticated, updateClientStage, toast])
 
-  const handleClientClick = (client: Client, tab?: string) => {
+  // Event handlers wrapped in useCallback for stable references (TD-012 partial fix)
+  const handleClientClick = useCallback((client: Client, tab?: string) => {
     setSelectedClient(client)
     setDefaultTab(tab || "overview")
     setIsSheetOpen(true)
-  }
+  }, [])
 
-  const handleOnboardingClientClick = (client: Client) => {
+  const handleOnboardingClientClick = useCallback((client: Client) => {
     handleClientClick(client, "techsetup")
-  }
+  }, [handleClientClick])
 
-  const handleQuickCreate = (type: "client" | "ticket" | "project") => {
+  const handleQuickCreate = useCallback((type: "client" | "ticket" | "project") => {
     setQuickCreateType(type)
     setQuickCreateOpen(true)
-  }
+  }, [])
 
   const renderView = () => {
     switch (activeView) {

@@ -213,26 +213,26 @@ function FeedHistorySheet({ isOpen, onClose, insights }: FeedHistorySheetProps) 
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="bg-card border-border w-full sm:max-w-[640px] overflow-y-auto p-0">
-        <div className="p-6">
+      <SheetContent className="bg-card border-border w-full sm:max-w-[540px] overflow-y-auto p-0">
+        <div className="p-4">
           <SheetHeader>
-            <SheetTitle className="text-foreground">Feed History</SheetTitle>
-            <SheetDescription>View all AI-generated insights and alerts</SheetDescription>
+            <SheetTitle className="text-foreground text-[14px] font-semibold">Feed History</SheetTitle>
+            <SheetDescription className="text-[11px]">View all AI-generated insights and alerts</SheetDescription>
           </SheetHeader>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-3">
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <Filter className="h-3 w-3 text-muted-foreground shrink-0" />
                 <Select value={filterClient} onValueChange={setFilterClient}>
-                  <SelectTrigger className="w-[140px] bg-secondary border-border h-8 text-xs">
+                  <SelectTrigger className="w-[120px] bg-secondary border-border h-7 text-[10px]">
                     <SelectValue placeholder="All Clients" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Clients</SelectItem>
+                    <SelectItem value="all" className="text-[11px]">All Clients</SelectItem>
                     {uniqueClients.map((client) => (
-                      <SelectItem key={client} value={client!}>
+                      <SelectItem key={client} value={client!} className="text-[11px]">
                         {client}
                       </SelectItem>
                     ))}
@@ -241,14 +241,14 @@ function FeedHistorySheet({ isOpen, onClose, insights }: FeedHistorySheetProps) 
               </div>
 
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[130px] bg-secondary border-border h-8 text-xs">
+                <SelectTrigger className="w-[110px] bg-secondary border-border h-7 text-[10px]">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="critical">Critical Risks</SelectItem>
-                  <SelectItem value="approval">Approvals</SelectItem>
-                  <SelectItem value="performance">Performance</SelectItem>
+                  <SelectItem value="all" className="text-[11px]">All Categories</SelectItem>
+                  <SelectItem value="critical" className="text-[11px]">Critical Risks</SelectItem>
+                  <SelectItem value="approval" className="text-[11px]">Approvals</SelectItem>
+                  <SelectItem value="performance" className="text-[11px]">Performance</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -256,18 +256,18 @@ function FeedHistorySheet({ isOpen, onClose, insights }: FeedHistorySheetProps) 
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={cn("h-7 px-2", viewMode === "list" && "bg-background")}
+                  className={cn("h-6 px-1.5", viewMode === "list" && "bg-background")}
                   onClick={() => setViewMode("list")}
                 >
-                  <List className="h-3.5 w-3.5" />
+                  <List className="h-3 w-3" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={cn("h-7 px-2", viewMode === "grid" && "bg-background")}
+                  className={cn("h-6 px-1.5", viewMode === "grid" && "bg-background")}
                   onClick={() => setViewMode("grid")}
                 >
-                  <LayoutGrid className="h-3.5 w-3.5" />
+                  <LayoutGrid className="h-3 w-3" />
                 </Button>
               </div>
             </div>
@@ -278,19 +278,19 @@ function FeedHistorySheet({ isOpen, onClose, insights }: FeedHistorySheetProps) 
                 <div
                   key={insight.id}
                   className={cn(
-                    "p-3 rounded-lg border transition-colors cursor-pointer hover:border-primary/50",
-                    insight.category === "critical" && "bg-rose-500/5 border-rose-500/20",
-                    insight.category === "approval" && "bg-amber-500/5 border-amber-500/20",
-                    insight.category === "performance" && "bg-blue-500/5 border-blue-500/20",
+                    "p-2 rounded-md border transition-colors cursor-pointer hover:border-primary/50",
+                    insight.category === "critical" && "bg-rose-50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/20",
+                    insight.category === "approval" && "bg-amber-50 dark:bg-amber-500/5 border-amber-200 dark:border-amber-500/20",
+                    insight.category === "performance" && "bg-blue-50 dark:bg-blue-500/5 border-blue-200 dark:border-blue-500/20",
                   )}
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
-                    <div className="flex items-center gap-2 pt-1 flex-wrap">
-                      <span className="text-xs text-muted-foreground">{insight.client}</span>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <span className="text-xs text-muted-foreground">{insight.timestamp}</span>
+                  <div className="space-y-0.5">
+                    <p className="text-[11px] font-medium text-foreground">{insight.title}</p>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
+                    <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                      <span className="text-[9px] text-muted-foreground">{insight.client}</span>
+                      <span className="text-[9px] text-muted-foreground">•</span>
+                      <span className="text-[9px] text-muted-foreground">{insight.timestamp}</span>
                     </div>
                   </div>
                 </div>
@@ -327,69 +327,69 @@ export function IntelligenceView() {
   const performanceSignals = aiInsights.filter((i) => i.category === "performance")
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Intelligence Center</h1>
-          <p className="text-muted-foreground">AI-powered insights and unified communications</p>
+          <h1 className="text-lg font-semibold text-foreground">Intelligence Center</h1>
+          <p className="text-[12px] text-muted-foreground">AI-powered insights and unified communications</p>
         </div>
-        <Button variant="outline" onClick={() => setIsHistoryOpen(true)}>
-          <Clock className="h-4 w-4 mr-2" />
-          View All Feed History
+        <Button variant="outline" size="sm" className="h-8 text-[11px]" onClick={() => setIsHistoryOpen(true)}>
+          <Clock className="h-3 w-3 mr-1.5" />
+          View History
         </Button>
       </div>
 
       {/* Pulse Check Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Sync Status Cards */}
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-emerald-500/10 shrink-0">
-                  <GmailIcon className="h-5 w-5 text-rose-500" />
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="p-1.5 rounded bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
+                  <GmailIcon className="h-3.5 w-3.5 text-rose-500" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">Gmail Sync</p>
-                  <p className="text-xs text-muted-foreground">Last sync: 2m ago</p>
+                  <p className="text-[11px] font-medium text-foreground truncate">Gmail Sync</p>
+                  <p className="text-[10px] text-muted-foreground">Last sync: 2m ago</p>
                 </div>
               </div>
-              <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-emerald-500/10 shrink-0">
-                  <SlackIcon className="h-5 w-5 text-[#4A154B]" />
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="p-1.5 rounded bg-purple-50 dark:bg-emerald-500/10 shrink-0">
+                  <SlackIcon className="h-3.5 w-3.5 text-[#4A154B]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">Slack Sync</p>
-                  <p className="text-xs text-muted-foreground">Active</p>
+                  <p className="text-[11px] font-medium text-foreground truncate">Slack Sync</p>
+                  <p className="text-[10px] text-muted-foreground">Active</p>
                 </div>
               </div>
-              <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
-                  <Zap className="h-5 w-5 text-blue-500" />
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="p-1.5 rounded bg-blue-50 dark:bg-blue-500/10 shrink-0">
+                  <Zap className="h-3.5 w-3.5 text-blue-500" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">Ad Accounts</p>
-                  <p className="text-xs text-muted-foreground">12 Connected</p>
+                  <p className="text-[11px] font-medium text-foreground truncate">Ad Accounts</p>
+                  <p className="text-[10px] text-muted-foreground">12 Connected</p>
                 </div>
               </div>
-              <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -397,57 +397,57 @@ export function IntelligenceView() {
         {/* Upload Zone */}
         <Card
           className={cn(
-            "bg-card border-border border-dashed cursor-pointer transition-colors",
+            "border-border border-dashed cursor-pointer transition-colors shadow-sm",
             isDragging && "border-primary bg-primary/5",
           )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-secondary shrink-0">
-                <Upload className="h-5 w-5 text-muted-foreground" />
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded bg-muted shrink-0">
+                <Upload className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">Upload Assets</p>
-                <p className="text-xs text-muted-foreground">Drop PDFs/CSVs here</p>
+                <p className="text-[11px] font-medium text-foreground truncate">Upload Assets</p>
+                <p className="text-[10px] text-muted-foreground">Drop PDFs/CSVs here</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Panel A: Critical Risks (Red Theme) */}
-        <Card className="bg-rose-500/5 border-rose-500/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-foreground text-base">
-              <AlertCircle className="h-5 w-5 text-rose-500 shrink-0" />
+        <Card className="bg-rose-50 dark:bg-rose-500/5 border-rose-200 dark:border-rose-500/20 shadow-sm">
+          <CardHeader className="pb-2 pt-3 px-3">
+            <CardTitle className="flex items-center gap-1.5 text-foreground text-[12px] font-medium">
+              <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
               <span className="truncate">Critical Risks</span>
-              <Badge variant="outline" className="ml-auto bg-rose-500/20 text-rose-400 border-rose-500/30 shrink-0">
+              <Badge variant="outline" className="ml-auto bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30 text-[9px] shrink-0">
                 {criticalRisks.length}
               </Badge>
             </CardTitle>
-            <CardDescription className="text-xs">Requires immediate attention</CardDescription>
+            <CardDescription className="text-[10px]">Requires immediate attention</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2 px-3 pb-3">
             {criticalRisks.map((insight) => (
               <div
                 key={insight.id}
-                className="p-3 rounded-lg bg-card border border-rose-500/20 hover:border-rose-500/40 transition-colors cursor-pointer"
+                className="p-2 rounded bg-card border border-rose-200 dark:border-rose-500/20 hover:border-rose-300 dark:hover:border-rose-500/40 transition-colors cursor-pointer"
               >
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                  <p className="text-xs text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
-                  <div className="flex items-center gap-2 pt-1 flex-wrap">
-                    <span className="text-xs text-rose-400">{insight.client}</span>
-                    <span className="text-xs text-muted-foreground">• {insight.timestamp}</span>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-medium text-foreground">{insight.title}</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
+                  <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                    <span className="text-[9px] text-rose-600 dark:text-rose-400">{insight.client}</span>
+                    <span className="text-[9px] text-muted-foreground">• {insight.timestamp}</span>
                   </div>
                 </div>
-                <Button size="sm" className="w-full mt-3 bg-rose-600 hover:bg-rose-700 text-white h-8 text-xs">
+                <Button size="sm" className="w-full mt-2 bg-rose-600 hover:bg-rose-700 text-white h-6 text-[10px]">
                   {insight.action}
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="h-2.5 w-2.5 ml-1" />
                 </Button>
               </div>
             ))}
@@ -455,38 +455,38 @@ export function IntelligenceView() {
         </Card>
 
         {/* Panel B: Approvals & Actions (Amber Theme) */}
-        <Card className="bg-amber-500/5 border-amber-500/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-foreground text-base">
-              <Clock className="h-5 w-5 text-amber-500 shrink-0" />
+        <Card className="bg-amber-50 dark:bg-amber-500/5 border-amber-200 dark:border-amber-500/20 shadow-sm">
+          <CardHeader className="pb-2 pt-3 px-3">
+            <CardTitle className="flex items-center gap-1.5 text-foreground text-[12px] font-medium">
+              <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
               <span className="truncate">Approvals & Actions</span>
-              <Badge variant="outline" className="ml-auto bg-amber-500/20 text-amber-400 border-amber-500/30 shrink-0">
+              <Badge variant="outline" className="ml-auto bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30 text-[9px] shrink-0">
                 {approvals.length}
               </Badge>
             </CardTitle>
-            <CardDescription className="text-xs">Needs human input</CardDescription>
+            <CardDescription className="text-[10px]">Needs human input</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2 px-3 pb-3">
             {approvals.map((insight) => (
               <div
                 key={insight.id}
-                className="p-3 rounded-lg bg-card border border-amber-500/20 hover:border-amber-500/40 transition-colors cursor-pointer"
+                className="p-2 rounded bg-card border border-amber-200 dark:border-amber-500/20 hover:border-amber-300 dark:hover:border-amber-500/40 transition-colors cursor-pointer"
               >
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                  <p className="text-xs text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
-                  <div className="flex items-center gap-2 pt-1 flex-wrap">
-                    <span className="text-xs text-amber-400">{insight.client}</span>
-                    <span className="text-xs text-muted-foreground">• {insight.timestamp}</span>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-medium text-foreground">{insight.title}</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
+                  <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                    <span className="text-[9px] text-amber-600 dark:text-amber-400">{insight.client}</span>
+                    <span className="text-[9px] text-muted-foreground">• {insight.timestamp}</span>
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full mt-3 border-amber-500/30 text-amber-400 hover:bg-amber-500/10 h-8 text-xs bg-transparent"
+                  className="w-full mt-2 border-amber-300 text-amber-700 dark:border-amber-500/30 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/10 h-6 text-[10px] bg-transparent"
                 >
                   {insight.action}
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="h-2.5 w-2.5 ml-1" />
                 </Button>
               </div>
             ))}
@@ -494,45 +494,45 @@ export function IntelligenceView() {
         </Card>
 
         {/* Panel C: Performance Signals (Blue/Green Theme) */}
-        <Card className="bg-blue-500/5 border-blue-500/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-foreground text-base">
-              <TrendingUp className="h-5 w-5 text-blue-500 shrink-0" />
+        <Card className="bg-blue-50 dark:bg-blue-500/5 border-blue-200 dark:border-blue-500/20 shadow-sm">
+          <CardHeader className="pb-2 pt-3 px-3">
+            <CardTitle className="flex items-center gap-1.5 text-foreground text-[12px] font-medium">
+              <TrendingUp className="h-3.5 w-3.5 text-blue-500 shrink-0" />
               <span className="truncate">Performance Signals</span>
-              <Badge variant="outline" className="ml-auto bg-blue-500/20 text-blue-400 border-blue-500/30 shrink-0">
+              <Badge variant="outline" className="ml-auto bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30 text-[9px] shrink-0">
                 {performanceSignals.length}
               </Badge>
             </CardTitle>
-            <CardDescription className="text-xs">KPI trends and opportunities</CardDescription>
+            <CardDescription className="text-[10px]">KPI trends and opportunities</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2 px-3 pb-3">
             {performanceSignals.map((insight) => (
               <div
                 key={insight.id}
-                className="p-3 rounded-lg bg-card border border-blue-500/20 hover:border-blue-500/40 transition-colors cursor-pointer"
+                className="p-2 rounded bg-card border border-blue-200 dark:border-blue-500/20 hover:border-blue-300 dark:hover:border-blue-500/40 transition-colors cursor-pointer"
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-1.5">
                   {insight.title.toLowerCase().includes("dropped") || insight.title.toLowerCase().includes("down") ? (
-                    <TrendingDown className="h-4 w-4 text-rose-500 mt-0.5 shrink-0" />
+                    <TrendingDown className="h-3 w-3 text-rose-500 mt-0.5 shrink-0" />
                   ) : (
-                    <TrendingUp className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <TrendingUp className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
                   )}
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
-                    <div className="flex items-center gap-2 pt-1 flex-wrap">
-                      <span className="text-xs text-blue-400">{insight.client}</span>
-                      <span className="text-xs text-muted-foreground">• {insight.timestamp}</span>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <p className="text-[11px] font-medium text-foreground">{insight.title}</p>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 break-words">{insight.description}</p>
+                    <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                      <span className="text-[9px] text-blue-600 dark:text-blue-400">{insight.client}</span>
+                      <span className="text-[9px] text-muted-foreground">• {insight.timestamp}</span>
                     </div>
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full mt-3 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 h-8 text-xs bg-transparent"
+                  className="w-full mt-2 border-blue-300 text-blue-700 dark:border-blue-500/30 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/10 h-6 text-[10px] bg-transparent"
                 >
                   {insight.action}
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="h-2.5 w-2.5 ml-1" />
                 </Button>
               </div>
             ))}
@@ -541,25 +541,25 @@ export function IntelligenceView() {
       </div>
 
       {/* AI Assistant Section */}
-      <Card className="bg-card border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-foreground text-base">
-            <Sparkles className="h-5 w-5 text-primary shrink-0" />
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2 pt-3 px-3">
+          <CardTitle className="flex items-center gap-1.5 text-foreground text-[12px] font-medium">
+            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
             AI Assistant
           </CardTitle>
-          <CardDescription>Ask questions about clients, draft messages, or find SOPs</CardDescription>
+          <CardDescription className="text-[10px]">Ask questions about clients, draft messages, or find SOPs</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-3 pb-3">
           {/* Context Chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {contextChips.map((chip) => (
               <Button
                 key={chip.label}
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs border-border bg-secondary/50 hover:bg-secondary"
+                className="h-6 text-[10px] border-border bg-secondary/50 hover:bg-secondary px-2"
               >
-                <chip.icon className="h-3.5 w-3.5 mr-1.5" />
+                <chip.icon className="h-3 w-3 mr-1" />
                 {chip.label}
               </Button>
             ))}
@@ -571,10 +571,10 @@ export function IntelligenceView() {
               placeholder="Ask about client status, draft a response, or find an SOP..."
               value={assistantInput}
               onChange={(e) => setAssistantInput(e.target.value)}
-              className="flex-1 bg-secondary border-border"
+              className="flex-1 bg-secondary border-border h-8 text-[11px]"
             />
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
-              <Send className="h-4 w-4" />
+            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 h-8 w-8 p-0">
+              <Send className="h-3.5 w-3.5" />
             </Button>
           </div>
         </CardContent>

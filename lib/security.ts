@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import DOMPurify from 'isomorphic-dompurify'
 
 // =============================================================================
 // INPUT SANITIZATION
@@ -24,16 +25,18 @@ export function sanitizeString(input: unknown): string {
 }
 
 /**
- * Sanitize HTML content (more aggressive)
+ * Sanitize HTML content using DOMPurify (TD-003 fix)
+ * Handles XSS vectors including encoding bypasses, SVG, data URIs
  */
 export function sanitizeHtml(input: unknown): string {
   if (typeof input !== 'string') return ''
-  return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/on\w+="[^"]*"/gi, '')
-    .replace(/on\w+='[^']*'/gi, '')
-    .replace(/javascript:/gi, '')
-    .trim()
+  return DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+  }).trim()
 }
 
 /**

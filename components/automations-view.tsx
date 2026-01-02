@@ -367,81 +367,82 @@ export function AutomationsView() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl">
+    <div className="space-y-4 max-w-7xl">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Workflow Engine</h1>
-          <p className="text-sm text-muted-foreground mt-1">No-code automation builder for technical fulfillment</p>
+          <h1 className="text-lg font-semibold text-foreground">Workflow Engine</h1>
+          <p className="text-[12px] text-muted-foreground">No-code automation builder for technical fulfillment</p>
         </div>
-        <Button onClick={() => setShowTemplateModal(true)} className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button size="sm" onClick={() => setShowTemplateModal(true)} className="bg-emerald-600 hover:bg-emerald-700 h-8 text-[11px]">
+          <Plus className="h-3.5 w-3.5 mr-1.5" />
           Create Automation
         </Button>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="active" className="w-full">
-        <TabsList className="bg-muted">
-          <TabsTrigger value="active">Active Workflows</TabsTrigger>
-          <TabsTrigger value="templates">Templates Library</TabsTrigger>
-          <TabsTrigger value="logs">Execution Logs</TabsTrigger>
+        <TabsList className="bg-muted h-8">
+          <TabsTrigger value="active" className="text-[11px] h-7">Active Workflows</TabsTrigger>
+          <TabsTrigger value="templates" className="text-[11px] h-7">Templates Library</TabsTrigger>
+          <TabsTrigger value="logs" className="text-[11px] h-7">Execution Logs</TabsTrigger>
         </TabsList>
 
         {/* Active Workflows Tab */}
-        <TabsContent value="active" className="space-y-4 mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TabsContent value="active" className="space-y-3 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {workflows.map((workflow) => {
               const Icon = workflow.icon
               return (
                 <Card
                   key={workflow.id}
-                  className="bg-card border-border hover:border-primary/30 transition-all cursor-pointer group"
+                  className="bg-card border-border hover:border-primary/30 transition-all cursor-pointer group shadow-sm"
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-secondary">
-                          <Icon className="h-5 w-5 text-foreground" />
+                  <CardHeader className="pb-2 pt-3 px-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-md bg-secondary">
+                          <Icon className="h-3.5 w-3.5 text-foreground" />
                         </div>
                         <div>
-                          <CardTitle className="text-base font-semibold">{workflow.name}</CardTitle>
-                          <CardDescription className="text-xs mt-0.5">{workflow.description}</CardDescription>
+                          <CardTitle className="text-[12px] font-medium">{workflow.name}</CardTitle>
+                          <CardDescription className="text-[10px] mt-0.5">{workflow.description}</CardDescription>
                         </div>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-3.5 w-3.5 text-blue-400" />
-                        <span className="text-xs font-medium text-blue-400">TRIGGER</span>
+                  <CardContent className="space-y-2 px-3 pb-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="h-3 w-3 text-blue-500 dark:text-blue-400" />
+                        <span className="text-[9px] font-medium text-blue-600 dark:text-blue-400">TRIGGER</span>
                       </div>
-                      <p className="text-sm text-foreground font-mono pl-5">{workflow.trigger}</p>
+                      <p className="text-[10px] text-foreground font-mono pl-4">{workflow.trigger}</p>
                     </div>
 
-                    <div className="pt-3 border-t border-border flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">
+                    <div className="pt-2 border-t border-border flex items-center justify-between">
+                      <div className="text-[10px] text-muted-foreground">
                         Run <span className="font-semibold text-foreground">{workflow.stats.runs}</span> times · Last{" "}
                         {workflow.stats.lastRun}
                       </div>
                       <Switch
                         checked={workflow.status === "active"}
                         onCheckedChange={() => toggleWorkflow(workflow.id)}
+                        className="scale-75"
                       />
                     </div>
 
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full opacity-0 group-hover:opacity-100 transition-opacity bg-transparent"
+                      className="w-full opacity-0 group-hover:opacity-100 transition-opacity bg-transparent h-7 text-[10px]"
                       onClick={() => {
                         setBuilderNodes(workflow.nodes)
                         setWorkflowName(workflow.name)
                         setShowBuilder(true)
                       }}
                     >
-                      <Edit2 className="h-3 w-3 mr-2" />
+                      <Edit2 className="h-2.5 w-2.5 mr-1.5" />
                       Edit Workflow
                     </Button>
                   </CardContent>
@@ -452,20 +453,20 @@ export function AutomationsView() {
         </TabsContent>
 
         {/* Templates Library Tab */}
-        <TabsContent value="templates" className="space-y-4 mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TabsContent value="templates" className="space-y-3 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* Start from Scratch Card */}
             <Card
-              className="bg-card border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all cursor-pointer"
+              className="bg-card border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all cursor-pointer shadow-sm"
               onClick={startFromScratch}
             >
-              <CardContent className="flex flex-col items-center justify-center py-12 space-y-3">
-                <div className="p-4 rounded-full bg-secondary">
-                  <Plus className="h-8 w-8 text-muted-foreground" />
+              <CardContent className="flex flex-col items-center justify-center py-8 space-y-2">
+                <div className="p-3 rounded-full bg-secondary">
+                  <Plus className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="text-center">
-                  <h3 className="font-semibold text-foreground">Build Custom Workflow</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Start from scratch</p>
+                  <h3 className="text-[12px] font-medium text-foreground">Build Custom Workflow</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Start from scratch</p>
                 </div>
               </CardContent>
             </Card>
@@ -474,27 +475,27 @@ export function AutomationsView() {
             {workflowTemplates.map((template) => (
               <Card
                 key={template.id}
-                className="bg-card border-border hover:border-primary/30 transition-all cursor-pointer group"
+                className="bg-card border-border hover:border-primary/30 transition-all cursor-pointer group shadow-sm"
                 onClick={() => startFromTemplate(template)}
               >
-                <CardHeader className="pb-3">
-                  <Badge variant="outline" className="w-fit text-xs mb-2">
+                <CardHeader className="pb-2 pt-3 px-3">
+                  <Badge variant="outline" className="w-fit text-[9px] px-1 py-0 mb-1.5">
                     {template.category}
                   </Badge>
-                  <CardTitle className="text-base font-semibold">{template.name}</CardTitle>
-                  <CardDescription className="text-xs">{template.description}</CardDescription>
+                  <CardTitle className="text-[12px] font-medium">{template.name}</CardTitle>
+                  <CardDescription className="text-[10px]">{template.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-3 pb-3">
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">
+                    <p className="text-[10px] font-medium text-muted-foreground">
                       {template.nodes.length} steps configured
                     </p>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full opacity-0 group-hover:opacity-100 transition-opacity bg-transparent"
+                      className="w-full opacity-0 group-hover:opacity-100 transition-opacity bg-transparent h-7 text-[10px]"
                     >
-                      <Sparkles className="h-3 w-3 mr-2" />
+                      <Sparkles className="h-2.5 w-2.5 mr-1.5" />
                       Use Template
                     </Button>
                   </div>
@@ -505,33 +506,33 @@ export function AutomationsView() {
         </TabsContent>
 
         {/* Execution Logs Tab */}
-        <TabsContent value="logs" className="space-y-4 mt-6">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-base">Recent Executions</CardTitle>
-              <CardDescription>Live workflow execution history</CardDescription>
+        <TabsContent value="logs" className="space-y-3 mt-4">
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="pb-2 pt-3 px-3">
+              <CardTitle className="text-[12px] font-medium">Recent Executions</CardTitle>
+              <CardDescription className="text-[10px]">Live workflow execution history</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="px-3 pb-3">
+              <div className="space-y-2">
                 {executionLogs.map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30"
+                    className="flex items-center justify-between p-2 rounded-md border border-border bg-secondary/30"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       {log.status === "success" ? (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                       ) : (
-                        <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
+                        <AlertTriangle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{log.workflowName}</p>
-                        <p className="text-xs text-muted-foreground">{log.details}</p>
+                        <p className="text-[11px] font-medium text-foreground truncate">{log.workflowName}</p>
+                        <p className="text-[10px] text-muted-foreground">{log.details}</p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0 ml-4">
-                      <p className="text-xs text-muted-foreground">{log.timestamp}</p>
-                      <p className="text-xs text-muted-foreground">{log.duration}s</p>
+                    <div className="text-right shrink-0 ml-3">
+                      <p className="text-[10px] text-muted-foreground">{log.timestamp}</p>
+                      <p className="text-[10px] text-muted-foreground">{log.duration}s</p>
                     </div>
                   </div>
                 ))}
@@ -543,33 +544,33 @@ export function AutomationsView() {
 
       {/* Template Selector Modal */}
       <Dialog open={showTemplateModal} onOpenChange={setShowTemplateModal}>
-        <DialogContent className="max-w-2xl bg-background border-border">
+        <DialogContent className="max-w-lg bg-background border-border">
           <DialogHeader>
-            <DialogTitle>Choose a Starting Point</DialogTitle>
+            <DialogTitle className="text-[14px] font-semibold">Choose a Starting Point</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-2 gap-3 mt-3">
             <Card
-              className="border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all cursor-pointer"
+              className="border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all cursor-pointer shadow-sm"
               onClick={startFromScratch}
             >
-              <CardContent className="flex flex-col items-center justify-center py-8 space-y-2">
-                <Plus className="h-8 w-8 text-muted-foreground" />
-                <h3 className="font-semibold">Start from Scratch</h3>
-                <p className="text-xs text-muted-foreground text-center">Build a custom workflow</p>
+              <CardContent className="flex flex-col items-center justify-center py-6 space-y-1.5">
+                <Plus className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-[11px] font-medium">Start from Scratch</h3>
+                <p className="text-[10px] text-muted-foreground text-center">Build a custom workflow</p>
               </CardContent>
             </Card>
             {workflowTemplates.map((template) => (
               <Card
                 key={template.id}
-                className="border-border hover:border-primary/30 transition-all cursor-pointer"
+                className="border-border hover:border-primary/30 transition-all cursor-pointer shadow-sm"
                 onClick={() => startFromTemplate(template)}
               >
-                <CardHeader>
-                  <Badge variant="outline" className="w-fit text-xs mb-1">
+                <CardHeader className="p-3">
+                  <Badge variant="outline" className="w-fit text-[9px] px-1 py-0 mb-1">
                     {template.category}
                   </Badge>
-                  <CardTitle className="text-sm">{template.name}</CardTitle>
-                  <CardDescription className="text-xs">{template.description}</CardDescription>
+                  <CardTitle className="text-[11px] font-medium">{template.name}</CardTitle>
+                  <CardDescription className="text-[10px]">{template.description}</CardDescription>
                 </CardHeader>
               </Card>
             ))}
