@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
 import { withRateLimit, isValidUUID, sanitizeString, sanitizeEmail, createErrorResponse } from '@/lib/security'
+import { getMockClientDetail } from '@/lib/mock-data'
 import type { HealthStatus } from '@/types/database'
 
 interface RouteParams {
@@ -21,18 +22,34 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid client ID format')
-    }
-
     const supabase = await createRouteHandlerClient(cookies)
 
     // Get authenticated user with server verification (SEC-006)
     const { user, error: authError } = await getAuthenticatedUser(supabase)
 
+    // Demo mode fallback - return mock data when not authenticated
     if (!user) {
-      return createErrorResponse(401, authError || 'Unauthorized')
+      // For demo mode, accept simple numeric IDs (mock data uses "1", "2", etc.)
+      const mockClient = getMockClientDetail(id)
+      if (mockClient) {
+        return NextResponse.json({
+          data: mockClient,
+          demo: true,
+          ...(authError && { authError }),
+        })
+      }
+      // If not a valid mock ID, return 404
+      return NextResponse.json({
+        error: 'Client not found',
+        demo: true,
+        hint: 'In demo mode, use client IDs 1-14',
+        ...(authError && { authError }),
+      }, { status: 404 })
+    }
+
+    // Validate UUID format (only for authenticated requests with real data)
+    if (!isValidUUID(id)) {
+      return createErrorResponse(400, 'Invalid client ID format')
     }
 
     const { data: client, error } = await supabase
