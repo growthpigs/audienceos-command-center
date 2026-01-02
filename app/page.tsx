@@ -8,6 +8,8 @@ import {
   ClientRow,
   ClientDetailPanel,
   KanbanBoard,
+  CommandPalette,
+  useCommandPalette,
 } from "@/components/linear"
 import { mockClients, type Client, owners } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
@@ -19,6 +21,7 @@ function CommandCenterContent() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "board">("list")
+  const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette()
 
   // Use mock clients for now
   const clients = mockClients
@@ -175,6 +178,11 @@ function CommandCenterContent() {
       >
         {renderContent()}
       </LinearShell>
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        context={selectedClient ? `${selectedClient.logo} - ${selectedClient.name}` : undefined}
+      />
       <Toaster />
     </>
   )
