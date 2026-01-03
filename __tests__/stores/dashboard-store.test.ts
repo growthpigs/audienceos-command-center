@@ -2,12 +2,12 @@
  * Dashboard Store Tests
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useDashboardStore } from '@/lib/stores/dashboard-store'
+import { useDashboardStore } from '@/stores/dashboard-store'
 import type { DashboardKPIs, DashboardTrends, KPI } from '@/types/dashboard'
 
 const mockKPI: KPI = {
-  id: 'test-kpi',
-  label: 'Test KPI',
+  id: 'active_onboardings',
+  label: 'Active Onboardings',
   value: 10,
   displayValue: '10',
   trend: 'up',
@@ -18,17 +18,17 @@ const mockKPI: KPI = {
 }
 
 const mockKPIs: DashboardKPIs = {
-  activeOnboardings: { ...mockKPI, value: 5 },
-  atRiskClients: { ...mockKPI, value: 2 },
-  supportHoursWeek: { ...mockKPI, value: 40 },
-  avgInstallTime: { ...mockKPI, value: 7 },
-  clientsNeedingAttention: { ...mockKPI, value: 3 },
+  activeOnboardings: { ...mockKPI, id: 'active_onboardings', label: 'Active Onboardings', value: 5, displayValue: '5' },
+  atRiskClients: { ...mockKPI, id: 'at_risk_clients', label: 'At Risk Clients', value: 2, displayValue: '2', trend: 'down' },
+  supportHoursWeek: { ...mockKPI, id: 'support_hours', label: 'Support Hours', value: 40, displayValue: '40h' },
+  avgInstallTime: { ...mockKPI, id: 'avg_install_time', label: 'Avg Install Time', value: 7, displayValue: '7 days' },
+  clientsNeedingAttention: { ...mockKPI, id: 'clients_needing_attention', label: 'Needs Attention', value: 3, displayValue: '3' },
 }
 
 const mockTrends: DashboardTrends = {
   data: [
     { date: '2024-01-01', newClients: 5, completedInstalls: 3 },
-    { date: '2024-01-02', newClients: 8, completedInstalls: 5 },
+    { date: '2024-01-02', newClients: 7, completedInstalls: 4 },
   ],
   period: 30,
   lastUpdated: new Date().toISOString(),

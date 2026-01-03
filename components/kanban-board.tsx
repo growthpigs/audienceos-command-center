@@ -231,7 +231,7 @@ function DroppableColumn({ stage, clients, onClientClick }: DroppableColumnProps
         {/* Show more/less */}
         {hasMore && (
           <button
-            className="w-full py-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            className="w-full py-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             onClick={() => setShowAll(!showAll)}
           >
             {showAll ? "Show less" : `+${hiddenCount} more`}

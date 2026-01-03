@@ -43,21 +43,21 @@ export function TaskActivity({
   ],
 }: TaskActivityProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
       {/* Load by Status */}
-      <Card className="bg-card border-border">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <h3 className="text-sm font-medium text-foreground">Load by Status</h3>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <BarChart3 className="h-4 w-4" />
+      <Card className="bg-card border border-border/50 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+          <h3 className="text-xs font-medium text-foreground">Load by Status</h3>
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <BarChart3 className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <MoreHorizontal className="h-3 w-3" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 pb-3">
           <div className="flex items-center gap-2 flex-wrap">
             {statusCounts.map((item, i) => (
               <Badge key={i} variant="secondary" className={item.color}>
@@ -69,19 +69,19 @@ export function TaskActivity({
       </Card>
 
       {/* Latest Activity */}
-      <Card className="bg-card border-border">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <h3 className="text-sm font-medium text-foreground">Latest Activity</h3>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <Calculator className="h-4 w-4" />
+      <Card className="bg-card border border-border/50 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+          <h3 className="text-xs font-medium text-foreground">Latest Activity</h3>
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <Calculator className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <MoreHorizontal className="h-3 w-3" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 pb-3">
           <div className="text-sm font-medium text-foreground mb-3">Today</div>
           <div className="space-y-4">
             {activities.map((activity) => (

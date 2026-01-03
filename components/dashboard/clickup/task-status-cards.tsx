@@ -13,16 +13,16 @@ interface StatusCardProps {
 
 function StatusCard({ title, value, subtitle }: StatusCardProps) {
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-          <MoreHorizontal className="h-4 w-4" />
+    <Card className="bg-card border border-border/50 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+        <h3 className="text-xs font-medium text-muted-foreground">{title}</h3>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+          <MoreHorizontal className="h-3 w-3" />
         </Button>
       </CardHeader>
-      <CardContent className="text-center">
-        <div className="text-4xl font-bold text-foreground mb-1">{value}</div>
-        <div className="text-sm text-muted-foreground">{subtitle}</div>
+      <CardContent className="text-center pb-3 px-3">
+        <div className="text-2xl font-semibold text-foreground">{value}</div>
+        <div className="text-[11px] text-muted-foreground">{subtitle}</div>
       </CardContent>
     </Card>
   )
@@ -53,35 +53,35 @@ export function TaskStatusCards({
   ],
 }: TaskStatusCardsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
       <StatusCard title="Unassigned" value={unassigned} subtitle="tasks" />
       <StatusCard title="In Progress" value={inProgress} subtitle="tasks in progress" />
       <StatusCard title="Completed" value={completed} subtitle="tasks completed" />
 
       {/* Tasks Completed By User Card */}
-      <Card className="bg-card border-border">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Tasks Completed...</h3>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-            <MoreHorizontal className="h-4 w-4" />
+      <Card className="bg-card border border-border/50 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+          <h3 className="text-xs font-medium text-muted-foreground">Tasks Completed...</h3>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+            <MoreHorizontal className="h-3 w-3" />
           </Button>
         </CardHeader>
-        <CardContent>
-          <div className="text-sm font-medium text-foreground mb-3">Tasks</div>
-          <div className="space-y-2">
+        <CardContent className="px-3 pb-3">
+          <div className="text-[11px] font-medium text-foreground mb-2">Tasks</div>
+          <div className="space-y-1.5">
             {completedByUser.map((user, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className={`w-6 h-6 ${user.color} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
+              <div key={i} className="flex items-center gap-1.5">
+                <div className={`w-5 h-5 ${user.color} rounded-full flex items-center justify-center text-white text-[10px] font-medium`}>
                   {user.count}
                 </div>
                 {user.name !== "Unassigned" && (
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback className="bg-blue-500 text-white text-xs">
+                  <Avatar className="h-5 w-5">
+                    <AvatarFallback className="bg-blue-500 text-white text-[9px]">
                       {user.initials}
                     </AvatarFallback>
                   </Avatar>
                 )}
-                <span className="text-sm text-muted-foreground truncate">{user.name}</span>
+                <span className="text-[11px] text-muted-foreground truncate">{user.name}</span>
               </div>
             ))}
           </div>

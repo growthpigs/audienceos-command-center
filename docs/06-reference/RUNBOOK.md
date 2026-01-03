@@ -402,6 +402,90 @@ When infinite loops occur, check:
 
 See `~/.claude/troubleshooting/error-patterns.md` EP-057 for full pattern.
 
+### Dev Server Lock File / Port Conflicts (2025-01-02)
+
+When dev server fails to start with "Unable to acquire lock" or port conflicts:
+
+```bash
+# 1. Check what's using ports 3000-3003
+lsof -i :3000 -i :3001 -i :3002 -i :3003 | grep LISTEN
+
+# 2. Kill existing Next.js processes
+pkill -f "next dev"
+
+# 3. Remove stale lock file
+rm -f .next/dev/lock
+
+# 4. Restart cleanly
+npm run dev
+
+# 5. Verify running (should show node listening)
+lsof -i :3000 | head -3
+```
+
+**Root Cause:** Multiple dev sessions or crashed servers leave lock files. Context window resets lose track of background processes.
+
+**Prevention:** Always `pkill -f "next dev"` before starting new session.
+
+### Runtime Environment Verification (Static vs Runtime Check)
+
+**Never trust file existence alone.** Always verify runtime:
+
+```bash
+# WRONG - File exists but may be empty/invalid:
+ls .env.local  # Shows file exists but doesn't prove config loads
+
+# RIGHT - Runtime verification:
+npm run build 2>&1 | head -20  # Proves TypeScript compiles
+curl http://localhost:3000/api/v1/workflows | jq '.demo'  # Proves API responds
+```
+
+See error-patterns.md "File Existence Fallacy" pattern.
+
+### Schema Verification (Before Any DB Changes) (2026-01-03)
+
+**CRITICAL:** Never plan database migrations from documentation alone. Always verify actual schema.
+
+```bash
+# 1. Check actual tables in RevOS Supabase
+# Via migration files (in chronological order):
+ls -la /Users/rodericandrews/_PAI/projects/revos/supabase/migrations/*.sql | head -10
+cat /path/to/revos/supabase/migrations/001_initial_schema.sql | head -100
+
+# 2. Check for table name discrepancies
+# Expected: 'tenants' | Actual: 'agencies' (RevOS uses 'agencies')
+grep -n "CREATE TABLE" /path/to/revos/supabase/migrations/*.sql | head -20
+
+# 3. Check FK patterns in users table
+grep -A10 "CREATE TABLE users" /path/to/revos/supabase/migrations/001_*.sql
+# Expected: users.id REFERENCES auth.users(id)
+# Actual: users.id is standalone UUID (manual sync)
+
+# 4. Check cartridge tables
+grep -n "cartridge" /path/to/revos/supabase/migrations/*.sql
+# Expected: Single 'cartridges' table
+# Actual: 4 tables (style_cartridges, preference_cartridges, etc.)
+
+# 5. Check RLS policies for JWT claim pattern
+grep -n "app_metadata" /path/to/revos/supabase/migrations/*.sql
+grep -n "tenant_id\|agency_id" /path/to/revos/supabase/migrations/*.sql
+# Expected: tenant_id | Actual: agency_id
+
+# 6. Via Supabase Dashboard (if CLI not configured)
+# https://supabase.com/dashboard/project/trdoainmejxanrownbuz/database/tables
+```
+
+**Verification Checklist (Pre-Migration):**
+```
+□ Queried actual tables (not assumed from docs)
+□ Documented discrepancies between docs and reality
+□ Updated execution plan to match ACTUAL schema
+□ Tested RLS pattern matches JWT claims in use
+□ Created RUNTIME-FINDINGS.md if major discrepancies found
+```
+
+**Related:** EP-061 "Schema Assumption Fallacy" in error-patterns.md
+
 ---
 
 ## Related Documents

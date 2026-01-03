@@ -1,10 +1,18 @@
 "use client"
 
-import { MoreHorizontal, Plus } from "lucide-react"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { MoreHorizontal, MoreVertical, Plus, Calendar, ExternalLink, Edit, Trash2, UserPlus, ArrowRight, SortAsc, Filter, EyeOff, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
 interface Task {
@@ -19,7 +27,8 @@ interface Task {
   }
   client?: string
   dueDate?: string
-  tags?: string[]
+  daysOpen?: number
+  blocker?: string | null
 }
 
 interface BoardViewProps {
@@ -30,84 +39,85 @@ interface BoardViewProps {
 
 const defaultTasks: Task[] = [
   {
-    id: "1",
+    id: "TSK-001",
     title: "Complete DNS setup for RTA Outdoor Living",
     status: "in_progress",
     priority: "high",
     assignee: { name: "Luke Thompson", initials: "LT", color: "bg-emerald-500" },
     client: "RTA Outdoor Living",
     dueDate: "2025-01-03",
-    tags: ["Installation", "Technical"],
+    daysOpen: 3,
   },
   {
-    id: "2",
+    id: "TSK-002",
     title: "Review quarterly metrics report",
     status: "todo",
     priority: "medium",
     assignee: { name: "Alex Smith", initials: "AS", color: "bg-blue-500" },
     client: "Terren",
     dueDate: "2025-01-06",
-    tags: ["Review"],
+    daysOpen: 1,
   },
   {
-    id: "3",
+    id: "TSK-003",
     title: "Pixel installation verification",
     status: "in_progress",
     priority: "high",
     assignee: { name: "Jordan Fields", initials: "JF", color: "bg-purple-500" },
     client: "Alo Yoga",
     dueDate: "2025-01-07",
-    tags: ["Technical", "Verification"],
+    daysOpen: 2,
   },
   {
-    id: "4",
+    id: "TSK-004",
     title: "Prepare launch checklist",
     status: "done",
     priority: "urgent",
     assignee: { name: "Luke Thompson", initials: "LT", color: "bg-emerald-500" },
     client: "Glow Recipe",
     dueDate: "2025-01-08",
-    tags: ["Launch"],
+    daysOpen: 0,
   },
   {
-    id: "5",
+    id: "TSK-005",
     title: "Resolve support ticket #4521",
     status: "blocked",
     priority: "high",
     assignee: { name: "Sam Lee", initials: "SL", color: "bg-amber-500" },
     client: "Beardbrand",
     dueDate: "2025-01-04",
-    tags: ["Support", "Urgent"],
+    daysOpen: 6,
+    blocker: "WAITING ON CLIENT",
   },
   {
-    id: "6",
+    id: "TSK-006",
     title: "Monthly performance report",
     status: "todo",
     priority: "medium",
     assignee: { name: "Alex Smith", initials: "AS", color: "bg-blue-500" },
     client: "MVMT Watches",
     dueDate: "2025-01-10",
-    tags: ["Report"],
+    daysOpen: 0,
   },
   {
-    id: "7",
+    id: "TSK-007",
     title: "Client onboarding call",
     status: "todo",
     priority: "medium",
     assignee: { name: "Jordan Fields", initials: "JF", color: "bg-purple-500" },
     client: "Ruggable",
     dueDate: "2025-01-05",
-    tags: ["Onboarding", "Meeting"],
+    daysOpen: 1,
   },
   {
-    id: "8",
+    id: "TSK-008",
     title: "Data layer audit",
     status: "in_progress",
     priority: "high",
     assignee: { name: "Luke Thompson", initials: "LT", color: "bg-emerald-500" },
     client: "V Shred",
     dueDate: "2025-01-04",
-    tags: ["Audit", "Technical"],
+    daysOpen: 4,
   },
 ]
 
@@ -118,70 +128,148 @@ const columns: { id: Task["status"]; label: string; color: string }[] = [
   { id: "blocked", label: "Blocked", color: "bg-red-500" },
 ]
 
-function getPriorityBadge(priority: Task["priority"]) {
-  switch (priority) {
-    case "urgent":
-      return { label: "Urgent", class: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400" }
-    case "high":
-      return { label: "High", class: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" }
-    case "medium":
-      return { label: "Medium", class: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" }
-    case "low":
-      return { label: "Low", class: "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400" }
+// Health/status checkbox matching Pipeline style
+function getStatusCheckbox(status: Task["status"]) {
+  if (status === "done") {
+    return (
+      <div className="w-4 h-4 bg-status-green rounded-full flex items-center justify-center">
+        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </div>
+    )
+  }
+  return (
+    <div className={cn("w-4 h-4 rounded-full border-2",
+      status === "blocked" ? "border-status-red" :
+      status === "in_progress" ? "border-primary" :
+      "border-border"
+    )} />
+  )
+}
+
+// Status dot color matching Pipeline style
+function getStatusDotColor(status: Task["status"]) {
+  switch (status) {
+    case "done":
+      return "bg-status-green"
+    case "in_progress":
+      return "bg-primary"
+    case "blocked":
+      return "bg-status-red"
+    default:
+      return "bg-muted-foreground"
   }
 }
 
 function TaskCard({ task, onClick }: { task: Task; onClick?: () => void }) {
-  const priorityBadge = getPriorityBadge(task.priority)
-
   return (
-    <Card
-      className="bg-card border border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+    <div
       onClick={onClick}
+      className="bg-card border border-border rounded-lg p-3 hover:border-primary/50 transition-colors cursor-pointer group"
     >
-      <CardContent className="p-3 space-y-2">
-        {/* Tags */}
-        {task.tags && task.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {task.tags.slice(0, 2).map((tag, i) => (
-              <Badge key={i} variant="outline" className="text-[9px] px-1.5 py-0 font-normal">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {/* Title */}
-        <h4 className="text-sm font-medium text-foreground line-clamp-2">{task.title}</h4>
-
-        {/* Client */}
-        {task.client && (
-          <p className="text-xs text-muted-foreground">{task.client}</p>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-1">
-          <Badge variant="secondary" className={cn("text-[9px] px-1.5 py-0", priorityBadge.class)}>
-            {priorityBadge.label}
-          </Badge>
-
-          <div className="flex items-center gap-2">
-            {task.dueDate && (
-              <span className="text-[10px] text-muted-foreground">
-                {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              </span>
-            )}
-            {task.assignee && (
-              <Avatar className={cn("h-5 w-5", task.assignee.color)}>
-                <AvatarFallback className={cn(task.assignee.color, "text-[8px] font-medium text-white")}>
-                  {task.assignee.initials}
-                </AvatarFallback>
-              </Avatar>
-            )}
-          </div>
+      {/* Header row: checkbox, ID, avatar */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          {getStatusCheckbox(task.status)}
+          <span className="text-xs text-muted-foreground font-mono">{task.id}</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-1">
+          {task.assignee && (
+            <Avatar className={cn("h-5 w-5", task.assignee.color)}>
+              <AvatarFallback className={cn(task.assignee.color, "text-[9px] font-medium text-white")}>
+                {task.assignee.initials}
+              </AvatarFallback>
+            </Avatar>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="w-3 h-3 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem>
+                <ExternalLink className="w-3 h-3 mr-2" />
+                Open
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="w-3 h-3 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <ArrowRight className="w-3 h-3 mr-2" />
+                  Move to
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem>To Do</DropdownMenuItem>
+                  <DropdownMenuItem>In Progress</DropdownMenuItem>
+                  <DropdownMenuItem>Done</DropdownMenuItem>
+                  <DropdownMenuItem>Blocked</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <UserPlus className="w-3 h-3 mr-2" />
+                  Assign to
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem>Luke Thompson</DropdownMenuItem>
+                  <DropdownMenuItem>Alex Smith</DropdownMenuItem>
+                  <DropdownMenuItem>Jordan Fields</DropdownMenuItem>
+                  <DropdownMenuItem>Sam Lee</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive">
+                <Trash2 className="w-3 h-3 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Title */}
+      <h4 className="text-sm text-foreground leading-relaxed mb-3">{task.title}</h4>
+
+      {/* Footer: status dot, days, client */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={cn("w-2 h-2 rounded-full", getStatusDotColor(task.status))} />
+          {task.daysOpen !== undefined && task.daysOpen > 0 && (
+            <div className="flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-muted-foreground" />
+              <span className={cn(
+                "text-xs",
+                task.daysOpen > 4 ? "text-status-red font-medium" : "text-muted-foreground"
+              )}>
+                {task.daysOpen}d
+              </span>
+            </div>
+          )}
+        </div>
+        {task.client && (
+          <span className="text-[10px] text-muted-foreground">{task.client}</span>
+        )}
+      </div>
+
+      {/* Blocker tag */}
+      {task.blocker && (
+        <div className="mt-2">
+          <span className="inline-flex items-center px-2 py-0.5 text-[10px] bg-status-red/10 border border-status-red/30 rounded text-status-red">
+            {task.blocker}
+          </span>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -207,9 +295,32 @@ function BoardColumn({
             {tasks.length}
           </span>
         </div>
-        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
-          <MoreHorizontal className="h-3 w-3" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <MoreHorizontal className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <SortAsc className="w-3 h-3 mr-2" />
+              Sort by Priority
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Filter className="w-3 h-3 mr-2" />
+              Filter
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <EyeOff className="w-3 h-3 mr-2" />
+              Hide Column
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className="w-3 h-3 mr-2" />
+              Column Settings
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Cards */}

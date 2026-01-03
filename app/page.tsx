@@ -1,370 +1,401 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from "react"
+import { useState, useMemo, Suspense, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
-import { Sidebar } from "@/components/sidebar"
+import {
+  LinearShell,
+  type LinearView,
+  ListHeader,
+  ClientRow,
+  ClientDetailPanel,
+  KanbanBoard,
+  CommandPalette,
+  useCommandPalette,
+  type FilterConfig,
+  type ActiveFilters,
+  type SortOption,
+} from "@/components/linear"
+import { mockClients, type Client, owners, type Stage, type HealthStatus, type Owner, type Tier } from "@/lib/mock-data"
+import { sortClients, type SortMode } from "@/lib/client-priority"
+
+// Filter configurations for Client List
+const clientFiltersConfig: FilterConfig[] = [
+  {
+    id: "stage",
+    label: "Stage",
+    options: [
+      { label: "Onboarding", value: "Onboarding" },
+      { label: "Installation", value: "Installation" },
+      { label: "Audit", value: "Audit" },
+      { label: "Live", value: "Live" },
+      { label: "Needs Support", value: "Needs Support" },
+      { label: "Off-boarding", value: "Off-boarding" },
+    ],
+  },
+  {
+    id: "health",
+    label: "Health",
+    options: [
+      { label: "Green", value: "Green" },
+      { label: "Yellow", value: "Yellow" },
+      { label: "Red", value: "Red" },
+      { label: "Blocked", value: "Blocked" },
+    ],
+  },
+  {
+    id: "owner",
+    label: "Owner",
+    options: [
+      { label: "Luke", value: "Luke" },
+      { label: "Garrett", value: "Garrett" },
+      { label: "Josh", value: "Josh" },
+      { label: "Jeff", value: "Jeff" },
+    ],
+  },
+  {
+    id: "tier",
+    label: "Tier",
+    options: [
+      { label: "Enterprise", value: "Enterprise" },
+      { label: "Core", value: "Core" },
+      { label: "Starter", value: "Starter" },
+    ],
+  },
+]
+// Sort options for Client List
+const clientSortOptions: SortOption[] = [
+  {
+    id: "priority",
+    label: "Priority",
+    description: "Actionable items first",
+  },
+  {
+    id: "health",
+    label: "Health",
+    description: "Red → Yellow → Blocked → Green",
+  },
+  {
+    id: "stage",
+    label: "Stage",
+    description: "Onboarding → Live → Off-boarding",
+  },
+  {
+    id: "owner",
+    label: "Owner",
+    description: "Alphabetical by owner",
+  },
+  {
+    id: "days",
+    label: "Days in Stage",
+    description: "Longest waiting first",
+  },
+  {
+    id: "name",
+    label: "Name",
+    description: "Alphabetical A-Z",
+  },
+]
+
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import { ToastProvider } from "@/components/linear"
+import { IntelligenceCenter } from "@/components/views/intelligence-center"
+import { OnboardingHub } from "@/components/views/onboarding-hub"
+import { SupportTickets } from "@/components/views/support-tickets"
+import { IntegrationsHub } from "@/components/views/integrations-hub"
+import { KnowledgeBaseDashboard } from "@/components/knowledge-base"
+import { AutomationsHub } from "@/components/views/automations-hub"
 import { DashboardView } from "@/components/dashboard-view"
-import { KanbanBoard } from "@/components/kanban-board"
-import { ClientListView } from "@/components/client-list-view"
-import { ClientDetailSheet } from "@/components/client-detail-sheet"
-import { AIBar } from "@/components/ai-bar"
 import { SettingsView } from "@/components/settings-view"
-import { IntelligenceView } from "@/components/intelligence-view"
-import { SupportTicketsView } from "@/components/support-tickets-view"
-import { KnowledgeBaseView } from "@/components/knowledge-base-view"
-import { IntegrationsView } from "@/components/integrations-view"
-import { AutomationsDashboard } from "@/components/automations/automations-dashboard"
-import { OnboardingHubView } from "@/components/onboarding-hub-view"
-import { QuickCreateDialogs } from "@/components/quick-create-dialogs"
-import { Toaster } from "@/components/ui/toaster"
-import { useToast } from "@/hooks/use-toast"
-import { type Client, type Stage, type HealthStatus, type Owner } from "@/lib/mock-data"
-import { useAuth } from "@/hooks/use-auth"
-import { usePipelineStore } from "@/stores/pipeline-store"
-import { FilterChips, type PipelineFilters, defaultFilters, countActiveFilters } from "@/components/filter-chips"
+
+// Valid filter keys for URL params
+const FILTER_KEYS = ["stage", "health", "owner", "tier"] as const
 
 function CommandCenterContent() {
-  const [activeView, setActiveView] = useState("dashboard")
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const [defaultTab, setDefaultTab] = useState<string>("overview")
-  const [quickCreateType, setQuickCreateType] = useState<"client" | "ticket" | "project" | null>(null)
-  const [quickCreateOpen, setQuickCreateOpen] = useState(false)
-
-  // Auth state
-  const { isLoading: _authLoading, isAuthenticated, displayName: _displayName, profile } = useAuth()
-
-  // Pipeline store for clients
-  const {
-    clients: pipelineClients,
-    isLoading: _clientsLoading,
-    fetchClients,
-    updateClientStage,
-  } = usePipelineStore()
-
-  const { toast } = useToast()
-
-  // Fetch clients from API when authenticated (or always in dev mode)
-  useEffect(() => {
-    // In dev mode, fetch even without auth since API allows it
-    const isDev = process.env.NODE_ENV !== 'production'
-    if (isAuthenticated || isDev) {
-      fetchClients()
-    }
-  }, [isAuthenticated, fetchClients])
-
-  // Transform pipeline clients to Client type using useMemo (TD-001, TD-002 fix)
-  // Returns empty array when no data - NO mock fallback (fixed: Issue 1)
-  const baseClients = useMemo(() => {
-    if (pipelineClients.length === 0) return []
-    return pipelineClients.map((pc) => ({
-      id: pc.id,
-      name: pc.name,
-      logo: "",
-      stage: pc.stage as Stage,
-      health: pc.health_status as HealthStatus,
-      owner: (pc.owner || 'Luke') as Owner,
-      daysInStage: pc.days_in_stage,
-      supportTickets: 0,
-      installTime: 0,
-      tasks: [],
-      comms: [],
-      tier: "Core" as const,
-    })) as Client[]
-  }, [pipelineClients])
-
-  // Local overrides for optimistic updates (only tracks changes, not full state)
-  const [clientOverrides, setClientOverrides] = useState<Map<string, Partial<Client>>>(new Map())
-
-  // Merge base clients with any optimistic overrides
-  const clients = useMemo(() => {
-    if (clientOverrides.size === 0) return baseClients
-    return baseClients.map((client) => {
-      const override = clientOverrides.get(client.id)
-      return override ? { ...client, ...override } : client
-    })
-  }, [baseClients, clientOverrides])
-
-  // Pipeline filters state
-  const [filters, setFilters] = useState<PipelineFilters>(defaultFilters)
-  const currentUser: Owner = (profile?.first_name as Owner) || "Luke"
-
-  // Filter clients based on current filters (TD-009 fix: memoized)
-  const filteredClients = useMemo(() => {
-    return clients.filter((client) => {
-      // Stage filter
-      if (filters.stage !== "all" && client.stage !== filters.stage) return false
-
-      // Health filter
-      if (filters.health !== "all" && client.health !== filters.health) return false
-
-      // Owner filter
-      if (filters.owner !== "all" && client.owner !== filters.owner) return false
-
-      // Search filter
-      if (filters.search) {
-        const search = filters.search.toLowerCase()
-        if (!client.name.toLowerCase().includes(search)) return false
-      }
-
-      // My Clients filter
-      if (filters.showMyClients && client.owner !== currentUser) return false
-
-      // At Risk filter (Yellow or Red health, or high days in stage)
-      if (filters.showAtRisk) {
-        const isAtRisk = client.health === "Yellow" || client.health === "Red" || client.daysInStage > 4
-        if (!isAtRisk) return false
-      }
-
-      // Blocked filter
-      if (filters.showBlocked) {
-        if (client.health !== "Blocked" && !client.blocker) return false
-      }
-
-      return true
-    })
-  }, [clients, filters, currentUser])
-
-  // Handle filter changes
-  const handleFilterChange = <K extends keyof PipelineFilters>(key: K, value: PipelineFilters[K]) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
-  }
-
-  // Clear all filters
-  const handleClearFilters = () => {
-    setFilters(defaultFilters)
-  }
-
-  // URL syncing
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
-  // Update URL with current state (without full page reload)
-  const updateURL = useCallback((params: Record<string, string | null>) => {
-    const current = new URLSearchParams(searchParams.toString())
+  const [activeView, setActiveView] = useState<LinearView>("pipeline")
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  // Separate view modes: Pipeline defaults to board (Kanban), Clients defaults to list
+  const [pipelineViewMode, setPipelineViewMode] = useState<"list" | "board">("board")
+  const [clientsViewMode, setClientsViewMode] = useState<"list" | "board">("list")
+  // Filter state for Client List - initialized from URL params
+  const [clientFilters, setClientFilters] = useState<ActiveFilters>(() => {
+    const initial: ActiveFilters = {}
+    FILTER_KEYS.forEach(key => {
+      const value = searchParams.get(key)
+      if (value) initial[key] = value
+    })
+    return initial
+  })
+  const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette()
 
-    Object.entries(params).forEach(([key, value]) => {
-      if (value === null || value === "" || value === "all" || value === "false") {
-        current.delete(key)
+  // Sort state - default to priority (smart sorting)
+  const [clientSort, setClientSort] = useState<SortMode>("priority")
+
+  // Use mock clients for now
+  const clients = mockClients
+
+  // Sync URL params when filters change
+  const updateUrlParams = useCallback((filters: ActiveFilters) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    // Update filter params
+    FILTER_KEYS.forEach(key => {
+      if (filters[key]) {
+        params.set(key, filters[key] as string)
       } else {
-        current.set(key, value)
+        params.delete(key)
       }
     })
 
-    const newUrl = current.toString() ? `${pathname}?${current.toString()}` : pathname
-    router.replace(newUrl, { scroll: false })
-  }, [searchParams, router, pathname])
-
-  // Track URL state restoration
-  const urlRestoredRef = useRef(false)
-
-  // Restore state from URL on mount (TD-001 fix: removed setTimeout antipattern)
-  // React 18+ automatically batches state updates, no setTimeout needed
-  useEffect(() => {
-    if (urlRestoredRef.current) return
-    urlRestoredRef.current = true
-
-    // Restore client drawer state
-    const clientId = searchParams.get("client")
-    const tab = searchParams.get("tab") || "overview"
-
-    if (clientId) {
-      const client = clients.find((c) => c.id === clientId)
-      if (client) {
-        setSelectedClient(client)
-        setDefaultTab(tab)
-        setIsSheetOpen(true)
-      }
-    }
-
-    // Restore filter state
-    const stage = searchParams.get("stage") as Stage | "all" | null
-    const health = searchParams.get("health") as HealthStatus | "all" | null
-    const owner = searchParams.get("owner") as Owner | "all" | null
-    const search = searchParams.get("search")
-    const myClients = searchParams.get("myClients") === "true"
-    const atRisk = searchParams.get("atRisk") === "true"
-    const blocked = searchParams.get("blocked") === "true"
-
-    if (stage || health || owner || search || myClients || atRisk || blocked) {
-      setFilters({
-        stage: stage || "all",
-        health: health || "all",
-        owner: owner || "all",
-        search: search || "",
-        showMyClients: myClients,
-        showAtRisk: atRisk,
-        showBlocked: blocked,
-      })
-    }
-
-    // Restore active view
+    // Preserve view param if present
     const view = searchParams.get("view")
-    if (view && ["dashboard", "pipeline", "clients", "onboarding", "intelligence", "tickets", "knowledge", "automations", "integrations", "settings"].includes(view)) {
-      setActiveView(view)
+    if (view) params.set("view", view)
+
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.replace(newUrl, { scroll: false })
+  }, [searchParams, pathname, router])
+
+  // Handle filter changes - updates both state and URL
+  const handleFilterChange = useCallback((filterId: string, value: string | null) => {
+    setClientFilters(prev => {
+      const newFilters = { ...prev, [filterId]: value }
+      // Update URL in next tick to avoid state/render conflicts
+      setTimeout(() => updateUrlParams(newFilters), 0)
+      return newFilters
+    })
+  }, [updateUrlParams])
+
+  // Filter and sort clients by priority
+  const filteredClients = useMemo(() => {
+    let result = clients
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(
+        (client) =>
+          client.name.toLowerCase().includes(query) ||
+          client.owner.toLowerCase().includes(query) ||
+          client.stage.toLowerCase().includes(query)
+      )
     }
-  }, [clients, searchParams]) // Include deps but guard with ref
 
-  // Sync drawer state to URL
-  useEffect(() => {
-    if (isSheetOpen && selectedClient) {
-      updateURL({
-        client: selectedClient.id,
-        tab: defaultTab !== "overview" ? defaultTab : null,
-      })
-    } else {
-      updateURL({ client: null, tab: null })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- updateURL is stable, including it causes infinite loop
-  }, [isSheetOpen, selectedClient, defaultTab])
-
-  // Sync filters to URL
-  useEffect(() => {
-    updateURL({
-      stage: filters.stage,
-      health: filters.health,
-      owner: filters.owner,
-      search: filters.search || null,
-      myClients: filters.showMyClients ? "true" : null,
-      atRisk: filters.showAtRisk ? "true" : null,
-      blocked: filters.showBlocked ? "true" : null,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- updateURL is stable, including it causes infinite loop
-  }, [filters])
-
-  // Optimistic update handler for drag-drop (TD-002 fix: uses override pattern)
-  const handleClientMove = useCallback(async (clientId: string, toStage: Stage, notes?: string) => {
-    const client = clients.find((c) => c.id === clientId)
-    if (!client) return
-
-    const fromStage = client.stage
-
-    // Optimistic update - apply override immediately
-    setClientOverrides((prev) => {
-      const next = new Map(prev)
-      next.set(clientId, { stage: toStage, daysInStage: 0, statusNote: notes || client.statusNote })
-      return next
-    })
-
-    // Show toast notification with notes if provided
-    toast({
-      title: "Client moved",
-      description: notes
-        ? `${client.name} moved to ${toStage}. Note: ${notes}`
-        : `${client.name} moved from ${fromStage} to ${toStage}`,
-    })
-
-    // Call API if authenticated
-    if (isAuthenticated) {
-      const success = await updateClientStage(clientId, toStage as Stage)
-      if (!success) {
-        // Rollback on error - remove the override
-        setClientOverrides((prev) => {
-          const next = new Map(prev)
-          next.delete(clientId)
-          return next
-        })
-        toast({
-          title: "Error",
-          description: "Failed to move client. Changes reverted.",
-          variant: "destructive",
-        })
-      } else {
-        // Success - clear override (store will have the updated value)
-        setClientOverrides((prev) => {
-          const next = new Map(prev)
-          next.delete(clientId)
-          return next
-        })
+    // Apply dropdown filters only for Client List view
+    if (activeView === "clients") {
+      if (clientFilters.stage) {
+        result = result.filter(client => client.stage === clientFilters.stage)
+      }
+      if (clientFilters.health) {
+        result = result.filter(client => client.health === clientFilters.health)
+      }
+      if (clientFilters.owner) {
+        result = result.filter(client => client.owner === clientFilters.owner)
+      }
+      if (clientFilters.tier) {
+        result = result.filter(client => client.tier === clientFilters.tier)
       }
     }
-  }, [clients, isAuthenticated, updateClientStage, toast])
 
-  // Event handlers wrapped in useCallback for stable references (TD-012 partial fix)
-  const handleClientClick = useCallback((client: Client, tab?: string) => {
-    setSelectedClient(client)
-    setDefaultTab(tab || "overview")
-    setIsSheetOpen(true)
-  }, [])
+    // Sort by the selected sort mode
+    return sortClients(result, clientSort)
+  }, [clients, searchQuery, activeView, clientFilters, clientSort])
 
-  const handleOnboardingClientClick = useCallback((client: Client) => {
-    handleClientClick(client, "techsetup")
-  }, [handleClientClick])
+  // Auto-select first client when list changes and nothing is selected
+  // Only for Clients view - Pipeline drawer should be closed by default
+  useEffect(() => {
+    if (activeView === "clients" && filteredClients.length > 0 && !selectedClient) {
+      setSelectedClient(filteredClients[0])
+    }
+  }, [filteredClients, selectedClient, activeView])
 
-  const handleQuickCreate = useCallback((type: "client" | "ticket" | "project") => {
-    setQuickCreateType(type)
-    setQuickCreateOpen(true)
-  }, [])
+  // Transform client to detail panel format
+  const clientForPanel = useMemo(() => {
+    if (!selectedClient) return null
+    const ownerData = owners.find((o) => o.name === selectedClient.owner) || {
+      name: selectedClient.owner,
+      avatar: selectedClient.owner[0],
+      color: "bg-primary",
+    }
+    return {
+      id: selectedClient.logo,
+      name: selectedClient.name,
+      stage: selectedClient.stage,
+      health: selectedClient.health,
+      owner: {
+        name: ownerData.name,
+        initials: ownerData.avatar,
+        color: ownerData.color,
+      },
+      tier: selectedClient.tier,
+      daysInStage: selectedClient.daysInStage,
+      blocker: selectedClient.blocker,
+      statusNote: selectedClient.statusNote,
+    }
+  }, [selectedClient])
 
-  const renderView = () => {
+  const renderContent = () => {
+    // Get the correct view mode and setter based on active view
+    const isPipeline = activeView === "pipeline"
+    const viewMode = isPipeline ? pipelineViewMode : clientsViewMode
+    const setViewMode = isPipeline ? setPipelineViewMode : setClientsViewMode
+
     switch (activeView) {
-      case "dashboard":
-        return <DashboardView clients={clients} onClientClick={handleClientClick} />
       case "pipeline":
+      case "clients":
         return (
-          <div className="space-y-4">
-            {/* Linear-style: minimal filter bar, no big title */}
-            <FilterChips
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={handleClearFilters}
-              currentUser={currentUser}
-              activeFilterCount={countActiveFilters(filters)}
+          <>
+            <ListHeader
+              title={isPipeline ? "Pipeline" : "Client List"}
+              count={filteredClients.length}
+              onSearch={setSearchQuery}
+              searchValue={searchQuery}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              // Show filters only for Client List, not Pipeline
+              filters={!isPipeline ? clientFiltersConfig : undefined}
+              activeFilters={!isPipeline ? clientFilters : undefined}
+              onFilterChange={!isPipeline ? handleFilterChange : undefined}
+              // Sort options - show on both Pipeline and Client List
+              sortOptions={clientSortOptions}
+              activeSort={clientSort}
+              onSortChange={(sortId) => setClientSort(sortId as SortMode)}
+              actions={
+                <Button size="sm" className="h-8 gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  Add Client
+                </Button>
+              }
             />
-            <KanbanBoard
+            {viewMode === "board" ? (
+              <KanbanBoard
+                clients={filteredClients}
+                onClientClick={(client) => setSelectedClient(client)}
+              />
+            ) : (
+              <div className="flex-1 overflow-y-auto">
+                {filteredClients.map((client) => {
+                  const ownerData = owners.find((o) => o.name === client.owner) || {
+                    name: client.owner,
+                    avatar: client.owner[0],
+                    color: "bg-primary",
+                  }
+                  return (
+                    <ClientRow
+                      key={client.id}
+                      id={client.logo}
+                      name={client.name}
+                      stage={client.stage}
+                      health={client.health}
+                      owner={{
+                        name: ownerData.name,
+                        initials: ownerData.avatar,
+                        color: ownerData.color,
+                      }}
+                      daysInStage={client.daysInStage}
+                      blocker={client.blocker}
+                      onClick={() => setSelectedClient(client)}
+                      selected={selectedClient?.id === client.id}
+                    />
+                  )
+                })}
+                {filteredClients.length === 0 && (
+                  <div className="flex items-center justify-center h-48 text-muted-foreground">
+                    No clients found
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )
+
+      case "dashboard":
+        return (
+          <div className="flex-1 overflow-y-auto p-4">
+            <DashboardView
               clients={filteredClients}
-              onClientClick={handleClientClick}
-              onClientMove={handleClientMove}
+              onClientClick={(client) => setSelectedClient(client)}
+              onNavigateToChat={() => setActiveView("intelligence")}
             />
           </div>
         )
-      case "clients":
-        return <ClientListView clients={clients} onClientClick={handleClientClick} />
-      case "onboarding":
-        return <OnboardingHubView onClientClick={handleOnboardingClientClick} />
+
       case "intelligence":
-        return <IntelligenceView />
+        return <IntelligenceCenter />
+
+      case "onboarding":
+        return (
+          <OnboardingHub
+            onClientClick={(clientId) => {
+              const client = mockClients.find((c) => c.id === clientId)
+              if (client) setSelectedClient(client)
+            }}
+          />
+        )
+
       case "tickets":
-        return <SupportTicketsView />
-      case "knowledge":
-        return <KnowledgeBaseView />
-      case "automations":
-        return <AutomationsDashboard />
+        return <SupportTickets />
+
       case "integrations":
-        return <IntegrationsView />
+        return <IntegrationsHub />
+
+      case "knowledge":
+        return (
+          <div className="flex-1 overflow-y-auto p-4">
+            <KnowledgeBaseDashboard />
+          </div>
+        )
+
+      case "automations":
+        return <AutomationsHub />
+
       case "settings":
         return <SettingsView />
+
       default:
-        return <DashboardView clients={clients} onClientClick={handleClientClick} />
+        return (
+          <div className="p-6">
+            <h1 className="text-lg font-semibold mb-4 capitalize">{activeView}</h1>
+            <p className="text-muted-foreground">View coming soon...</p>
+          </div>
+        )
     }
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar
+    <>
+      <LinearShell
         activeView={activeView}
-        onViewChange={setActiveView}
-        collapsed={sidebarCollapsed}
-        onCollapsedChange={setSidebarCollapsed}
-        onQuickCreate={handleQuickCreate}
+        onViewChange={(view) => {
+          setActiveView(view)
+          setSelectedClient(null)
+        }}
+        onQuickCreate={() => setCommandPaletteOpen(true)}
+        detailPanel={
+          clientForPanel ? (
+            <ClientDetailPanel
+              client={clientForPanel}
+              onClose={() => setSelectedClient(null)}
+            />
+          ) : undefined
+        }
+      >
+        {renderContent()}
+      </LinearShell>
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        context={selectedClient ? `${selectedClient.logo} - ${selectedClient.name}` : undefined}
       />
-      <main className="flex-1 overflow-auto p-6 pb-32">{renderView()}</main>
-      <ClientDetailSheet
-        client={selectedClient}
-        open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
-        defaultTab={defaultTab}
-      />
-      <QuickCreateDialogs type={quickCreateType} open={quickCreateOpen} onOpenChange={setQuickCreateOpen} />
-      <AIBar />
-      <Toaster />
-    </div>
+    </>
   )
 }
 
-// Loading fallback for Suspense
+// Loading fallback
 function CommandCenterLoading() {
   return (
     <div className="flex h-screen bg-background items-center justify-center">
@@ -373,11 +404,12 @@ function CommandCenterLoading() {
   )
 }
 
-// Wrap with Suspense for useSearchParams
 export default function CommandCenter() {
   return (
-    <Suspense fallback={<CommandCenterLoading />}>
-      <CommandCenterContent />
-    </Suspense>
+    <ToastProvider position="bottom-right">
+      <Suspense fallback={<CommandCenterLoading />}>
+        <CommandCenterContent />
+      </Suspense>
+    </ToastProvider>
   )
 }

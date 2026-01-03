@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useCallback, useState, useRef } from "react"
-import { useDashboardStore } from "@/lib/stores/dashboard-store"
+import { useEffect, useCallback, useState } from "react"
+import { useDashboardStore } from "@/stores/dashboard-store"
 import {
   calculateAllKPIs,
   fetchTrends,
@@ -343,19 +343,21 @@ export function useDashboard(): UseDashboardReturn {
     loadTrends(period)
   }, [setSelectedPeriod, loadTrends])
 
-  // Track mount state to prevent duplicate initial loads (TD-007 fix)
-  const hasMounted = useRef(false)
-  const initialPeriod = useRef(selectedPeriod)
-
-  // Initial load - only runs once on mount
+  // Initial load - runs once on mount
+  // Dependencies are intentionally empty: we only want to fetch on first render
+  // The callbacks check if data exists before fetching, preventing duplicate requests
   useEffect(() => {
-    if (hasMounted.current) return
-    hasMounted.current = true
-
-    // Load KPIs if not already loaded
-    if (!kpis) {
-      loadKPIs()
+    const initialLoad = async () => {
+      if (!kpis) {
+        loadKPIs()
+      }
+      if (!trends) {
+        loadTrends(selectedPeriod)
+      }
+      setRealtimeConnected(true)
     }
+    initialLoad()
+  }, [kpis, trends, selectedPeriod, loadKPIs, loadTrends, setRealtimeConnected])
 
     // Load trends for initial period
     if (!trends) {

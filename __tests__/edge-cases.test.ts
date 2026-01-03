@@ -91,8 +91,8 @@ describe('Edge Cases', () => {
     it('should reject save without name', async () => {
       useAutomationsStore.setState({
         builderName: '',
-        builderTriggers: [{ id: 't1', type: 'stage_change', name: 'Test', config: { toStage: 'Installation' } }],
-        builderActions: [{ id: 'a1', type: 'create_task', name: 'Test', config: { title: 'Test Task' }, delayMinutes: 0, continueOnFailure: false }],
+        builderTriggers: [{ id: 't1', type: 'stage_change', name: 'Test', config: { toStage: 'Live' } }],
+        builderActions: [{ id: 'a1', type: 'send_notification', name: 'Test', config: { channel: 'slack', message: 'Test', recipients: ['user1'] }, delayMinutes: 0, continueOnFailure: false }],
       })
 
       const { saveWorkflow } = useAutomationsStore.getState()
@@ -105,7 +105,7 @@ describe('Edge Cases', () => {
       useAutomationsStore.setState({
         builderName: 'Test Workflow',
         builderTriggers: [],
-        builderActions: [{ id: 'a1', type: 'create_task', name: 'Test', config: { title: 'Test Task' }, delayMinutes: 0, continueOnFailure: false }],
+        builderActions: [{ id: 'a1', type: 'send_notification', name: 'Test', config: { channel: 'slack', message: 'Test', recipients: ['user1'] }, delayMinutes: 0, continueOnFailure: false }],
       })
 
       const { saveWorkflow } = useAutomationsStore.getState()
@@ -117,7 +117,7 @@ describe('Edge Cases', () => {
     it('should reject save without actions', async () => {
       useAutomationsStore.setState({
         builderName: 'Test Workflow',
-        builderTriggers: [{ id: 't1', type: 'stage_change', name: 'Test', config: { toStage: 'Installation' } }],
+        builderTriggers: [{ id: 't1', type: 'stage_change', name: 'Test', config: { toStage: 'Live' } }],
         builderActions: [],
       })
 
@@ -179,12 +179,13 @@ describe('Edge Cases', () => {
 
   describe('trigger validation edge cases', () => {
     it('should handle empty config object', () => {
-      const trigger: WorkflowTrigger = {
+      // Intentionally invalid config to test validation
+      const trigger = {
         id: 't1',
         type: 'stage_change',
         name: 'Test',
-        config: {} as any,
-      }
+        config: {},
+      } as unknown as WorkflowTrigger
 
       const result = validateTriggerConfig(trigger)
       expect(result.valid).toBe(false)
@@ -204,12 +205,13 @@ describe('Edge Cases', () => {
     })
 
     it('should handle non-numeric kpi value', () => {
-      const trigger: WorkflowTrigger = {
+      // Intentionally invalid value type to test validation
+      const trigger = {
         id: 't1',
         type: 'kpi_threshold',
         name: 'Test',
-        config: { metric: 'roas', operator: 'above', value: 0 },
-      }
+        config: { metric: 'roas', operator: 'above', value: 'not-a-number' },
+      } as unknown as WorkflowTrigger
 
       const result = validateTriggerConfig(trigger)
       // Value exists but is not a valid number - implementation may vary
@@ -217,12 +219,13 @@ describe('Edge Cases', () => {
     })
 
     it('should validate scheduled trigger without timezone', () => {
-      const trigger: WorkflowTrigger = {
+      // Intentionally missing timezone to test validation
+      const trigger = {
         id: 't1',
         type: 'scheduled',
         name: 'Test',
-        config: { schedule: '0 9 * * 1-5' } as any,
-      }
+        config: { schedule: '0 9 * * 1-5' }, // Missing timezone
+      } as unknown as WorkflowTrigger
 
       const result = validateTriggerConfig(trigger)
       expect(result.valid).toBe(false)

@@ -7,11 +7,11 @@
 
 ---
 
-## Current State (2026-01-02)
+## Current State (2026-01-03)
 
 | Layer | Status | Notes |
 |-------|--------|-------|
-| **Frontend UI** | ✅ 90% Complete | 80+ components, 11 views, Linear design system |
+| **Frontend UI** | ✅ 90% Complete | 80+ components, 11 views, UI polish pass done |
 | **API Routes** | ✅ Complete | 24 endpoints built |
 | **Zustand Stores** | ✅ Complete | 6 stores |
 | **Demo Mode** | ✅ Working | Mock data fallback when unauthenticated |
@@ -19,8 +19,10 @@
 | **Auth** | ✅ Working | Supabase Auth + user table linked |
 | **Third-party APIs** | ❌ Not Connected | OAuth creds empty |
 
-**DEVELOPMENT:** Fully functional with real Supabase data. Login with `dev@audienceos.dev` / `Test123!`.
-**PRODUCTION:** Ready for staging deploy. Third-party integrations (Slack, Gmail, Ads) pending OAuth setup.
+**LATEST (2026-01-03):** UI polish pass completed - cursor-pointer on all clickable elements, interactive intake checklist, IntegrationCard button anchoring, Activity section scrollable. Build verified. See RUNBOOK.md for verification commands.
+
+**DEVELOPMENT:** App works in demo mode with mock data. All views functional.
+**PRODUCTION:** Supabase has legacy War Room schema (Nov 2025). The `001_initial_schema.sql` migration was never applied.
 
 ---
 

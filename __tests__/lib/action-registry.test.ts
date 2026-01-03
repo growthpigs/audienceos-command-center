@@ -121,12 +121,13 @@ describe('action-registry', () => {
     })
 
     it('should reject create_task without title', () => {
-      const action: WorkflowAction = {
+      // Intentionally invalid config to test validation
+      const action = {
         id: 'test-1',
         type: 'create_task',
         name: 'Test Action',
-        config: { title: '' },
-      }
+        config: {},
+      } as unknown as WorkflowAction
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
       expect(result.errors).toContain('Create task action requires a title')
@@ -136,7 +137,7 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'send_notification',
-        name: 'Test Notification',
+        name: 'Test Action',
         config: {
           channel: 'slack',
           message: 'Test message',
@@ -148,12 +149,13 @@ describe('action-registry', () => {
     })
 
     it('should reject send_notification without required fields', () => {
-      const action: WorkflowAction = {
+      // Intentionally invalid config to test validation
+      const action = {
         id: 'test-1',
         type: 'send_notification',
-        name: 'Test Notification',
-        config: { channel: 'slack', message: '', recipients: [] },
-      }
+        name: 'Test Action',
+        config: {},
+      } as unknown as WorkflowAction
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
       expect(result.errors).toContain('Send notification action requires a message')
@@ -164,7 +166,7 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'draft_communication',
-        name: 'Test Communication',
+        name: 'Test Action',
         config: {
           platform: 'slack',
           template: 'Check-in message',
@@ -175,12 +177,13 @@ describe('action-registry', () => {
     })
 
     it('should reject draft_communication without platform', () => {
-      const action: WorkflowAction = {
+      // Intentionally invalid config to test validation
+      const action = {
         id: 'test-1',
         type: 'draft_communication',
-        name: 'Test Communication',
-        config: { template: 'Test' } as any,
-      }
+        name: 'Test Action',
+        config: { template: 'Test' },
+      } as unknown as WorkflowAction
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
       expect(result.errors).toContain('Draft communication action requires a platform')
@@ -190,7 +193,7 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_ticket',
-        name: 'Test Ticket',
+        name: 'Test Action',
         config: {
           title: 'Test Ticket',
           category: 'technical',
@@ -202,12 +205,13 @@ describe('action-registry', () => {
     })
 
     it('should reject create_ticket without required fields', () => {
-      const action: WorkflowAction = {
+      // Intentionally invalid config to test validation
+      const action = {
         id: 'test-1',
         type: 'create_ticket',
-        name: 'Test Ticket',
-        config: { title: 'Test' } as any,
-      }
+        name: 'Test Action',
+        config: { title: 'Test' },
+      } as unknown as WorkflowAction
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
       expect(result.errors).toContain('Create ticket action requires a category')
@@ -218,7 +222,7 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'update_client',
-        name: 'Test Update',
+        name: 'Test Action',
         config: {
           updates: { stage: 'onboarding' },
         },
@@ -231,7 +235,7 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'update_client',
-        name: 'Test Update',
+        name: 'Test Action',
         config: { updates: {} },
       }
       const result = validateActionConfig(action)
@@ -243,7 +247,7 @@ describe('action-registry', () => {
       const action: WorkflowAction = {
         id: 'test-1',
         type: 'create_alert',
-        name: 'Test Alert',
+        name: 'Test Action',
         config: {
           title: 'Test Alert',
           type: 'risk_detected',
@@ -255,12 +259,13 @@ describe('action-registry', () => {
     })
 
     it('should reject create_alert without required fields', () => {
-      const action: WorkflowAction = {
+      // Intentionally invalid config to test validation
+      const action = {
         id: 'test-1',
         type: 'create_alert',
-        name: 'Test Alert',
-        config: {} as any,
-      }
+        name: 'Test Action',
+        config: {},
+      } as unknown as WorkflowAction
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
       expect(result.errors).toContain('Create alert action requires a title')
@@ -269,12 +274,13 @@ describe('action-registry', () => {
     })
 
     it('should reject unknown action type', () => {
-      const action: WorkflowAction = {
+      // Intentionally invalid type to test validation
+      const action = {
         id: 'test-1',
-        type: 'unknown' as never,
+        type: 'unknown',
         name: 'Test Action',
-        config: { title: 'Test Task' },
-      }
+        config: {},
+      } as unknown as WorkflowAction
       const result = validateActionConfig(action)
       expect(result.valid).toBe(false)
       expect(result.errors).toContain('Unknown action type: unknown')

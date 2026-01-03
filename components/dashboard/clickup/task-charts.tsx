@@ -36,27 +36,33 @@ export function TaskCharts({
 }: TaskChartsProps) {
   // Calculate pie chart segments
   const total = pieData.reduce((sum, item) => sum + item.value, 0)
-  let cumulativePercentage = 0
+
+  // Pre-calculate cumulative percentages to avoid mutation during render
+  const pieDataWithCumulative = pieData.reduce<Array<ChartDataItem & { cumulativeStart: number }>>((acc, item) => {
+    const prevCumulative = acc.length > 0 ? acc[acc.length - 1].cumulativeStart + (acc[acc.length - 1].value / total) * 100 : 0
+    acc.push({ ...item, cumulativeStart: prevCumulative })
+    return acc
+  }, [])
 
   // Find max value for bar chart scaling
   const maxBarValue = Math.max(...barData.map((d) => d.value))
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
       {/* Donut Chart - Total Tasks by Assignee */}
-      <Card className="bg-card border-border">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <h3 className="text-sm font-medium text-foreground">Total Tasks by Assignee</h3>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <BarChart3 className="h-4 w-4" />
+      <Card className="bg-card border border-border/50 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+          <h3 className="text-xs font-medium text-foreground">Total Tasks by Assignee</h3>
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <BarChart3 className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <MoreHorizontal className="h-3 w-3" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 pb-3">
           <div className="flex items-center justify-center h-48">
             <div className="relative w-40 h-40">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -69,11 +75,10 @@ export function TaskCharts({
                   className="text-muted"
                   strokeWidth="8"
                 />
-                {pieData.map((item, i) => {
+                {pieDataWithCumulative.map((item, i) => {
                   const circumference = 2 * Math.PI * 40
                   const strokeLength = (item.value / total) * circumference
-                  const strokeOffset = (cumulativePercentage / 100) * circumference
-                  cumulativePercentage += (item.value / total) * 100
+                  const strokeOffset = (item.cumulativeStart / 100) * circumference
 
                   return (
                     <circle
@@ -117,19 +122,19 @@ export function TaskCharts({
       </Card>
 
       {/* Bar Chart - Open Tasks by Assignee */}
-      <Card className="bg-card border-border">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <h3 className="text-sm font-medium text-foreground">Open Tasks by Assignee</h3>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <TrendingUp className="h-4 w-4" />
+      <Card className="relative bg-card border border-border/50 shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+          <h3 className="text-xs font-medium text-foreground">Open Tasks by Assignee</h3>
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <TrendingUp className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+              <MoreHorizontal className="h-3 w-3" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 pb-3">
           <div className="text-xs text-muted-foreground mb-2">Tasks</div>
           <div className="h-48 flex items-end justify-around gap-4">
             {barData.map((item, i) => (

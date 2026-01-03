@@ -45,6 +45,7 @@ function ensureCsrfCookie(request: NextRequest, response: NextResponse): NextRes
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
+  '/', // Allow root for demo/dev
   '/login',
   '/auth/callback',
   '/api/v1/oauth/callback', // OAuth callback needs to work without auth
