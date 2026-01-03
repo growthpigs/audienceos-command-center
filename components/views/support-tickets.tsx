@@ -299,8 +299,8 @@ export function SupportTickets() {
         <ListHeader
           title="Support Tickets"
           count={filteredTickets.length}
-          onSearch={setSearchQuery}
-          searchValue={searchQuery}
+          onSearch={!selectedTicket ? setSearchQuery : undefined}
+          searchValue={!selectedTicket ? searchQuery : undefined}
           searchPlaceholder="Search tickets..."
         />
 

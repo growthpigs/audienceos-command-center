@@ -484,7 +484,7 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
         initial={false}
         animate={{ width: isCompact ? 288 : "100%" }}
         transition={slideTransition}
-        className="flex flex-col border-r border-border/50 bg-muted/30 shrink-0 overflow-hidden"
+        className="flex flex-col border-r border-border/50 bg-muted/30 overflow-hidden"
         style={{ minWidth: isCompact ? 288 : undefined }}
       >
         {/* Header */}
@@ -498,10 +498,7 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
         </div>
 
         {/* Stages List */}
-        <div className={cn(
-          "flex-1 overflow-y-auto",
-          isCompact ? "" : "p-4 space-y-3"
-        )}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {onboardingStages.map((stage) => {
             const clients = clientsByStage[stage.id] || []
             const isExpanded = expandedStages.has(stage.id)
