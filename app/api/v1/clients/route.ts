@@ -6,7 +6,8 @@ import { withRateLimit, sanitizeString, sanitizeEmail, createErrorResponse } fro
 import type { HealthStatus } from '@/types/database'
 
 // Admin client for dev mode (bypasses RLS)
-const getAdminClient = () => createClient(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getAdminClient = (): any => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
@@ -36,7 +37,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Use admin client in dev mode to bypass RLS
-    const dbClient = isDevMode ? getAdminClient() : supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbClient: any = isDevMode ? getAdminClient() : supabase
 
     // Get query params for filtering (sanitize inputs)
     const { searchParams } = new URL(request.url)
