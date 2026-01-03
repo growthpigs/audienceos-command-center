@@ -783,7 +783,7 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
   const prefersReducedMotion = useReducedMotion()
   const slideTransition = prefersReducedMotion
     ? { duration: 0 }
-    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
 
   const firehoseItems = useMemo(() => generateMockFirehoseItems(clients), [clients])
 
@@ -975,11 +975,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedTask && (
                 <motion.div
                   key="task-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
                   transition={slideTransition}
-                  className="w-96 shrink-0"
+                  className="shrink-0 overflow-hidden"
                 >
                   <TaskDetailDrawer item={selectedTask} onClose={() => setSelectedTaskId(null)} />
                 </motion.div>
@@ -1033,11 +1033,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedClient && (
                 <motion.div
                   key="client-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
                   transition={slideTransition}
-                  className="w-96 shrink-0"
+                  className="shrink-0 overflow-hidden"
                 >
                   <ClientDetailDrawer client={selectedClient} onClose={() => setSelectedClientId(null)} />
                 </motion.div>
@@ -1082,11 +1082,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedAlert && (
                 <motion.div
                   key="alert-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
                   transition={slideTransition}
-                  className="w-96 shrink-0"
+                  className="shrink-0 overflow-hidden"
                 >
                   <AlertDetailDrawer item={selectedAlert} onClose={() => setSelectedAlertId(null)} />
                 </motion.div>
@@ -1135,11 +1135,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedPerf && (
                 <motion.div
                   key="perf-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
                   transition={slideTransition}
-                  className="w-96 shrink-0"
+                  className="shrink-0 overflow-hidden"
                 >
                   <PerformanceDetailDrawer item={selectedPerf} onClose={() => setSelectedPerfId(null)} />
                 </motion.div>

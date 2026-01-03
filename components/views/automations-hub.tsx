@@ -201,7 +201,7 @@ export function AutomationsHub() {
   const prefersReducedMotion = useReducedMotion()
   const slideTransition = prefersReducedMotion
     ? { duration: 0 }
-    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
 
   // Calculate counts
   const counts = useMemo(() => {
@@ -322,11 +322,12 @@ export function AutomationsHub() {
         {selectedAutomation && (
           <motion.div
             key="steps-panel"
-            initial={{ x: -320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
             transition={slideTransition}
-            className="w-[320px] border-r border-border flex flex-col bg-background">
+            className="border-r border-border flex flex-col bg-background overflow-hidden"
+            style={{ minWidth: 0 }}>
           {/* Header */}
           <div className="h-[52px] px-4 flex items-center justify-between border-b border-border shrink-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -455,9 +456,9 @@ export function AutomationsHub() {
         {selectedAutomation && selectedStep && (
           <motion.div
             key="config-panel"
-            initial={{ x: 384, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 384, opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
             transition={slideTransition}
             className="flex-1 flex flex-col bg-background">
           {/* Panel Header */}

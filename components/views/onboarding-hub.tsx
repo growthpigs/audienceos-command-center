@@ -448,7 +448,7 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
   const prefersReducedMotion = useReducedMotion()
   const slideTransition = prefersReducedMotion
     ? { duration: 0 }
-    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
 
   // Group clients by onboarding stage
   const clientsByStage = mockClients.reduce((acc, client) => {
@@ -523,9 +523,9 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
         {selectedClient && selectedStage && (
           <motion.div
             key="client-detail"
-            initial={{ x: 384, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 384, opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
             transition={slideTransition}
             className="flex-1"
           >

@@ -128,7 +128,7 @@ export function LinearSidebar({
   // Animation settings - instant when reduced motion is preferred
   const transition = prefersReducedMotion
     ? { duration: 0 }
-    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
   const fadeTransition = prefersReducedMotion
     ? { duration: 0 }
     : { duration: 0.15 }

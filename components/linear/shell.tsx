@@ -24,7 +24,7 @@ export function LinearShell({
   // Animation settings - instant when reduced motion is preferred
   const slideTransition = prefersReducedMotion
     ? { duration: 0 }
-    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
 
   // Only show detail panel when:
   // - "clients" view: always show the aside (persistent panel)
@@ -39,11 +39,11 @@ export function LinearShell({
         {showDetailPanel && (
           <motion.aside
             key="detail-panel"
-            initial={{ x: 384, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 384, opacity: 0 }}
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 384, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
             transition={slideTransition}
-            className="w-96 bg-card border-l border-border flex flex-col overflow-hidden"
+            className="bg-card border-l border-border flex flex-col overflow-hidden"
           >
             {detailPanel}
           </motion.aside>
