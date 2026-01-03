@@ -9,6 +9,9 @@ import {
   integrationIcons,
   intelligenceSettingsGroups,
 } from "@/components/linear"
+import { CartridgesPage } from "@/components/cartridges"
+import { ChatInterface } from "@/components/chat/chat-interface"
+import { useAuth } from "@/hooks/use-auth"
 import {
   MessageSquare,
   FileSearch,
@@ -26,6 +29,7 @@ interface IntelligenceCenterProps {
 
 export function IntelligenceCenter({ onBack }: IntelligenceCenterProps) {
   const [activeSection, setActiveSection] = useState("overview")
+  const { agencyId, isLoading: authLoading } = useAuth()
 
   const aiCapabilities = [
     {
@@ -141,13 +145,21 @@ export function IntelligenceCenter({ onBack }: IntelligenceCenterProps) {
 
       {activeSection === "chat" && (
         <SettingsContentSection title="Chat">
-          <div className="bg-card border border-border rounded-lg p-8 text-center">
-            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">Chat Interface</h3>
-            <p className="text-muted-foreground mb-4">
-              AI-powered chat coming soon. Will integrate HGC backend.
-            </p>
-          </div>
+          {authLoading ? (
+            <div className="bg-card border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">Loading...</p>
+            </div>
+          ) : agencyId ? (
+            <ChatInterface agencyId={agencyId} />
+          ) : (
+            <div className="bg-card border border-border rounded-lg p-8 text-center">
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+              <p className="text-muted-foreground mb-4">
+                Please sign in to use the chat interface.
+              </p>
+            </div>
+          )}
         </SettingsContentSection>
       )}
 
@@ -165,16 +177,7 @@ export function IntelligenceCenter({ onBack }: IntelligenceCenterProps) {
 
       {activeSection === "cartridges" && (
         <SettingsContentSection title="Cartridges">
-          <div className="bg-card border border-border rounded-lg p-8 text-center">
-            <Boxes className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">AI Cartridges</h3>
-            <p className="text-muted-foreground mb-4">
-              Configure Voice, Style, Preferences, Instructions, and Brand cartridges.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Port from RevOS coming in CC2.
-            </p>
-          </div>
+          <CartridgesPage />
         </SettingsContentSection>
       )}
 
