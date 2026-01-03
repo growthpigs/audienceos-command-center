@@ -442,6 +442,50 @@ curl http://localhost:3000/api/v1/workflows | jq '.demo'  # Proves API responds
 
 See error-patterns.md "File Existence Fallacy" pattern.
 
+### Schema Verification (Before Any DB Changes) (2026-01-03)
+
+**CRITICAL:** Never plan database migrations from documentation alone. Always verify actual schema.
+
+```bash
+# 1. Check actual tables in RevOS Supabase
+# Via migration files (in chronological order):
+ls -la /Users/rodericandrews/_PAI/projects/revos/supabase/migrations/*.sql | head -10
+cat /path/to/revos/supabase/migrations/001_initial_schema.sql | head -100
+
+# 2. Check for table name discrepancies
+# Expected: 'tenants' | Actual: 'agencies' (RevOS uses 'agencies')
+grep -n "CREATE TABLE" /path/to/revos/supabase/migrations/*.sql | head -20
+
+# 3. Check FK patterns in users table
+grep -A10 "CREATE TABLE users" /path/to/revos/supabase/migrations/001_*.sql
+# Expected: users.id REFERENCES auth.users(id)
+# Actual: users.id is standalone UUID (manual sync)
+
+# 4. Check cartridge tables
+grep -n "cartridge" /path/to/revos/supabase/migrations/*.sql
+# Expected: Single 'cartridges' table
+# Actual: 4 tables (style_cartridges, preference_cartridges, etc.)
+
+# 5. Check RLS policies for JWT claim pattern
+grep -n "app_metadata" /path/to/revos/supabase/migrations/*.sql
+grep -n "tenant_id\|agency_id" /path/to/revos/supabase/migrations/*.sql
+# Expected: tenant_id | Actual: agency_id
+
+# 6. Via Supabase Dashboard (if CLI not configured)
+# https://supabase.com/dashboard/project/trdoainmejxanrownbuz/database/tables
+```
+
+**Verification Checklist (Pre-Migration):**
+```
+□ Queried actual tables (not assumed from docs)
+□ Documented discrepancies between docs and reality
+□ Updated execution plan to match ACTUAL schema
+□ Tested RLS pattern matches JWT claims in use
+□ Created RUNTIME-FINDINGS.md if major discrepancies found
+```
+
+**Related:** EP-061 "Schema Assumption Fallacy" in error-patterns.md
+
 ---
 
 ## Related Documents
