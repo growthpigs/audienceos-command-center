@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { mockClients } from "@/lib/mock-data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -443,6 +444,12 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
   )
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+
   // Group clients by onboarding stage
   const clientsByStage = mockClients.reduce((acc, client) => {
     const stage = getOnboardingStage(client.stage)
@@ -512,16 +519,25 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
       </div>
 
       {/* RIGHT PANEL - Client Detail View */}
-      {selectedClient && selectedStage ? (
-        <ClientDetailPanel
-          client={selectedClient}
-          stage={selectedStage}
-          onClose={() => setSelectedClient(null)}
-          onClientClick={onClientClick}
-        />
-      ) : (
-        <div className="hidden" />
-      )}
+      <AnimatePresence mode="wait">
+        {selectedClient && selectedStage && (
+          <motion.div
+            key="client-detail"
+            initial={{ x: 384, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 384, opacity: 0 }}
+            transition={slideTransition}
+            className="flex-1"
+          >
+            <ClientDetailPanel
+              client={selectedClient}
+              stage={selectedStage}
+              onClose={() => setSelectedClient(null)}
+              onClientClick={onClientClick}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

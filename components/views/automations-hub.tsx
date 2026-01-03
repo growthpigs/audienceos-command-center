@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import { ListHeader } from "@/components/linear"
 import {
@@ -196,6 +197,12 @@ export function AutomationsHub() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+
   // Calculate counts
   const counts = useMemo(() => {
     return {
@@ -311,8 +318,15 @@ export function AutomationsHub() {
       </div>
 
       {/* MIDDLE PANEL - Steps list (when automation selected) */}
-      {selectedAutomation && (
-        <div className="w-[320px] border-r border-border flex flex-col bg-background">
+      <AnimatePresence mode="wait">
+        {selectedAutomation && (
+          <motion.div
+            key="steps-panel"
+            initial={{ x: -320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -320, opacity: 0 }}
+            transition={slideTransition}
+            className="w-[320px] border-r border-border flex flex-col bg-background">
           {/* Header */}
           <div className="h-[52px] px-4 flex items-center justify-between border-b border-border shrink-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -432,12 +446,20 @@ export function AutomationsHub() {
               Add Step
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* RIGHT PANEL - Step configuration (when step selected) */}
-      {selectedAutomation && selectedStep && (
-        <div className="flex-1 flex flex-col bg-background">
+      <AnimatePresence mode="wait">
+        {selectedAutomation && selectedStep && (
+          <motion.div
+            key="config-panel"
+            initial={{ x: 384, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 384, opacity: 0 }}
+            transition={slideTransition}
+            className="flex-1 flex flex-col bg-background">
           {/* Panel Header */}
           <div className="h-[52px] px-4 flex items-center justify-between border-b border-border shrink-0">
             <div className="flex items-center gap-2">
@@ -474,8 +496,9 @@ export function AutomationsHub() {
           <div className="flex-1 overflow-y-auto p-4">
             <StepConfiguration step={selectedStep} />
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }

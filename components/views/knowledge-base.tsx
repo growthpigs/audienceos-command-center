@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   DocumentCard,
@@ -207,6 +208,12 @@ export function KnowledgeBase() {
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all")
   const [categoryFilter, setCategoryFilter] = useState<DocumentCategory | "all">("all")
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+
   // Filter documents
   const filteredDocuments = useMemo((): Document[] => {
     let result: Document[] = mockDocuments
@@ -355,18 +362,27 @@ export function KnowledgeBase() {
       </div>
 
       {/* Preview/Editor panel */}
-      {selectedDocument && (
-        <div className="flex-1">
-          <DocumentPreviewPanel
-            document={selectedDocument}
-            onClose={() => setSelectedDocument(null)}
-            onStar={() => handleStar(selectedDocument.id)}
-            onDownload={() => console.log("Download:", selectedDocument.name)}
-            onShare={() => console.log("Share:", selectedDocument.name)}
-            onDelete={() => console.log("Delete:", selectedDocument.name)}
-          />
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {selectedDocument && (
+          <motion.div
+            key="document-preview"
+            initial={{ x: 384, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 384, opacity: 0 }}
+            transition={slideTransition}
+            className="flex-1"
+          >
+            <DocumentPreviewPanel
+              document={selectedDocument}
+              onClose={() => setSelectedDocument(null)}
+              onStar={() => handleStar(selectedDocument.id)}
+              onDownload={() => console.log("Download:", selectedDocument.name)}
+              onShare={() => console.log("Share:", selectedDocument.name)}
+              onDelete={() => console.log("Delete:", selectedDocument.name)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

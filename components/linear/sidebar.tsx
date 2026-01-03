@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -30,7 +30,9 @@ interface NavItemProps {
   indent?: boolean
 }
 
-function NavItem({ icon, label, active, onClick, collapsed, indent }: NavItemProps) {
+function NavItem({ icon, label, active, onClick, collapsed, indent, reducedMotion }: NavItemProps & { reducedMotion?: boolean }) {
+  const fadeTransition = reducedMotion ? { duration: 0 } : { duration: 0.15 }
+
   return (
     <button
       onClick={onClick}
@@ -51,7 +53,7 @@ function NavItem({ icon, label, active, onClick, collapsed, indent }: NavItemPro
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: "auto" }}
             exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={fadeTransition}
             className="flex-1 text-left truncate overflow-hidden"
           >
             {label}
@@ -62,7 +64,9 @@ function NavItem({ icon, label, active, onClick, collapsed, indent }: NavItemPro
   )
 }
 
-function NavGroup({ label, collapsed }: { label: string; collapsed: boolean }) {
+function NavGroup({ label, collapsed, reducedMotion }: { label: string; collapsed: boolean; reducedMotion?: boolean }) {
+  const fadeTransition = reducedMotion ? { duration: 0 } : { duration: 0.15 }
+
   return (
     <AnimatePresence initial={false}>
       {!collapsed && (
@@ -71,7 +75,7 @@ function NavGroup({ label, collapsed }: { label: string; collapsed: boolean }) {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={fadeTransition}
           className="px-3 pt-4 pb-1 overflow-hidden"
         >
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
@@ -119,6 +123,15 @@ export function LinearSidebar({
   },
 }: LinearSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
+
+  // Animation settings - instant when reduced motion is preferred
+  const transition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+  const fadeTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.15 }
 
   // Main nav items (ungrouped at top)
   const mainItems = [
@@ -150,7 +163,7 @@ export function LinearSidebar({
     <motion.div
       initial={false}
       animate={{ width: collapsed ? 64 : 224 }}
-      transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={transition}
       className="bg-sidebar border-r border-sidebar-border flex flex-col h-screen"
     >
       {/* Header - matches Pipeline header height */}
@@ -164,7 +177,7 @@ export function LinearSidebar({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
+                  transition={fadeTransition}
                   className="text-[17px] tracking-tight text-foreground"
                   style={{
                     fontFamily: 'var(--font-poppins), Poppins, sans-serif'
@@ -178,7 +191,7 @@ export function LinearSidebar({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
+                  transition={fadeTransition}
                   className="text-[15px] font-normal text-foreground"
                   style={{
                     fontFamily: 'var(--font-poppins), Poppins, sans-serif'
@@ -232,12 +245,13 @@ export function LinearSidebar({
               active={activeView === item.id}
               onClick={() => onViewChange(item.id)}
               collapsed={collapsed}
+              reducedMotion={prefersReducedMotion ?? false}
             />
           ))}
         </div>
 
         {/* Operations group */}
-        <NavGroup label="Operations" collapsed={collapsed} />
+        <NavGroup label="Operations" collapsed={collapsed} reducedMotion={prefersReducedMotion ?? false} />
         <div className="space-y-1">
           {operationsItems.map((item) => (
             <NavItem
@@ -247,12 +261,13 @@ export function LinearSidebar({
               active={activeView === item.id}
               onClick={() => onViewChange(item.id)}
               collapsed={collapsed}
+              reducedMotion={prefersReducedMotion ?? false}
             />
           ))}
         </div>
 
         {/* Resources group */}
-        <NavGroup label="Resources" collapsed={collapsed} />
+        <NavGroup label="Resources" collapsed={collapsed} reducedMotion={prefersReducedMotion ?? false} />
         <div className="space-y-1">
           {resourcesItems.map((item) => (
             <NavItem
@@ -262,12 +277,13 @@ export function LinearSidebar({
               active={activeView === item.id}
               onClick={() => onViewChange(item.id)}
               collapsed={collapsed}
+              reducedMotion={prefersReducedMotion ?? false}
             />
           ))}
         </div>
 
         {/* Configure group */}
-        <NavGroup label="Configure" collapsed={collapsed} />
+        <NavGroup label="Configure" collapsed={collapsed} reducedMotion={prefersReducedMotion ?? false} />
         <div className="space-y-1">
           {configureItems.map((item) => (
             <NavItem
@@ -277,6 +293,7 @@ export function LinearSidebar({
               active={activeView === item.id}
               onClick={() => onViewChange(item.id)}
               collapsed={collapsed}
+              reducedMotion={prefersReducedMotion ?? false}
             />
           ))}
         </div>

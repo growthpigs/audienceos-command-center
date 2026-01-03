@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import {
   LinearKPICard,
   LinearKPICardSkeleton,
@@ -779,6 +779,12 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
   // Track previous tab to clear stale selections on tab switch
   const prevTabRef = useRef<DashboardTab>(activeTab)
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+
   const firehoseItems = useMemo(() => generateMockFirehoseItems(clients), [clients])
 
   // KPI data
@@ -972,7 +978,7 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
                   initial={{ x: 384, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={slideTransition}
                   className="w-96 shrink-0"
                 >
                   <TaskDetailDrawer item={selectedTask} onClose={() => setSelectedTaskId(null)} />
@@ -1030,7 +1036,7 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
                   initial={{ x: 384, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={slideTransition}
                   className="w-96 shrink-0"
                 >
                   <ClientDetailDrawer client={selectedClient} onClose={() => setSelectedClientId(null)} />
@@ -1079,7 +1085,7 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
                   initial={{ x: 384, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={slideTransition}
                   className="w-96 shrink-0"
                 >
                   <AlertDetailDrawer item={selectedAlert} onClose={() => setSelectedAlertId(null)} />
@@ -1132,7 +1138,7 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
                   initial={{ x: 384, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={slideTransition}
                   className="w-96 shrink-0"
                 >
                   <PerformanceDetailDrawer item={selectedPerf} onClose={() => setSelectedPerfId(null)} />

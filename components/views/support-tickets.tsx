@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   InboxItem,
@@ -232,6 +233,12 @@ export function SupportTickets() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }
+
   // Calculate counts
   const counts = useMemo(() => {
     return {
@@ -347,15 +354,24 @@ export function SupportTickets() {
       </div>
 
       {/* Ticket detail panel */}
-      {selectedTicket && (
-        <div className="flex-1">
-          <TicketDetailPanel
-            ticket={selectedTicket}
-            onClose={() => setSelectedTicket(null)}
-            onComment={handleComment}
-          />
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {selectedTicket && (
+          <motion.div
+            key="ticket-detail"
+            initial={{ x: 384, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 384, opacity: 0 }}
+            transition={slideTransition}
+            className="flex-1"
+          >
+            <TicketDetailPanel
+              ticket={selectedTicket}
+              onClose={() => setSelectedTicket(null)}
+              onComment={handleComment}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
