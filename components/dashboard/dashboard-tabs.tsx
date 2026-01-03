@@ -12,7 +12,7 @@ interface DashboardTabsProps {
 }
 
 const tabs: { id: DashboardTab; label: string; icon: typeof LayoutGrid }[] = [
-  { id: "overview", label: "Overview", icon: LayoutGrid },
+  { id: "overview", label: "Dash", icon: LayoutGrid },
   { id: "tasks", label: "Tasks", icon: CheckSquare },
   { id: "clients", label: "Clients", icon: Users },
   { id: "alerts", label: "Alerts", icon: AlertTriangle },
@@ -31,7 +31,7 @@ export function DashboardTabs({ activeTab, onTabChange, className }: DashboardTa
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative",
               isActive
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"

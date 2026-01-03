@@ -116,20 +116,30 @@ function generateMockFirehoseItems(clients: Client[]): FirehoseItemData[] {
 }
 
 // Client Progress Widget
-function ClientProgressWidget({ clients }: { clients: Client[] }) {
+function ClientProgressWidget({
+  clients,
+  onClientClick
+}: {
+  clients: Client[]
+  onClientClick: (client: Client) => void
+}) {
   const topClients = clients.slice(0, 5)
 
   return (
-    <div className="bg-card border border-border rounded-lg p-5">
-      <h3 className="text-sm font-medium text-foreground mb-4">Client Progress</h3>
-      <div className="space-y-3">
+    <div className="bg-card border border-border rounded-lg p-4">
+      <h3 className="text-sm font-medium text-foreground mb-3">Client Progress</h3>
+      <div className="space-y-2">
         {topClients.map(client => {
           const progress = Math.floor(Math.random() * 40 + 60) // Mock progress
           const owner = owners.find(o => o.name === client.owner)
           return (
-            <div key={client.id} className="flex items-center gap-3">
-              <div className="flex items-center gap-2 w-32 shrink-0">
-                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs text-white", owner?.color || "bg-gray-500")}>
+            <button
+              key={client.id}
+              onClick={() => onClientClick(client)}
+              className="flex items-center gap-3 w-full hover:bg-muted/50 rounded-md p-1.5 -mx-1.5 transition-colors"
+            >
+              <div className="flex items-center gap-2 w-28 shrink-0">
+                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white", owner?.color || "bg-gray-500")}>
                   {client.logo}
                 </div>
                 <span className="text-sm text-foreground truncate">{client.name}</span>
@@ -140,13 +150,13 @@ function ClientProgressWidget({ clients }: { clients: Client[] }) {
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground w-16 text-right">
+              <span className="text-xs text-muted-foreground w-14 text-right">
                 {client.tasks?.length || 0} tasks
               </span>
               <span className="text-xs text-muted-foreground w-10 text-right">
                 {progress}%
               </span>
-            </div>
+            </button>
           )
         })}
       </div>
@@ -155,7 +165,13 @@ function ClientProgressWidget({ clients }: { clients: Client[] }) {
 }
 
 // Clients by Stage Widget
-function ClientsByStageWidget({ clients }: { clients: Client[] }) {
+function ClientsByStageWidget({
+  clients,
+  onStageClick
+}: {
+  clients: Client[]
+  onStageClick: (stage: string) => void
+}) {
   const stageCount = clients.reduce((acc, client) => {
     acc[client.stage] = (acc[client.stage] || 0) + 1
     return acc
@@ -172,20 +188,24 @@ function ClientsByStageWidget({ clients }: { clients: Client[] }) {
   const total = clients.length
 
   return (
-    <div className="bg-card border border-border rounded-lg p-5">
-      <h3 className="text-sm font-medium text-foreground mb-4">Clients by Stage</h3>
-      <div className="space-y-2.5">
+    <div className="bg-card border border-border rounded-lg p-4">
+      <h3 className="text-sm font-medium text-foreground mb-3">Clients by Stage</h3>
+      <div className="space-y-2">
         {stages.map(stage => (
-          <div key={stage.name} className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground w-24 shrink-0">{stage.name}</span>
+          <button
+            key={stage.name}
+            onClick={() => onStageClick(stage.name)}
+            className="flex items-center gap-3 w-full hover:bg-muted/50 rounded-md p-1.5 -mx-1.5 transition-colors"
+          >
+            <span className="text-sm text-muted-foreground w-24 shrink-0 text-left">{stage.name}</span>
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className={cn("h-full rounded-full", stage.color)}
                 style={{ width: `${total > 0 ? (stage.count / total) * 100 : 0}%` }}
               />
             </div>
-            <span className="text-sm text-foreground w-8 text-right">{stage.count}</span>
-          </div>
+            <span className="text-sm text-foreground w-6 text-right">{stage.count}</span>
+          </button>
         ))}
       </div>
     </div>
@@ -193,7 +213,13 @@ function ClientsByStageWidget({ clients }: { clients: Client[] }) {
 }
 
 // Tasks by Assignee Widget
-function TasksByAssigneeWidget({ clients }: { clients: Client[] }) {
+function TasksByAssigneeWidget({
+  clients,
+  onOwnerClick
+}: {
+  clients: Client[]
+  onOwnerClick: (owner: string) => void
+}) {
   const tasksByOwner = clients.reduce((acc, client) => {
     acc[client.owner] = (acc[client.owner] || 0) + (client.tasks?.length || 0)
     return acc
@@ -202,30 +228,31 @@ function TasksByAssigneeWidget({ clients }: { clients: Client[] }) {
   const totalTasks = Object.values(tasksByOwner).reduce((a, b) => a + b, 0)
 
   return (
-    <div className="bg-card border border-border rounded-lg p-5">
-      <h3 className="text-sm font-medium text-foreground mb-4">Tasks by Assignee</h3>
-      <div className="flex items-center gap-4">
-        {/* Simple bar representation */}
-        <div className="flex-1 space-y-2">
-          {Object.entries(tasksByOwner).slice(0, 4).map(([owner, count]) => {
-            const ownerData = owners.find(o => o.name === owner)
-            return (
-              <div key={owner} className="flex items-center gap-2">
-                <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white", ownerData?.color || "bg-gray-500")}>
-                  {ownerData?.avatar || owner[0]}
-                </div>
-                <span className="text-xs text-muted-foreground w-16 truncate">{owner.split(" ")[0]}</span>
-                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full", ownerData?.color || "bg-gray-500")}
-                    style={{ width: `${totalTasks > 0 ? (count / totalTasks) * 100 : 0}%` }}
-                  />
-                </div>
-                <span className="text-xs text-foreground w-6 text-right">{count}</span>
+    <div className="bg-card border border-border rounded-lg p-4">
+      <h3 className="text-sm font-medium text-foreground mb-3">Tasks by Assignee</h3>
+      <div className="space-y-2">
+        {Object.entries(tasksByOwner).slice(0, 4).map(([owner, count]) => {
+          const ownerData = owners.find(o => o.name === owner)
+          return (
+            <button
+              key={owner}
+              onClick={() => onOwnerClick(owner)}
+              className="flex items-center gap-2 w-full hover:bg-muted/50 rounded-md p-1.5 -mx-1.5 transition-colors"
+            >
+              <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white", ownerData?.color || "bg-gray-500")}>
+                {ownerData?.avatar || owner[0]}
               </div>
-            )
-          })}
-        </div>
+              <span className="text-xs text-muted-foreground w-14 truncate text-left">{owner.split(" ")[0]}</span>
+              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full", ownerData?.color || "bg-gray-500")}
+                  style={{ width: `${totalTasks > 0 ? (count / totalTasks) * 100 : 0}%` }}
+                />
+              </div>
+              <span className="text-xs text-foreground w-6 text-right">{count}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -296,13 +323,33 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
       performance: "performance",
     }
     setActiveTab(tabMap[item.targetTab])
-    // TODO: Also open detail drawer for the item
+    // If client item, also select the client
+    if (item.clientId) {
+      const client = clients.find(c => c.id === item.clientId)
+      if (client) onClientClick(client)
+    }
   }
+
+  const handleStageClick = (stage: string) => {
+    setActiveTab("clients")
+    // In real app, would set filter to stage
+  }
+
+  const handleOwnerClick = (owner: string) => {
+    setActiveTab("tasks")
+    // In real app, would set filter to owner
+  }
+
+  // Filter clients/items for each tab
+  const alertClients = clients.filter(c => c.health === "Red" || c.health === "Blocked")
+  const taskItems = firehoseItems.filter(item => item.targetTab === "tasks")
+  const alertItems = firehoseItems.filter(item => item.targetTab === "alerts" || item.severity === "critical")
+  const perfItems = firehoseItems.filter(item => item.targetTab === "performance")
 
   return (
     <div className="flex flex-col h-full">
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-4 gap-3 mb-3">
         {kpis.map((kpi, i) => (
           <LinearKPICard key={i} data={kpi} />
         ))}
@@ -311,12 +358,12 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
       {/* Tabs */}
       <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden mt-4">
+      {/* Main Content - Scrollable */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide mt-3">
         {activeTab === "overview" ? (
-          <div className="grid grid-cols-5 gap-4 h-full">
+          <div className="grid grid-cols-5 gap-3 min-h-full">
             {/* Left: Firehose Feed (40%) */}
-            <div className="col-span-2 h-full">
+            <div className="col-span-2 min-h-[400px]">
               <FirehoseFeed
                 items={firehoseItems}
                 onItemClick={handleFirehoseItemClick}
@@ -325,17 +372,126 @@ export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
             </div>
 
             {/* Right: Widgets (60%) */}
-            <div className="col-span-3 space-y-4 overflow-y-auto pr-1">
-              <ClientProgressWidget clients={clients} />
-              <ClientsByStageWidget clients={clients} />
-              <TasksByAssigneeWidget clients={clients} />
+            <div className="col-span-3 space-y-3">
+              <ClientProgressWidget clients={clients} onClientClick={onClientClick} />
+              <ClientsByStageWidget clients={clients} onStageClick={handleStageClick} />
+              <TasksByAssigneeWidget clients={clients} onOwnerClick={handleOwnerClick} />
             </div>
           </div>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">
-            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} tab content coming soon...
+        ) : activeTab === "tasks" ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-foreground mb-3">Tasks ({taskItems.length})</h3>
+            {taskItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No pending tasks</p>
+            ) : (
+              taskItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => handleFirehoseItemClick(item)}
+                  className="w-full text-left bg-card border border-border rounded-lg p-3 hover:border-primary/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn(
+                      "w-2 h-2 rounded-full",
+                      item.severity === "critical" ? "bg-red-500" :
+                      item.severity === "warning" ? "bg-amber-500" : "bg-blue-500"
+                    )} />
+                    <span className="text-sm font-medium text-foreground">{item.title}</span>
+                    {item.assignee && (
+                      <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">@{item.assignee}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                </button>
+              ))
+            )}
           </div>
-        )}
+        ) : activeTab === "clients" ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-foreground mb-3">All Clients ({clients.length})</h3>
+            {clients.map(client => {
+              const owner = owners.find(o => o.name === client.owner)
+              return (
+                <button
+                  key={client.id}
+                  onClick={() => onClientClick(client)}
+                  className="w-full text-left bg-card border border-border rounded-lg p-3 hover:border-primary/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-sm text-white", owner?.color || "bg-gray-500")}>
+                      {client.logo}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-foreground">{client.name}</span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{client.stage}</span>
+                        <span>•</span>
+                        <span className={cn(
+                          client.health === "Red" ? "text-red-500" :
+                          client.health === "Yellow" ? "text-amber-500" :
+                          client.health === "Blocked" ? "text-purple-500" : "text-emerald-500"
+                        )}>{client.health}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{client.daysInStage}d</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ) : activeTab === "alerts" ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-foreground mb-3">Alerts ({alertItems.length})</h3>
+            {alertItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active alerts</p>
+            ) : (
+              alertItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => handleFirehoseItemClick(item)}
+                  className="w-full text-left bg-card border border-red-500/30 rounded-lg p-3 hover:border-red-500/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    <span className="text-sm font-medium text-foreground">{item.title}</span>
+                    {item.clientName && (
+                      <span className="text-xs bg-red-500/10 text-red-600 px-1.5 py-0.5 rounded">{item.clientName}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                </button>
+              ))
+            )}
+          </div>
+        ) : activeTab === "performance" ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-foreground mb-3">Performance ({perfItems.length})</h3>
+            {perfItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No performance alerts</p>
+            ) : (
+              perfItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => handleFirehoseItemClick(item)}
+                  className="w-full text-left bg-card border border-border rounded-lg p-3 hover:border-primary/30 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn(
+                      "w-2 h-2 rounded-full",
+                      item.severity === "critical" ? "bg-red-500" :
+                      item.severity === "warning" ? "bg-amber-500" : "bg-blue-500"
+                    )} />
+                    <span className="text-sm font-medium text-foreground">{item.title}</span>
+                    {item.clientName && (
+                      <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{item.clientName}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                </button>
+              ))
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* HGC Input Bar */}

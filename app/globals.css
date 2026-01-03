@@ -175,3 +175,13 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.005 260);
 }
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
