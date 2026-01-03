@@ -43,7 +43,7 @@ export async function getRecentCommunications(
   context: ExecutorContext,
   rawArgs: Record<string, unknown>
 ): Promise<CommunicationSummary[]> {
-  const args = rawArgs as GetRecentCommunicationsArgs;
+  const args = rawArgs as unknown as GetRecentCommunicationsArgs;
   const limit = args.limit ?? 10;
 
   let communications = [...MOCK_COMMUNICATIONS];

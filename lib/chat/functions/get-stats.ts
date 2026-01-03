@@ -14,7 +14,7 @@ export async function getAgencyStats(
   context: ExecutorContext,
   rawArgs: Record<string, unknown>
 ): Promise<AgencyStats> {
-  const args = rawArgs as GetAgencyStatsArgs;
+  const args = rawArgs as unknown as GetAgencyStatsArgs;
   const period = args.period || 'week';
 
   // Mock stats - TODO: Replace with Supabase queries

@@ -61,7 +61,7 @@ export async function getClients(
   context: ExecutorContext,
   rawArgs: Record<string, unknown>
 ): Promise<ClientSummary[]> {
-  const args = rawArgs as GetClientsArgs;
+  const args = rawArgs as unknown as GetClientsArgs;
   const limit = args.limit ?? 10;
 
   let clients = [...MOCK_CLIENTS];
@@ -97,7 +97,7 @@ export async function getClientDetails(
   context: ExecutorContext,
   rawArgs: Record<string, unknown>
 ): Promise<ClientDetails | null> {
-  const args = rawArgs as { client_id?: string; client_name?: string };
+  const args = rawArgs as unknown as { client_id?: string; client_name?: string };
 
   let client: ClientDetails | undefined;
 

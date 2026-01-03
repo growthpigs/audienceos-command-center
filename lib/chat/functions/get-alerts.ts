@@ -53,7 +53,7 @@ export async function getAlerts(
   context: ExecutorContext,
   rawArgs: Record<string, unknown>
 ): Promise<AlertSummary[]> {
-  const args = rawArgs as GetAlertsArgs;
+  const args = rawArgs as unknown as GetAlertsArgs;
   const limit = args.limit ?? 10;
 
   let alerts = [...MOCK_ALERTS];

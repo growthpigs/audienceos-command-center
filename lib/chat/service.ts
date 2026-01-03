@@ -17,9 +17,10 @@ import type {
   SessionContext,
   StreamChunk,
   ChatError,
+  FunctionCall,
 } from './types';
 
-const DEFAULT_MODEL = 'gemini-2.0-flash';
+const DEFAULT_MODEL = 'gemini-2.0-flash-001';
 
 /**
  * Generate unique ID
@@ -72,13 +73,13 @@ export class ChatService {
 
     // 2. Handle based on route
     let response: string;
-    let metadata: ChatMessage['metadata'] = { route: decision.route };
+    let functionCalls: FunctionCall[] | undefined;
 
     switch (decision.route) {
       case 'dashboard':
         const dashResult = await this.handleDashboardRoute(userMessage);
         response = dashResult.response;
-        metadata.functionCalls = dashResult.functionCalls;
+        functionCalls = dashResult.functionCalls;
         break;
 
       case 'casual':
@@ -92,10 +93,11 @@ export class ChatService {
       role: 'assistant',
       content: response,
       timestamp: new Date(),
+      route: decision.route,
       metadata: {
-        ...metadata,
         latencyMs: Date.now() - startTime,
         model: DEFAULT_MODEL,
+        functionCalls,
       },
     };
   }
@@ -105,7 +107,7 @@ export class ChatService {
    */
   private async handleDashboardRoute(
     message: string
-  ): Promise<{ response: string; functionCalls?: ChatMessage['metadata']['functionCalls'] }> {
+  ): Promise<{ response: string; functionCalls?: FunctionCall[] }> {
     try {
       // Call Gemini with function declarations
       const response = await fetch(
@@ -129,7 +131,7 @@ export class ChatService {
 
       // Process function calls
       const functionResults: Array<{ name: string; result: unknown }> = [];
-      const functionCalls: ChatMessage['metadata']['functionCalls'] = [];
+      const functionCalls: FunctionCall[] = [];
 
       for (const part of parts) {
         if (part.functionCall) {

@@ -14,7 +14,7 @@ export function navigateTo(
   context: ExecutorContext,
   rawArgs: Record<string, unknown>
 ): NavigationAction {
-  const args = rawArgs as NavigateToArgs;
+  const args = rawArgs as unknown as NavigateToArgs;
 
   const baseUrls: Record<string, string> = {
     clients: '/clients',

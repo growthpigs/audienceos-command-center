@@ -128,14 +128,14 @@ export function ChatInterface({ agencyId }: ChatInterfaceProps) {
                 <div className="whitespace-pre-wrap text-sm">{msg.content}</div>
 
                 {/* Show route badge for assistant messages */}
-                {msg.role === "assistant" && msg.metadata?.route && (
+                {msg.role === "assistant" && msg.route && (
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-background/50 text-muted-foreground uppercase">
-                      {msg.metadata.route}
+                      {msg.route}
                     </span>
-                    {msg.metadata.latencyMs && (
+                    {msg.metadata?.latencyMs && (
                       <span className="text-[10px] text-muted-foreground">
-                        {msg.metadata.latencyMs}ms
+                        {msg.metadata?.latencyMs}ms
                       </span>
                     )}
                   </div>
