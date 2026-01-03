@@ -531,7 +531,7 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
             animate={{ width: 600, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={slideTransition}
-            className="flex-1 overflow-hidden"
+            className="flex flex-col bg-background overflow-hidden"
             style={{ minWidth: 0 }}
           >
             <ClientDetailPanel

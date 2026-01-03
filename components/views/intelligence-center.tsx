@@ -47,7 +47,6 @@ import {
   Bot,
   User,
   Settings,
-  Send,
 } from "lucide-react"
 
 // Types for Training Data
@@ -131,65 +130,110 @@ const PROMPT_CATEGORIES = [
 // Chat filter types for conversation view
 type ChatFilterTab = "all" | "chat" | "ai" | "system"
 
-// Mock AI activities for the Chat conversation feed
-const mockAIActivities = [
+// Chat sessions with timestamps for history view
+interface ChatSession {
+  id: string
+  title: string
+  timestamp: string
+  activities: {
+    id: string
+    type: ActivityType
+    actor: { name: string; initials: string; color?: string }
+    timestamp: string
+    content?: string
+    metadata?: { from?: string; to?: string; fileName?: string }
+  }[]
+}
+
+const mockChatSessions: ChatSession[] = [
   {
-    id: "ai-1",
-    type: "comment" as ActivityType,
-    actor: { name: "You", initials: "YU", color: "bg-blue-600" },
-    timestamp: "2 hours ago",
-    content: "Show me clients at risk of churning",
+    id: "session-1",
+    title: "Client Risk Analysis",
+    timestamp: "Today, 2:30 PM",
+    activities: [
+      {
+        id: "ai-1",
+        type: "comment" as ActivityType,
+        actor: { name: "You", initials: "YU", color: "bg-blue-600" },
+        timestamp: "2:30 PM",
+        content: "Show me clients at risk of churning",
+      },
+      {
+        id: "ai-2",
+        type: "mention" as ActivityType,
+        actor: { name: "Chi Assistant", initials: "AI", color: "bg-primary" },
+        timestamp: "2:30 PM",
+        content: "Found 3 at-risk clients: Beardbrand (6d in Needs Support), Allbirds (high urgency ticket), MVMT Watches (120d in Live with declining engagement).",
+      },
+    ],
   },
   {
-    id: "ai-2",
-    type: "mention" as ActivityType,
-    actor: { name: "Chi Assistant", initials: "AI", color: "bg-primary" },
-    timestamp: "2 hours ago",
-    content: "Found 3 at-risk clients: Beardbrand (6d in Needs Support), Allbirds (high urgency ticket), MVMT Watches (120d in Live with declining engagement).",
+    id: "session-2",
+    title: "Support Ticket Review",
+    timestamp: "Today, 1:15 PM",
+    activities: [
+      {
+        id: "ai-3",
+        type: "comment" as ActivityType,
+        actor: { name: "You", initials: "YU", color: "bg-blue-600" },
+        timestamp: "1:15 PM",
+        content: "What are my open support tickets?",
+      },
+      {
+        id: "ai-4",
+        type: "mention" as ActivityType,
+        actor: { name: "Chi Assistant", initials: "AI", color: "bg-primary" },
+        timestamp: "1:16 PM",
+        content: "You have 5 open tickets. 2 are urgent: TKT-001 (Pixel tracking) and TKT-004 (Page speed). Would you like me to summarize them?",
+      },
+    ],
   },
   {
-    id: "ai-3",
-    type: "comment" as ActivityType,
-    actor: { name: "You", initials: "YU", color: "bg-blue-600" },
-    timestamp: "3 hours ago",
-    content: "What are my open support tickets?",
+    id: "session-3",
+    title: "Document Indexing",
+    timestamp: "Today, 10:00 AM",
+    activities: [
+      {
+        id: "ai-5",
+        type: "status_change" as ActivityType,
+        actor: { name: "System", initials: "SY", color: "bg-slate-500" },
+        timestamp: "10:00 AM",
+        metadata: { from: "Pending", to: "Indexed" },
+      },
+      {
+        id: "ai-6",
+        type: "attachment" as ActivityType,
+        actor: { name: "System", initials: "SY", color: "bg-slate-500" },
+        timestamp: "9:45 AM",
+        metadata: { fileName: "Q4 Strategy Deck.pdf" },
+      },
+    ],
   },
   {
-    id: "ai-4",
-    type: "mention" as ActivityType,
-    actor: { name: "Chi Assistant", initials: "AI", color: "bg-primary" },
-    timestamp: "3 hours ago",
-    content: "You have 5 open tickets. 2 are urgent: TKT-001 (Pixel tracking) and TKT-004 (Page speed). Would you like me to summarize them?",
-  },
-  {
-    id: "ai-5",
-    type: "status_change" as ActivityType,
-    actor: { name: "System", initials: "SY", color: "bg-slate-500" },
-    timestamp: "4 hours ago",
-    metadata: { from: "Pending", to: "Indexed" },
-  },
-  {
-    id: "ai-6",
-    type: "attachment" as ActivityType,
-    actor: { name: "System", initials: "SY", color: "bg-slate-500" },
-    timestamp: "5 hours ago",
-    metadata: { fileName: "Q4 Strategy Deck.pdf" },
-  },
-  {
-    id: "ai-7",
-    type: "comment" as ActivityType,
-    actor: { name: "You", initials: "YU", color: "bg-blue-600" },
-    timestamp: "Yesterday",
-    content: "Draft a follow-up email for Brooklinen about their campaign performance",
-  },
-  {
-    id: "ai-8",
-    type: "mention" as ActivityType,
-    actor: { name: "Chi Assistant", initials: "AI", color: "bg-primary" },
-    timestamp: "Yesterday",
-    content: "I've drafted an email highlighting their 23% CTR improvement and suggesting next steps for Q1. Would you like to review it?",
+    id: "session-4",
+    title: "Email Draft Request",
+    timestamp: "Yesterday, 4:30 PM",
+    activities: [
+      {
+        id: "ai-7",
+        type: "comment" as ActivityType,
+        actor: { name: "You", initials: "YU", color: "bg-blue-600" },
+        timestamp: "4:30 PM",
+        content: "Draft a follow-up email for Brooklinen about their campaign performance",
+      },
+      {
+        id: "ai-8",
+        type: "mention" as ActivityType,
+        actor: { name: "Chi Assistant", initials: "AI", color: "bg-primary" },
+        timestamp: "4:31 PM",
+        content: "I've drafted an email highlighting their 23% CTR improvement and suggesting next steps for Q1. Would you like to review it?",
+      },
+    ],
   },
 ]
+
+// Flatten sessions for filtering
+const mockAIActivities = mockChatSessions.flatMap(session => session.activities)
 
 // Generate mock firehose items for Intelligence Center Activity
 function generateMockActivityFirehose(): FirehoseItemData[] {
@@ -532,7 +576,7 @@ export function IntelligenceCenter({ onBack }: IntelligenceCenterProps) {
       )}
 
       {activeSection === "chat" && (
-        <SettingsContentSection title="Chat">
+        <SettingsContentSection title="Chat History">
           {/* Chat Filter Tabs */}
           <div className="flex items-center gap-1 mb-4 p-1 bg-secondary/50 rounded-lg w-fit">
             {[
@@ -557,31 +601,51 @@ export function IntelligenceCenter({ onBack }: IntelligenceCenterProps) {
             ))}
           </div>
 
-          {/* Chat Conversation Feed */}
-          <div className="bg-card border border-border rounded-lg p-4">
-            {filteredChatActivities.length > 0 ? (
-              <ActivityFeed activities={filteredChatActivities} />
-            ) : (
-              <div className="text-center py-8">
+          {/* Sessions grouped by timestamp */}
+          <div className="space-y-4">
+            {mockChatSessions.map((session) => {
+              // Filter activities within session based on chat filter
+              const filteredActivities = session.activities.filter((activity) => {
+                if (chatFilter === "all") return true
+                if (chatFilter === "chat") return activity.actor.name === "You"
+                if (chatFilter === "ai") return activity.actor.name === "Chi Assistant"
+                if (chatFilter === "system") return activity.actor.name === "System"
+                return true
+              })
+
+              if (filteredActivities.length === 0) return null
+
+              return (
+                <div key={session.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                  {/* Session Header */}
+                  <div className="px-4 py-2 bg-secondary/30 border-b border-border flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">{session.title}</span>
+                    <span className="text-xs text-muted-foreground">{session.timestamp}</span>
+                  </div>
+                  {/* Session Activities */}
+                  <div className="p-4">
+                    <ActivityFeed activities={filteredActivities} />
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Empty state */}
+            {mockChatSessions.every((session) => {
+              const filteredActivities = session.activities.filter((activity) => {
+                if (chatFilter === "all") return true
+                if (chatFilter === "chat") return activity.actor.name === "You"
+                if (chatFilter === "ai") return activity.actor.name === "Chi Assistant"
+                if (chatFilter === "system") return activity.actor.name === "System"
+                return true
+              })
+              return filteredActivities.length === 0
+            }) && (
+              <div className="bg-card border border-border rounded-lg p-8 text-center">
                 <History className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                <p className="text-sm text-muted-foreground">No messages found for this filter.</p>
+                <p className="text-sm text-muted-foreground">No sessions found for this filter.</p>
               </div>
             )}
-          </div>
-
-          {/* Chat Input */}
-          <div className="mt-4 flex gap-2">
-            <input
-              type="text"
-              placeholder="Ask Chi anything..."
-              className="flex-1 bg-secondary/50 border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <button
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer flex items-center gap-2"
-            >
-              <Send className="w-4 h-4" />
-              Send
-            </button>
           </div>
         </SettingsContentSection>
       )}
