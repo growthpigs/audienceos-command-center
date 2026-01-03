@@ -51,7 +51,7 @@ export function FirehoseFeed({ items, onItemClick, isLoading, className }: Fireh
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
               className={cn(
-                "px-2 py-1 text-xs rounded transition-colors",
+                "px-2 py-1 text-xs rounded transition-colors cursor-pointer",
                 activeFilter === filter.id
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"

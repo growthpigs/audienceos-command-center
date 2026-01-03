@@ -82,6 +82,21 @@ export class ChatService {
         functionCalls = dashResult.functionCalls;
         break;
 
+      case 'rag':
+        // TODO: Implement RAG (document search) handler
+        response = "I'd like to help you search through documents, but the knowledge base search feature isn't available yet. I can still help answer general questions about your clients and data.";
+        break;
+
+      case 'web':
+        // TODO: Implement web search handler
+        response = "I'd like to search the web for you, but external search isn't available yet. I can help with questions about your agency data and clients instead.";
+        break;
+
+      case 'memory':
+        // TODO: Implement memory/session context handler
+        response = "I don't have access to our previous conversation history yet. This feature is coming soon! For now, please provide the context you need in your message.";
+        break;
+
       case 'casual':
       default:
         response = await this.handleCasualRoute(userMessage, history);
@@ -124,6 +139,11 @@ export class ChatService {
           }),
         }
       );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `Gemini API error: ${response.status}`);
+      }
 
       const data = await response.json();
       const candidate = data.candidates?.[0];
@@ -191,6 +211,11 @@ export class ChatService {
           }
         );
 
+        if (!finalResponse.ok) {
+          const errorData = await finalResponse.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `Gemini API error: ${finalResponse.status}`);
+        }
+
         const finalData = await finalResponse.json();
         const finalText = finalData.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
@@ -246,6 +271,11 @@ Be concise, friendly, and helpful. If the user asks about clients, alerts, or da
           }),
         }
       );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `Gemini API error: ${response.status}`);
+      }
 
       const data = await response.json();
       return data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm not sure how to respond to that.";

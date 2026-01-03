@@ -287,7 +287,7 @@ export function DocumentUploadModal({
               Drag and drop files here, or{" "}
               <button
                 type="button"
-                className="text-primary hover:underline"
+                className="text-primary hover:underline cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
                 browse
@@ -410,7 +410,7 @@ export function DocumentUploadModal({
                     {tag}
                     <button
                       type="button"
-                      className="hover:text-foreground"
+                      className="hover:text-foreground cursor-pointer"
                       onClick={() => removeTag(tag)}
                     >
                       <X className="h-2.5 w-2.5" />

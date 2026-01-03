@@ -82,8 +82,8 @@ export function KanbanCard({
               {owner.initials}
             </AvatarFallback>
           </Avatar>
-          <button className="p-1 hover:bg-secondary rounded opacity-0 group-hover:opacity-100 transition-opacity">
-            <MoreVertical className="w-3 h-3 text-muted-foreground" />
+          <button className="p-2 hover:bg-secondary rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
       </div>

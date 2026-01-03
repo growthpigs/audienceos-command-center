@@ -76,17 +76,16 @@ export function Sidebar({ activeView, onViewChange, collapsed, onCollapsedChange
       <div className="flex items-center justify-center h-12 px-[15px] border-b border-border">
         {!collapsed && (
           <span
-            className="text-[17px] tracking-tight flex-1"
+            className="text-[17px] tracking-tight flex-1 text-foreground"
             style={{
-              fontFamily: 'var(--font-poppins), Poppins, sans-serif',
-              color: '#1e3a5f'
+              fontFamily: 'var(--font-poppins), Poppins, sans-serif'
             }}
           >
-            <span className="font-medium">audience</span><span className="font-normal">OS</span>
+            <span className="font-medium">audience</span><span className="font-normal text-muted-foreground">OS</span>
           </span>
         )}
         <button
-          className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           onClick={() => onCollapsedChange(!collapsed)}
         >
           {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
@@ -99,7 +98,7 @@ export function Sidebar({ activeView, onViewChange, collapsed, onCollapsedChange
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors",
+                "flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer",
                 collapsed && "justify-center w-full",
               )}
             >
@@ -153,7 +152,7 @@ export function Sidebar({ activeView, onViewChange, collapsed, onCollapsedChange
                     key={item.id}
                     onClick={() => onViewChange(item.id)}
                     className={cn(
-                      "flex items-center gap-2.5 w-full px-3 py-1.5 rounded-md transition-colors text-[13px]",
+                      "flex items-center gap-2.5 w-full px-3 py-1.5 rounded-md transition-colors text-[13px] cursor-pointer",
                       isActive
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",

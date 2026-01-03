@@ -46,7 +46,7 @@ export function FirehoseItem({ item, onClick, className }: FirehoseItemProps) {
     <button
       onClick={() => onClick?.(item)}
       className={cn(
-        "w-full text-left p-3 border-b border-border transition-colors",
+        "w-full text-left p-3 border-b border-border transition-colors cursor-pointer",
         colors.bg,
         className
       )}

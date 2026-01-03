@@ -34,7 +34,7 @@ function NavItem({ icon, label, active, onClick, collapsed, indent }: NavItemPro
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-3 w-full px-3 py-2 text-sm rounded-md transition-colors",
+        "flex items-center gap-3 w-full px-3 py-2 text-sm rounded-md transition-colors cursor-pointer",
         active
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
@@ -135,21 +135,19 @@ export function LinearSidebar({
           <div className={cn("flex items-center", collapsed && "justify-center w-full")}>
             {!collapsed && (
               <span
-                className="text-[17px] tracking-tight"
+                className="text-[17px] tracking-tight text-foreground"
                 style={{
-                  fontFamily: 'var(--font-poppins), Poppins, sans-serif',
-                  color: '#1e3a5f'
+                  fontFamily: 'var(--font-poppins), Poppins, sans-serif'
                 }}
               >
-                <span className="font-semibold">audience</span><span className="text-[15px] font-light">OS</span>
+                <span className="font-semibold">audience</span><span className="text-[15px] font-light text-muted-foreground">OS</span>
               </span>
             )}
             {collapsed && (
               <span
-                className="text-[15px] font-normal"
+                className="text-[15px] font-normal text-foreground"
                 style={{
-                  fontFamily: 'var(--font-poppins), Poppins, sans-serif',
-                  color: '#1e3a5f'
+                  fontFamily: 'var(--font-poppins), Poppins, sans-serif'
                 }}
               >
                 aOS
@@ -159,7 +157,7 @@ export function LinearSidebar({
           {!collapsed && (
             <button
               onClick={() => setCollapsed(true)}
-              className="p-1 hover:bg-secondary rounded transition-colors"
+              className="p-1 hover:bg-secondary rounded transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -249,7 +247,7 @@ export function LinearSidebar({
         {collapsed ? (
           <button
             onClick={() => setCollapsed(false)}
-            className="w-full flex justify-center p-2 hover:bg-secondary rounded transition-colors"
+            className="w-full flex justify-center p-2 hover:bg-secondary rounded transition-colors cursor-pointer"
           >
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>

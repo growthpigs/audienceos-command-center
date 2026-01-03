@@ -155,7 +155,7 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
             </div>
           )}
 
-          <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <Tag className="w-4 h-4" />
             <span className="text-xs">Add label</span>
           </button>

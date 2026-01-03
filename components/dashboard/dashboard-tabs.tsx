@@ -31,7 +31,7 @@ export function DashboardTabs({ activeTab, onTabChange, className }: DashboardTa
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative",
+              "flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative cursor-pointer",
               isActive
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"

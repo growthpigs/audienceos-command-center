@@ -18,8 +18,10 @@ export function LinearShell({
   children,
   detailPanel,
 }: LinearShellProps) {
-  // Only show detail panel for views that use it (pipeline, clients)
-  const showDetailPanel = activeView === "pipeline" || activeView === "clients"
+  // Only show detail panel when:
+  // - "clients" view: always show the aside (persistent panel)
+  // - "pipeline" view: only show when detailPanel has content (click to open)
+  const showDetailPanel = activeView === "clients" || (activeView === "pipeline" && detailPanel)
 
   return (
     <div className="flex h-screen bg-background text-foreground">

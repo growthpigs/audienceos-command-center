@@ -103,7 +103,7 @@ import { IntelligenceCenter } from "@/components/views/intelligence-center"
 import { OnboardingHub } from "@/components/views/onboarding-hub"
 import { SupportTickets } from "@/components/views/support-tickets"
 import { IntegrationsHub } from "@/components/views/integrations-hub"
-import { KnowledgeBase } from "@/components/views/knowledge-base"
+import { KnowledgeBaseDashboard } from "@/components/knowledge-base"
 import { AutomationsHub } from "@/components/views/automations-hub"
 import { DashboardView } from "@/components/dashboard-view"
 import { SettingsView } from "@/components/settings-view"
@@ -206,12 +206,12 @@ function CommandCenterContent() {
   }, [clients, searchQuery, activeView, clientFilters, clientSort])
 
   // Auto-select first client when list changes and nothing is selected
-  // This ensures the detail panel always has content
+  // Only for Clients view - Pipeline drawer should be closed by default
   useEffect(() => {
-    if (filteredClients.length > 0 && !selectedClient) {
+    if (activeView === "clients" && filteredClients.length > 0 && !selectedClient) {
       setSelectedClient(filteredClients[0])
     }
-  }, [filteredClients, selectedClient])
+  }, [filteredClients, selectedClient, activeView])
 
   // Transform client to detail panel format
   const clientForPanel = useMemo(() => {
@@ -319,6 +319,7 @@ function CommandCenterContent() {
             <DashboardView
               clients={filteredClients}
               onClientClick={(client) => setSelectedClient(client)}
+              onNavigateToChat={() => setActiveView("intelligence")}
             />
           </div>
         )
@@ -343,7 +344,11 @@ function CommandCenterContent() {
         return <IntegrationsHub />
 
       case "knowledge":
-        return <KnowledgeBase />
+        return (
+          <div className="flex-1 overflow-y-auto p-4">
+            <KnowledgeBaseDashboard />
+          </div>
+        )
 
       case "automations":
         return <AutomationsHub />

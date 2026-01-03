@@ -254,8 +254,8 @@ export function AutomationsHub() {
         <ListHeader
           title="Automations"
           count={filteredAutomations.length}
-          onSearch={setSearchQuery}
-          searchValue={searchQuery}
+          onSearch={!selectedAutomation ? setSearchQuery : undefined}
+          searchValue={!selectedAutomation ? searchQuery : undefined}
           searchPlaceholder="Search automations..."
           actions={
             !selectedAutomation && (
@@ -275,7 +275,7 @@ export function AutomationsHub() {
                 key={tab.id}
                 onClick={() => setActiveFilter(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
                   activeFilter === tab.id
                     ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
@@ -391,7 +391,7 @@ export function AutomationsHub() {
                   <button
                     onClick={() => setSelectedStep(step)}
                     className={cn(
-                      "w-full text-left p-2.5 rounded-lg border transition-colors",
+                      "w-full text-left p-2.5 rounded-lg border transition-colors cursor-pointer",
                       selectedStep?.id === step.id
                         ? "bg-primary/5 border-primary/30"
                         : "bg-card border-border hover:border-primary/30"
@@ -427,7 +427,7 @@ export function AutomationsHub() {
             </div>
 
             {/* Add step button */}
-            <button className="w-full mt-3 p-2 border-2 border-dashed border-muted-foreground/20 rounded-lg flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors">
+            <button className="w-full mt-3 p-2 border-2 border-dashed border-muted-foreground/20 rounded-lg flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors cursor-pointer">
               <Plus className="h-3 w-3" />
               Add Step
             </button>
@@ -493,7 +493,7 @@ function AutomationItem({ automation, selected, compact, onClick }: AutomationIt
     return (
       <div
         className={cn(
-          "px-3 py-2.5 cursor-pointer transition-colors border-b border-border/30",
+          "px-3 py-2.5 transition-colors border-b border-border/30 cursor-pointer",
           selected
             ? "bg-primary/10 border-l-2 border-l-primary"
             : "hover:bg-secondary/50 border-l-2 border-l-transparent"
@@ -529,7 +529,7 @@ function AutomationItem({ automation, selected, compact, onClick }: AutomationIt
   return (
     <div
       className={cn(
-        "flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-l-2 border-b border-border/30",
+        "flex items-start gap-3 px-4 py-3 transition-colors border-l-2 border-b border-border/30 cursor-pointer",
         selected
           ? "bg-secondary border-l-primary"
           : "border-l-transparent hover:bg-secondary/50"

@@ -45,7 +45,7 @@ export function SettingsSidebar({
         <div className="p-3 border-b border-border">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
             Settings
@@ -67,7 +67,7 @@ export function SettingsSidebar({
                   key={section.id}
                   onClick={() => onSectionChange(section.id)}
                   className={cn(
-                    "block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors",
+                    "block w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer",
                     activeSection === section.id
                       ? "bg-secondary text-foreground"
                       : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
@@ -91,7 +91,7 @@ export function SettingsSidebar({
               {teams.map((team) => (
                 <button
                   key={team.id}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground rounded-md transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground rounded-md transition-colors cursor-pointer"
                 >
                   <div
                     className={cn(
@@ -107,7 +107,7 @@ export function SettingsSidebar({
               {onAddTeam && (
                 <button
                   onClick={onAddTeam}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground rounded-md transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground rounded-md transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add team</span>
@@ -122,6 +122,7 @@ export function SettingsSidebar({
 }
 
 // Default groups for AudienceOS Intelligence Center
+// Note: Account section removed - use main Settings nav instead
 export const intelligenceSettingsGroups: SettingsGroup[] = [
   {
     id: "assistant",
@@ -140,16 +141,7 @@ export const intelligenceSettingsGroups: SettingsGroup[] = [
     sections: [
       { id: "cartridges", label: "Cartridges" },
       { id: "prompts", label: "Custom Prompts" },
-      { id: "knowledge", label: "Knowledge Base" },
-    ],
-  },
-  {
-    id: "account",
-    label: "Account",
-    icon: <User className="w-4 h-4" />,
-    sections: [
-      { id: "api", label: "API Keys" },
-      { id: "preferences", label: "Preferences" },
+      { id: "knowledge", label: "AI Training Data" },
     ],
   },
 ]

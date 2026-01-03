@@ -172,7 +172,7 @@ function TaskCard({ task, onClick }: { task: Task; onClick?: () => void }) {
               </AvatarFallback>
             </Avatar>
           )}
-          <button className="p-1 hover:bg-secondary rounded opacity-0 group-hover:opacity-100 transition-opacity">
+          <button className="p-1 hover:bg-secondary rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
             <MoreVertical className="w-3 h-3 text-muted-foreground" />
           </button>
         </div>

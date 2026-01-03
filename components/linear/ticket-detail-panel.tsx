@@ -126,15 +126,15 @@ export function TicketDetailPanel({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors">
+          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer">
             <ExternalLink className="w-4 h-4" />
           </button>
-          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors">
+          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer">
             <MoreHorizontal className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

@@ -79,7 +79,7 @@ export function DocumentPreviewPanel({
           <button
             onClick={onStar}
             className={cn(
-              "p-1.5 rounded transition-colors",
+              "p-1.5 rounded transition-colors cursor-pointer",
               document.starred
                 ? "text-yellow-500"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -89,19 +89,19 @@ export function DocumentPreviewPanel({
           </button>
           <button
             onClick={onDownload}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4" />
           </button>
-          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors">
+          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer">
             <ExternalLink className="w-4 h-4" />
           </button>
-          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors">
+          <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer">
             <MoreHorizontal className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -255,14 +255,14 @@ export function DocumentPreviewPanel({
         <div className="flex items-center gap-2">
           <button
             onClick={onShare}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-foreground rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-secondary text-foreground rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
             Share
           </button>
           <button
             onClick={onDownload}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Download
@@ -270,7 +270,7 @@ export function DocumentPreviewPanel({
         </div>
         <button
           onClick={onDelete}
-          className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 text-red-500 hover:bg-red-500/10 rounded-md text-sm font-medium transition-colors"
+          className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 text-red-500 hover:bg-red-500/10 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           <Trash2 className="w-4 h-4" />
           Delete

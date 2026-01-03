@@ -333,7 +333,7 @@ export function KnowledgeBaseDashboard() {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 py-2.5 px-3 hover:bg-secondary/50 transition-colors group"
+                className="flex items-center gap-3 py-2.5 px-3 hover:bg-secondary/50 transition-colors group cursor-pointer"
               >
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary shrink-0" />
                 <span className="text-[11px] text-foreground group-hover:text-primary truncate">{link.title}</span>

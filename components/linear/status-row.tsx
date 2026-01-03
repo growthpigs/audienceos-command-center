@@ -88,7 +88,7 @@ export function StatusRow({
               e.stopPropagation()
               onAdd()
             }}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors"
+            className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
           </button>

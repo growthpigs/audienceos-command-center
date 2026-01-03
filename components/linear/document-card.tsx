@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import {
   FileText,
@@ -225,7 +226,7 @@ export function DocumentCard({
           onClick={(e) => {
             e.stopPropagation()
           }}
-          className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors flex-shrink-0"
+          className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors flex-shrink-0 cursor-pointer"
         >
           <MoreHorizontal className="w-4 h-4" />
         </button>
@@ -249,7 +250,7 @@ export function DocumentCard({
       {/* Thumbnail or icon */}
       <div className="aspect-[4/3] bg-secondary/50 flex items-center justify-center relative">
         {thumbnail ? (
-          <img src={thumbnail} alt={name} className="w-full h-full object-cover" />
+          <Image src={thumbnail} alt={name} fill className="object-cover" />
         ) : (
           <div className={cn("w-16 h-16 rounded-xl flex items-center justify-center", typeColors[type])}>
             {getTypeIcon(type, "lg")}
@@ -263,7 +264,7 @@ export function DocumentCard({
             onStar?.()
           }}
           className={cn(
-            "absolute top-2 right-2 p-1.5 rounded transition-all",
+            "absolute top-2 right-2 p-1.5 rounded transition-all cursor-pointer",
             starred
               ? "text-yellow-500"
               : "text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground"
@@ -288,7 +289,7 @@ export function DocumentCard({
             onClick={(e) => {
               e.stopPropagation()
             }}
-            className="p-0.5 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+            className="p-0.5 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>

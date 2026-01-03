@@ -73,7 +73,7 @@ export function SettingsLayout({ children, onBack }: SettingsLayoutProps) {
         <div className="p-4 border-b border-gray-200">
           <button
             onClick={onBack}
-            className="flex items-center text-gray-600 text-sm hover:text-gray-900 transition-colors"
+            className="flex items-center text-gray-600 text-sm hover:text-gray-900 transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4 mr-2" />
             Settings
@@ -95,10 +95,10 @@ export function SettingsLayout({ children, onBack }: SettingsLayoutProps) {
                   key={item.id}
                   onClick={() => handleSectionChange(item.id)}
                   className={cn(
-                    "block w-full text-left px-3 py-2 text-sm rounded-md transition-colors",
-                    activeSection === item.id
-                      ? "bg-gray-100 text-gray-900 font-medium"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    "block w-full text-left px-3 py-2 text-sm rounded-md transition-colors cursor-pointer",
+                      activeSection === item.id
+                        ? "bg-gray-100 text-gray-900 font-medium"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
                   {item.label}
@@ -121,7 +121,7 @@ export function SettingsLayout({ children, onBack }: SettingsLayoutProps) {
                     key={item.id}
                     onClick={() => handleSectionChange(item.id)}
                     className={cn(
-                      "block w-full text-left px-3 py-2 text-sm rounded-md transition-colors",
+                      "block w-full text-left px-3 py-2 text-sm rounded-md transition-colors cursor-pointer",
                       activeSection === item.id
                         ? "bg-gray-100 text-gray-900 font-medium"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"

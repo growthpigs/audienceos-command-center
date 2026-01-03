@@ -100,7 +100,7 @@ export function ProgressList({
           })}
         </div>
         {items.length > maxItems && (
-          <button className="mt-3 text-[11px] text-primary hover:underline">
+          <button className="mt-3 text-[11px] text-primary hover:underline cursor-pointer">
             View all {items.length} items →
           </button>
         )}

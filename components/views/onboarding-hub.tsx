@@ -174,7 +174,7 @@ function ClientDetailPanel({ client, stage, onClose, onClientClick }: ClientDeta
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 hover:bg-secondary rounded transition-colors"
+          className="p-1.5 hover:bg-secondary rounded transition-colors cursor-pointer"
         >
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -272,14 +272,14 @@ function ClientDetailPanel({ client, stage, onClose, onClientClick }: ClientDeta
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => onClientClick?.(client.id)}
-              className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors cursor-pointer"
             >
               View Full Profile
             </button>
-            <button className="px-3 py-1.5 text-xs font-medium bg-secondary text-foreground rounded hover:bg-secondary/80 transition-colors">
+            <button className="px-3 py-1.5 text-xs font-medium bg-secondary text-foreground rounded hover:bg-secondary/80 transition-colors cursor-pointer">
               Send Reminder
             </button>
-            <button className="px-3 py-1.5 text-xs font-medium bg-secondary text-foreground rounded hover:bg-secondary/80 transition-colors">
+            <button className="px-3 py-1.5 text-xs font-medium bg-secondary text-foreground rounded hover:bg-secondary/80 transition-colors cursor-pointer">
               Add Note
             </button>
           </div>
@@ -307,7 +307,7 @@ function StageRow({ stage, clients, isExpanded, isCompact, selectedClientId, onT
         {/* Stage Header - Compact */}
         <button
           onClick={onToggle}
-          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-secondary/30 transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-secondary/30 transition-colors cursor-pointer"
         >
           <ChevronRight className={cn(
             "w-3 h-3 text-muted-foreground transition-transform",
@@ -326,7 +326,7 @@ function StageRow({ stage, clients, isExpanded, isCompact, selectedClientId, onT
                 key={client.id}
                 onClick={() => onClientSelect(client)}
                 className={cn(
-                  "w-full flex items-center gap-2 px-3 py-1.5 pl-8 transition-colors",
+                  "w-full flex items-center gap-2 px-3 py-1.5 pl-8 transition-colors cursor-pointer",
                   selectedClientId === client.id
                     ? "bg-primary/10 border-l-2 border-l-primary"
                     : "hover:bg-secondary/30"
@@ -355,7 +355,7 @@ function StageRow({ stage, clients, isExpanded, isCompact, selectedClientId, onT
       {/* Stage Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/30 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/30 transition-colors cursor-pointer"
       >
         <ChevronRight className={cn(
           "w-4 h-4 text-muted-foreground transition-transform",
@@ -380,7 +380,7 @@ function StageRow({ stage, clients, isExpanded, isCompact, selectedClientId, onT
             <button
               key={client.id}
               onClick={() => onClientSelect(client)}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary/30 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary/30 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8 bg-primary">

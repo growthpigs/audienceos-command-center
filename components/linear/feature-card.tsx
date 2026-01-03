@@ -61,7 +61,7 @@ export function FeatureCard({
           {secondaryAction && (
             <button
               onClick={onSecondaryClick}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               {secondaryAction}
               <ChevronRight className="w-4 h-4" />
