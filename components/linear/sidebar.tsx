@@ -140,7 +140,7 @@ export function LinearSidebar({
                   fontFamily: 'var(--font-poppins), Poppins, sans-serif'
                 }}
               >
-                <span className="font-semibold">audience</span><span className="text-[15px] font-light text-muted-foreground">OS</span>
+                <span className="font-light text-muted-foreground">audience</span><span className="text-[15px] font-semibold text-foreground">OS</span>
               </span>
             )}
             {collapsed && (
@@ -171,12 +171,17 @@ export function LinearSidebar({
           onClick={onQuickCreate}
           className={cn(
             "w-full bg-primary hover:bg-primary/90 text-primary-foreground",
-            collapsed ? "px-2" : "gap-2"
+            collapsed ? "px-2" : "justify-between"
           )}
           size={collapsed ? "icon" : "default"}
         >
-          <Plus className="w-4 h-4" />
-          {!collapsed && "New"}
+          <span className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            {!collapsed && "Quick"}
+          </span>
+          {!collapsed && (
+            <span className="text-xs opacity-70">⌘K</span>
+          )}
         </Button>
       </div>
 
