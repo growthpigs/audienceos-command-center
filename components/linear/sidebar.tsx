@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -123,11 +124,11 @@ export function LinearSidebar({
   ]
 
   return (
-    <div
-      className={cn(
-        "bg-sidebar border-r border-sidebar-border flex flex-col h-screen transition-all duration-200",
-        collapsed ? "w-16" : "w-56"
-      )}
+    <motion.div
+      initial={false}
+      animate={{ width: collapsed ? 64 : 224 }}
+      transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+      className="bg-sidebar border-r border-sidebar-border flex flex-col h-screen"
     >
       {/* Header - matches Pipeline header height */}
       <div className="h-[52px] px-[15px] flex items-center justify-center">
@@ -270,6 +271,6 @@ export function LinearSidebar({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
