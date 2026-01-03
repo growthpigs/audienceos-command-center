@@ -16,6 +16,8 @@ import {
   Target,
   TrendingUp,
   AlertTriangle,
+  History,
+  Boxes,
 } from "lucide-react"
 
 interface IntelligenceCenterProps {
@@ -110,28 +112,129 @@ export function IntelligenceCenter({ onBack }: IntelligenceCenterProps) {
       onSectionChange={setActiveSection}
       onBack={onBack}
     >
-      <SettingsContentSection title="AI Capabilities">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {aiCapabilities.map((capability, index) => (
-            <FeatureCard key={index} {...capability} />
-          ))}
-        </div>
-      </SettingsContentSection>
+      {activeSection === "overview" && (
+        <>
+          <SettingsContentSection title="AI Capabilities">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {aiCapabilities.map((capability, index) => (
+                <FeatureCard key={index} {...capability} />
+              ))}
+            </div>
+          </SettingsContentSection>
 
-      <SettingsContentSection
-        title="Connected Data Sources"
-        action={
-          <button className="text-sm text-primary hover:text-primary/80 transition-colors">
-            Browse all integrations
-          </button>
-        }
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {dataSources.map((source, index) => (
-            <IntegrationCard key={index} {...source} />
-          ))}
-        </div>
-      </SettingsContentSection>
+          <SettingsContentSection
+            title="Connected Data Sources"
+            action={
+              <button className="text-sm text-primary hover:text-primary/80 transition-colors">
+                Browse all integrations
+              </button>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {dataSources.map((source, index) => (
+                <IntegrationCard key={index} {...source} />
+              ))}
+            </div>
+          </SettingsContentSection>
+        </>
+      )}
+
+      {activeSection === "chat" && (
+        <SettingsContentSection title="Chat">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">Chat Interface</h3>
+            <p className="text-muted-foreground mb-4">
+              AI-powered chat coming soon. Will integrate HGC backend.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
+
+      {activeSection === "activity" && (
+        <SettingsContentSection title="Activity">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <History className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">Activity Feed</h3>
+            <p className="text-muted-foreground mb-4">
+              View your chat history and AI interactions.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
+
+      {activeSection === "cartridges" && (
+        <SettingsContentSection title="Cartridges">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <Boxes className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">AI Cartridges</h3>
+            <p className="text-muted-foreground mb-4">
+              Configure Voice, Style, Preferences, Instructions, and Brand cartridges.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Port from RevOS coming in CC2.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
+
+      {activeSection === "prompts" && (
+        <SettingsContentSection title="Custom Prompts">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <FileSearch className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">Custom Prompts</h3>
+            <p className="text-muted-foreground mb-4">
+              Create and manage custom AI prompts for your agency workflows.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
+
+      {activeSection === "knowledge" && (
+        <SettingsContentSection title="Knowledge Base">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <FileSearch className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">Knowledge Base</h3>
+            <p className="text-muted-foreground mb-4">
+              Upload documents and data sources for AI to reference.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
+
+      {activeSection === "api" && (
+        <SettingsContentSection title="API Keys">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <Zap className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">API Keys</h3>
+            <p className="text-muted-foreground mb-4">
+              Manage your API keys for external integrations.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
+
+      {activeSection === "preferences" && (
+        <SettingsContentSection title="Preferences">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <Target className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">Account Preferences</h3>
+            <p className="text-muted-foreground mb-4">
+              Configure your account settings and preferences.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
+
+      {!["overview", "chat", "activity", "cartridges", "prompts", "knowledge", "api", "preferences"].includes(activeSection) && (
+        <SettingsContentSection title="Coming Soon">
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <p className="text-muted-foreground">
+              This section is under development.
+            </p>
+          </div>
+        </SettingsContentSection>
+      )}
     </SettingsLayout>
   )
 }

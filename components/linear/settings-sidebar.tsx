@@ -2,7 +2,7 @@
 
 import React from "react"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, Building2, User, Users, Plus } from "lucide-react"
+import { ChevronLeft, Building2, User, Users, Plus, Sparkles, Settings } from "lucide-react"
 
 export interface SettingsSection {
   id: string
@@ -124,25 +124,32 @@ export function SettingsSidebar({
 // Default groups for AudienceOS Intelligence Center
 export const intelligenceSettingsGroups: SettingsGroup[] = [
   {
-    id: "ai",
-    label: "AI Assistant",
-    icon: <Building2 className="w-4 h-4" />,
+    id: "assistant",
+    label: "Assistant",
+    icon: <Sparkles className="w-4 h-4" />,
     sections: [
       { id: "overview", label: "Overview" },
-      { id: "capabilities", label: "Capabilities" },
-      { id: "knowledge", label: "Knowledge Sources" },
+      { id: "chat", label: "Chat" },
+      { id: "activity", label: "Activity" },
+    ],
+  },
+  {
+    id: "configuration",
+    label: "Configuration",
+    icon: <Settings className="w-4 h-4" />,
+    sections: [
+      { id: "cartridges", label: "Cartridges" },
       { id: "prompts", label: "Custom Prompts" },
-      { id: "history", label: "Chat History" },
+      { id: "knowledge", label: "Knowledge Base" },
     ],
   },
   {
     id: "account",
-    label: "My Account",
+    label: "Account",
     icon: <User className="w-4 h-4" />,
     sections: [
-      { id: "preferences", label: "Preferences" },
-      { id: "notifications", label: "Notifications" },
       { id: "api", label: "API Keys" },
+      { id: "preferences", label: "Preferences" },
     ],
   },
 ]
