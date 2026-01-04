@@ -55,19 +55,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists in agency
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: userExistsError } = await supabase
       .from('user')
       .select('id')
       .eq('agency_id', agencyId)
       .eq('email', trimmedEmail)
       .single()
 
+    // PGRST116 = "No rows found" - this is expected when user doesn't exist
+    if (userExistsError && userExistsError.code !== 'PGRST116') {
+      return createErrorResponse(500, 'Database error checking user')
+    }
+
     if (existingUser) {
       return createErrorResponse(400, 'User with this email already exists in your agency')
     }
 
     // Check if invitation already exists (pending)
-    const { data: existingInvitation } = await (supabase
+    const { data: existingInvitation, error: invitationExistsError } = await (supabase
       .from('user_invitations' as any)
       .select('id')
       .eq('agency_id', agencyId)
@@ -75,6 +80,11 @@ export async function POST(request: NextRequest) {
       .is('accepted_at', null)
       .gt('expires_at', new Date().toISOString())
       .single() as any)
+
+    // PGRST116 = "No rows found" - this is expected when no pending invitation exists
+    if (invitationExistsError && invitationExistsError.code !== 'PGRST116') {
+      return createErrorResponse(500, 'Database error checking invitations')
+    }
 
     if (existingInvitation) {
       return createErrorResponse(400, 'This email has already been invited. You can resend the invitation.')
@@ -112,6 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send invitation email
+    let emailSent = false
     try {
       const { data: agencyData } = await supabase
         .from('agency')
@@ -126,15 +137,18 @@ export async function POST(request: NextRequest) {
         acceptUrl: `${process.env.NEXT_PUBLIC_APP_URL}/invite/${tokenHex}`,
         role: role as UserRole,
       })
+      emailSent = true
     } catch (emailError) {
       console.error('Failed to send invitation email:', emailError)
       // Don't fail the request if email fails - invitation is still created
-      // Log for monitoring
+      // Log for monitoring/alerting
     }
 
     return NextResponse.json(
       {
-        message: 'Invitation sent successfully',
+        message: emailSent
+          ? 'Invitation sent successfully'
+          : 'Invitation created but email delivery failed - please resend or contact support',
         invitation: {
           id: invitation.id,
           email: invitation.email,
@@ -142,6 +156,7 @@ export async function POST(request: NextRequest) {
           expires_at: invitation.expires_at,
           created_at: invitation.created_at,
         },
+        email_status: emailSent ? 'sent' : 'failed',
       },
       { status: 201 }
     )

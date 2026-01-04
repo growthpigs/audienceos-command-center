@@ -11,6 +11,7 @@ import {
 } from "@/components/linear/document-card"
 import { DocumentPreviewPanel, type Document } from "@/components/linear/document-preview-panel"
 import { DocumentUploadModal } from "@/components/linear/document-upload-modal"
+import { DriveLinkModal } from "@/components/knowledge-base/drive-link-modal"
 import { ProcessingPanel } from "@/components/knowledge-base/processing-panel"
 import { SearchPanel } from "@/components/knowledge-base/search-panel"
 import { ListHeader } from "@/components/linear"
@@ -23,6 +24,7 @@ import {
   Clock,
   Search,
   Settings,
+  Cloud,
 } from "lucide-react"
 
 // Diiiploy - Knowledge Base Documents
@@ -217,6 +219,7 @@ export function KnowledgeBase() {
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all")
   const [categoryFilter, setCategoryFilter] = useState<DocumentCategory | "all">("all")
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [isDriveLinkModalOpen, setIsDriveLinkModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("documents")
 
   const slideTransition = useSlideTransition()
@@ -264,6 +267,12 @@ export function KnowledgeBase() {
     console.log("Toggle training for:", _docId)
   }
 
+  const handleAddDriveLink = async (url: string, displayName?: string) => {
+    // TODO: Implement Drive link API call
+    console.log("Add Drive link:", url, displayName)
+    // In production, this would call an API to process the Drive file
+  }
+
   // Helper to render document cards with proper typing
   const renderDocumentCard = (doc: Document, mode: "compact" | "grid" | "list") => (
     <DocumentCard
@@ -297,10 +306,16 @@ export function KnowledgeBase() {
           onViewModeChange={!selectedDocument && activeTab === "documents" ? (mode) => setViewMode(mode === "board" ? "grid" : "list") : undefined}
           actions={
             !selectedDocument && activeTab === "documents" && (
-              <Button size="sm" className="h-8 gap-1.5" onClick={() => setIsUploadModalOpen(true)}>
-                <Upload className="h-4 w-4" />
-                Upload
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setIsDriveLinkModalOpen(true)}>
+                  <Cloud className="h-4 w-4" />
+                  From Drive
+                </Button>
+                <Button size="sm" className="h-8 gap-1.5" onClick={() => setIsUploadModalOpen(true)}>
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+              </div>
             )
           }
         />
@@ -448,6 +463,13 @@ export function KnowledgeBase() {
       <DocumentUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
+      />
+
+      {/* Drive Link Modal */}
+      <DriveLinkModal
+        isOpen={isDriveLinkModalOpen}
+        onClose={() => setIsDriveLinkModalOpen(false)}
+        onAddDriveLink={handleAddDriveLink}
       />
     </div>
   )

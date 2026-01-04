@@ -30,6 +30,23 @@ export function useDocumentProcessing() {
       setError(null)
       const response = await fetch('/api/v1/documents/process')
 
+      // Handle auth/server errors gracefully - return empty status instead of throwing
+      if (response.status === 401 || response.status === 500) {
+        // Not authenticated or server error - just show empty state
+        setStatus({
+          pending: 0,
+          indexing: 0,
+          indexed: 0,
+          failed: 0,
+          total: 0
+        })
+        // Only set error for 500 (user should know server has issues)
+        if (response.status === 500) {
+          setError('Server temporarily unavailable')
+        }
+        return { counts: null, total: 0 }
+      }
+
       if (!response.ok) {
         throw new Error(`Failed to fetch status: ${response.status}`)
       }
