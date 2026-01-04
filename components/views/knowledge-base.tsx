@@ -636,11 +636,11 @@ export function KnowledgeBase() {
         {selectedDocument && (
           <motion.div
             key="document-preview"
-            initial={{ flex: 0, opacity: 0 }}
-            animate={{ flex: 1, opacity: 1 }}
-            exit={{ flex: 0, opacity: 0 }}
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: "auto" }}
+            exit={{ opacity: 0, width: 0 }}
             transition={slideTransition}
-            className="flex flex-col bg-background overflow-hidden min-w-0"
+            className="flex-1 flex flex-col bg-background overflow-hidden min-w-0"
           >
             <DocumentPreviewPanel
               document={selectedDocument}
