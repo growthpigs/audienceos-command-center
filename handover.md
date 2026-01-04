@@ -2,6 +2,40 @@
 
 **Last Session:** 2026-01-04
 
+## Session 2026-01-04 (Mock Data Removal Sprint)
+
+### Completed
+- Seeded Supabase with comprehensive demo data:
+  - "Acme Marketing Agency" - direct response marketing, ~$1M/year
+  - 15 clients across all pipeline stages (Onboarding → Off-boarding)
+  - 4 users (admin, test accounts)
+  - 7 communications (email/slack threads)
+  - 4 integrations (Gmail, Slack, Google Ads, Meta - all connected)
+  - 5 alerts (various severities)
+  - 10 documents (various categories)
+- Connected frontend to Supabase:
+  - Main page now uses `usePipelineStore` → fetches from `/api/v1/clients`
+  - Created `MinimalClient` type in `types/client.ts`
+  - Updated kanban-board, kanban-column, dashboard-view to use new types
+  - Updated `lib/client-priority.ts` to use `MinimalClient`
+- Added production mock data guards:
+  - Console warnings when mock-data.ts accessed in production
+  - Same for mock-knowledge-base.ts
+- All tests pass (306 unit tests), build succeeds
+
+### Remaining
+- [ ] Knowledge-base-store still uses mock data as initial state
+- [ ] Update Vercel env vars with real Supabase URL/key to see data in production
+
+### Architecture Note
+The pipeline store already has proper API fetching:
+```
+usePipelineStore.fetchClients() → /api/v1/clients → Supabase RLS query
+```
+Mock data is now only a fallback in `use-dashboard.ts` when no real data exists.
+
+---
+
 ## Session 2026-01-04 (Maintenance Sprint)
 
 ### Completed
