@@ -49,8 +49,11 @@ export interface NotificationPreferences {
   email_mentions: boolean
   slack_channel_id?: string
   digest_mode: boolean
+  digest_time?: string // HH:mm format
+  digest_days?: string[] // e.g. ['monday', 'tuesday', ...]
   quiet_hours_start?: string // HH:mm format
   quiet_hours_end?: string // HH:mm format
+  timezone?: string // e.g. 'America/New_York'
   muted_clients: string[] // client IDs
 }
 
