@@ -20,8 +20,11 @@ npm run dev
 | Environment | URL | Status |
 |-------------|-----|---------|
 | Local | http://localhost:3000 | ✅ Working |
-| Staging | TBD | ⏳ Not deployed |
-| Production | TBD | ⏳ Not deployed |
+| Staging | https://command-center-linear-git-staging-growthpigs.vercel.app | ✅ Deployed |
+| Production | https://command-center-linear.vercel.app | ✅ Deployed |
+
+**Vercel Project:** `command_center_linear`
+**Vercel Team:** `growthpigs`
 
 ## Repository
 
@@ -120,13 +123,24 @@ npm run lint         # Run ESLint checks
 
 | Service | Purpose | Status | Dashboard |
 |---------|---------|--------|-----------|
-| **Supabase** | Database, Auth, Storage | ❌ Not configured | [supabase.com/dashboard](https://supabase.com/dashboard) |
-| **Anthropic** | Claude AI integration | ❌ Not configured | [console.anthropic.com](https://console.anthropic.com) |
-| **Google AI** | Gemini document indexing | ❌ Not configured | [aistudio.google.com](https://aistudio.google.com) |
+| **Supabase** | Database, Auth, Storage | ✅ Configured | [supabase.com/dashboard](https://supabase.com/dashboard) |
+| **Anthropic** | Claude AI integration | ⏳ Optional | [console.anthropic.com](https://console.anthropic.com) |
+| **Google AI** | Gemini 2.0 Flash (Chat + Document RAG) | ✅ Configured | [aistudio.google.com](https://aistudio.google.com) |
 | Slack | Communication integration | ⏳ Optional | [api.slack.com/apps](https://api.slack.com/apps) |
 | Google Cloud | Gmail/Ads OAuth | ⏳ Optional | [console.cloud.google.com](https://console.cloud.google.com) |
 | Meta for Developers | Ads integration | ⏳ Optional | [developers.facebook.com](https://developers.facebook.com) |
 | Sentry | Error monitoring | ⏳ Optional | [sentry.io](https://sentry.io) |
+
+### API Key Locations
+
+| Key | Local | Vercel | PAI Secrets |
+|-----|-------|--------|-------------|
+| `GOOGLE_AI_API_KEY` | `.env.local` | ✅ All envs | `~/.claude/secrets/secrets-vault.md` |
+| `SUPABASE_*` | `.env.local` | ✅ All envs | Project-specific |
+| `OAUTH_STATE_SECRET` | `.env.local` | ✅ Production | Generated per-project |
+| `TOKEN_ENCRYPTION_KEY` | `.env.local` | ✅ Production | Generated per-project |
+
+**Note:** `.env.local` is gitignored. Safe to store actual secrets there for local dev.
 
 ## Common Tasks
 
@@ -326,5 +340,5 @@ npx tsc --noEmit
 
 ---
 
-*Last updated: 2025-01-01*
-*Project Phase: D-3 Setup Complete*
+*Last updated: 2026-01-04*
+*Project Phase: Deployed to Vercel (staging + production)*
