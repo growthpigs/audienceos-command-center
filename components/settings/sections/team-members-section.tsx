@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { UserInvitationModal } from "@/components/settings/modals/user-invitation-modal"
 import type { TeamMember, UserInvitation } from "@/types/settings"
 
 // Mock data for demo
@@ -96,7 +97,7 @@ function formatLastActive(dateString: string | null): string {
 
 export function TeamMembersSection() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [_isInviteModalOpen, _setIsInviteModalOpen] = useState(false)
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
   // In production, this would come from the store
   const teamMembers = MOCK_TEAM_MEMBERS
@@ -125,7 +126,10 @@ export function TeamMembersSection() {
             Manage your agency's team and access permissions
           </p>
         </div>
-        <Button className="gap-1.5 h-7 text-[10px]">
+        <Button
+          className="gap-1.5 h-7 text-[10px]"
+          onClick={() => setIsInviteModalOpen(true)}
+        >
           <UserPlus className="h-3 w-3" />
           Invite User
         </Button>
@@ -255,6 +259,16 @@ export function TeamMembersSection() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Invitation Modal */}
+      <UserInvitationModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onSuccess={() => {
+          // In production, refresh the invitations list here
+          // refetchInvitations()
+        }}
+      />
     </div>
   )
 }
