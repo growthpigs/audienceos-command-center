@@ -51,6 +51,18 @@ export function sanitizeString(input: unknown): string {
 }
 
 /**
+ * Sanitize search input for SQL LIKE patterns
+ * Escapes special characters (%, _) and limits length to prevent abuse
+ */
+export function sanitizeSearchPattern(input: unknown, maxLength: number = 100): string {
+  if (typeof input !== 'string') return ''
+  return sanitizeString(input)
+    .replace(/%/g, '\\%')
+    .replace(/_/g, '\\_')
+    .slice(0, maxLength)
+}
+
+/**
  * Sanitize HTML content using DOMPurify (TD-003 fix)
  * Handles XSS vectors including encoding bypasses, SVG, data URIs
  * Note: This is async to enable lazy loading of DOMPurify (jsdom dependency)

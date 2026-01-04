@@ -366,9 +366,11 @@ export class WorkflowEngine {
     })
 
     // In production, this would integrate with Slack/email APIs
-    // For now, we'll simulate by logging
-    console.log(`[Workflow Notification] Channel: ${channel}, Recipients: ${recipients.join(', ')}`)
-    console.log(`[Workflow Notification] Message: ${processedMessage}`)
+    // For now, we'll simulate by logging (dev only)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[Workflow Notification] Channel: ${channel}, Recipients: ${recipients.join(', ')}`)
+      console.log(`[Workflow Notification] Message: ${processedMessage}`)
+    }
 
     // TODO: Implement actual notification sending via integrations
 

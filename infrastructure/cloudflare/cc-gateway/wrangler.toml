@@ -1,0 +1,17 @@
+name = "cc-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+account_id = "83f57273aef92ae292d9d8bfab97988e"
+
+# KV Namespace for OAuth tokens and state (will need new KV namespace)
+# TODO: Create new KV namespace for cc-gateway via:
+# wrangler kv:namespace create CC_KV
+[[kv_namespaces]]
+binding = "CC_KV"
+id = "PLACEHOLDER_CREATE_VIA_WRANGLER"
+
+# Environment variables (secrets set via wrangler secret put)
+[vars]
+ENVIRONMENT = "production"
+
+# Routes - will be cc-gateway.roderic-andrews.workers.dev

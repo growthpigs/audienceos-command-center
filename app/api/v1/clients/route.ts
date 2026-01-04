@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
-import { withRateLimit, withCsrfProtection, sanitizeString, sanitizeEmail, createErrorResponse } from '@/lib/security'
+import { withRateLimit, withCsrfProtection, sanitizeString, sanitizeEmail, sanitizeSearchPattern, createErrorResponse } from '@/lib/security'
 import type { HealthStatus } from '@/types/database'
 
 // Valid values for enums
@@ -61,11 +61,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_active', isActive === 'true')
     }
     if (search) {
-      // Sanitize search input and escape special characters for LIKE pattern
-      const sanitizedSearch = sanitizeString(search)
-        .replace(/%/g, '\\%')
-        .replace(/_/g, '\\_')
-        .slice(0, 100) // Limit search length
+      const sanitizedSearch = sanitizeSearchPattern(search)
       if (sanitizedSearch) {
         query = query.or(`name.ilike.%${sanitizedSearch}%,contact_email.ilike.%${sanitizedSearch}%,contact_name.ilike.%${sanitizedSearch}%`)
       }

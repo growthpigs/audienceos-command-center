@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
-import { withRateLimit, withCsrfProtection, sanitizeString, isValidUUID, createErrorResponse } from '@/lib/security'
+import { withRateLimit, withCsrfProtection, sanitizeString, sanitizeSearchPattern, isValidUUID, createErrorResponse } from '@/lib/security'
 import type { TicketCategory, TicketPriority, TicketStatus } from '@/types/database'
 
 // Valid enum values
@@ -70,11 +70,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('category', category as TicketCategory)
     }
     if (search) {
-      // Sanitize search input and escape special characters
-      const sanitizedSearch = sanitizeString(search)
-        .replace(/%/g, '\\%')
-        .replace(/_/g, '\\_')
-        .slice(0, 100)
+      const sanitizedSearch = sanitizeSearchPattern(search)
       if (sanitizedSearch) {
         query = query.or(`title.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`)
       }

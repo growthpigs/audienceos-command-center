@@ -1,6 +1,6 @@
 # AudienceOS Command Center
 
-> **Multi-tenant SaaS for marketing agencies** | Next.js 15 + React 19 + Supabase
+> **Multi-tenant SaaS for marketing agencies** | Next.js 16 + React 19 + Supabase
 
 ---
 
@@ -18,8 +18,8 @@
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 15 (App Router) |
-| UI | React 19, Tailwind, shadcn/ui (Linear design system) |
+| Framework | Next.js 16 (App Router, Turbopack) |
+| UI | React 19, Tailwind v4, shadcn/ui (Linear design system) |
 | Charts | Recharts |
 | State | Zustand |
 | Backend | Supabase (Postgres + Auth + Storage + Realtime) |
@@ -75,7 +75,9 @@ features/               # 9 specs, 206 tasks total
 npm install          # Install deps
 npm run dev          # Dev server (localhost:3000)
 npm run build        # Production build
+npm run test         # Run test suite (Vitest)
 npm run lint         # ESLint
+npm run typecheck    # TypeScript check
 ```
 
 ---
@@ -168,4 +170,4 @@ gemini-2.0-flash-001
 
 ---
 
-*Updated: 2026-01-03 (3-System Consolidation complete)*
+*Updated: 2026-01-04 (Maintenance: DRY refactoring, version sync)*

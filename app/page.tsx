@@ -103,7 +103,7 @@ import { IntelligenceCenter } from "@/components/views/intelligence-center"
 import { OnboardingHub } from "@/components/views/onboarding-hub"
 import { SupportTickets } from "@/components/views/support-tickets"
 import { IntegrationsHub } from "@/components/views/integrations-hub"
-import { KnowledgeBaseDashboard } from "@/components/knowledge-base"
+import { KnowledgeBase } from "@/components/views/knowledge-base"
 import { AutomationsHub } from "@/components/views/automations-hub"
 import { DashboardView } from "@/components/dashboard-view"
 import { SettingsView } from "@/components/settings-view"
@@ -354,11 +354,7 @@ function CommandCenterContent() {
         return <IntegrationsHub />
 
       case "knowledge":
-        return (
-          <div className="flex-1 overflow-y-auto p-4">
-            <KnowledgeBaseDashboard />
-          </div>
-        )
+        return <KnowledgeBase />
 
       case "automations":
         return <AutomationsHub />
