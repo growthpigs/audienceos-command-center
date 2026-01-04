@@ -1,7 +1,7 @@
 # AudienceOS Command Center - Runbook
 
 > **Operational reference for development, deployment, and troubleshooting**
-> Last Updated: 2026-01-03
+> Last Updated: 2026-01-04
 
 ---
 
@@ -110,15 +110,16 @@ supabase gen types typescript --local > types/database.ts
 
 ## Build & Deployment
 
-### Current Status: Local Development Only
+### Current Status: Production Deployed ✅
 
-**⚠️ No production deployment configured yet.**
+| Environment | URL | Status |
+|-------------|-----|--------|
+| **Production** | [audienceos-command-center-5e7i.vercel.app](https://audienceos-command-center-5e7i.vercel.app) | Active |
+| **Vercel Team** | Agro Bros | growthpigs/audienceos-co... |
 
-The project is currently in local development. There is no staging or production environment.
+**Deployment:** Auto-deploys on push to `main` branch.
 
-**Note:** `v0-audience-os-command-center.vercel.app` is a **V0 prototype/proof of concept** built during discovery. It is NOT connected to this codebase and should not be confused with a production deployment.
-
-### Production Build (Local Verification)
+### Production Build
 
 ```bash
 npm run build
@@ -129,13 +130,16 @@ Build output:
 - 24 API routes (dynamic)
 - TypeScript check included
 
-### Future Deployment (Not Yet Configured)
+### Vercel Environment Variables
 
-When ready to deploy:
-1. Create Vercel project and link to this repo
-2. Configure environment variables in Vercel Dashboard
-3. Set up staging vs production environments
-4. Configure custom domain
+| Variable | Status | Notes |
+|----------|--------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Set | `audienceos-cc-fresh` project |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Set | JWT format |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Set | Server-only |
+| `GOOGLE_AI_API_KEY` | ✅ Set | Gemini for chat |
+| `OAUTH_STATE_SECRET` | ✅ Set | Security |
+| `TOKEN_ENCRYPTION_KEY` | ✅ Set | Security |
 
 ---
 
@@ -165,70 +169,59 @@ supabase db push --linked
 
 ---
 
-## ⚠️ Schema Migration (CRITICAL - 2026-01-02)
+## ✅ Database Configuration (Completed 2026-01-04)
 
-### Current State
+### Active Supabase Project
 
-The Supabase project (`qwlhdeiigwnbmqcydpvu`) has **legacy War Room schema** from November 2025:
-- `agencies` (plural) instead of `agency`
-- `clients` with subscription_tier, unipile fields
-- `users` with roles array, unipile_account_id
+| Property | Value |
+|----------|-------|
+| **Project Name** | `audienceos-cc-fresh` |
+| **Project ID** | `ebxshdqfaqupnvpghodi` |
+| **Organization** | Badaboost |
+| **URL** | `https://ebxshdqfaqupnvpghodi.supabase.co` |
 
-The AudienceOS schema (`supabase/migrations/001_initial_schema.sql`) was **never applied**.
+### Schema Status: Applied ✅
 
-### Option A: Fresh Supabase Project (Recommended)
+The AudienceOS schema (`supabase/migrations/001_initial_schema.sql`) has been applied with all 19 tables:
 
-1. Create new Supabase project at supabase.com
-2. Update `.env.local` with new credentials:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=https://NEW_PROJECT.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=new_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=new_service_key
-   ```
-3. Apply migration:
-   ```bash
-   # Via Supabase Dashboard SQL Editor
-   # Paste contents of supabase/migrations/001_initial_schema.sql
+| Table | Purpose |
+|-------|---------|
+| `agency` | Tenant root (multi-tenant) |
+| `user` | Team members |
+| `client` | Client accounts |
+| `client_assignment` | Owner/collaborator assignments |
+| `stage_event` | Pipeline stage history |
+| `task` | Action items |
+| `integration` | OAuth connections |
+| `communication` | Messages (Slack/Gmail) |
+| `alert` | System notifications |
+| `document` | Knowledge base files |
+| `chat_session` | AI chat sessions |
+| `chat_message` | AI chat messages |
+| `ticket` | Support tickets |
+| `ticket_note` | Ticket comments |
+| `workflow` | Automation definitions |
+| `workflow_run` | Automation executions |
+| `user_preference` | User settings |
+| `kpi_snapshot` | Performance metrics |
+| `ad_performance` | Ad platform data |
 
-   # Or via CLI
-   supabase link --project-ref NEW_PROJECT_ID
-   supabase db push
-   ```
-4. Regenerate types:
-   ```bash
-   supabase gen types typescript --project-id NEW_PROJECT_ID > types/database.ts
-   ```
+### Seed Data: Present ✅
 
-### Option B: Migrate In Place
+Test users configured:
+- `test@audienceos.dev` - Test User
+- `dev@audienceos.dev` - Dev User
+- `test@audienceos.com` - Test User
+- `admin@acme.agency` - Admin User
 
-1. Backup existing data (if needed)
-2. Drop legacy tables:
-   ```sql
-   DROP TABLE IF EXISTS users CASCADE;
-   DROP TABLE IF EXISTS clients CASCADE;
-   DROP TABLE IF EXISTS agencies CASCADE;
-   -- etc
-   ```
-3. Apply migration via SQL Editor
-4. Regenerate types
+### RLS: Enabled ✅
 
-### Seed Data
+All tables have Row-Level Security with `auth.jwt() ->> 'agency_id'` isolation.
 
-After migration, seed with test data:
-```sql
--- Insert test agency
-INSERT INTO agency (name, slug) VALUES ('Acme Marketing', 'acme-marketing');
+### Regenerate Types (If Schema Changes)
 
--- Insert test user (link to Supabase Auth user)
-INSERT INTO "user" (id, agency_id, email, first_name, last_name, role)
-VALUES (
-  'YOUR_AUTH_USER_ID',
-  (SELECT id FROM agency WHERE slug = 'acme-marketing'),
-  'you@example.com',
-  'Your',
-  'Name',
-  'admin'
-);
+```bash
+supabase gen types typescript --project-id ebxshdqfaqupnvpghodi > types/database.ts
 ```
 
 ---

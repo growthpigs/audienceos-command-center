@@ -10,6 +10,7 @@ import {
   categoryLabels,
 } from "@/components/linear/document-card"
 import { DocumentPreviewPanel, type Document } from "@/components/linear/document-preview-panel"
+import { DocumentUploadModal } from "@/components/linear/document-upload-modal"
 import { ListHeader } from "@/components/linear"
 import { Button } from "@/components/ui/button"
 import {
@@ -206,6 +207,7 @@ export function KnowledgeBase() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all")
   const [categoryFilter, setCategoryFilter] = useState<DocumentCategory | "all">("all")
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
 
   const slideTransition = useSlideTransition()
 
@@ -279,7 +281,7 @@ export function KnowledgeBase() {
           onViewModeChange={!selectedDocument ? (mode) => setViewMode(mode === "board" ? "grid" : "list") : undefined}
           actions={
             !selectedDocument && (
-              <Button size="sm" className="h-8 gap-1.5">
+              <Button size="sm" className="h-8 gap-1.5" onClick={() => setIsUploadModalOpen(true)}>
                 <Upload className="h-4 w-4" />
                 Upload
               </Button>
@@ -380,6 +382,12 @@ export function KnowledgeBase() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Upload Modal */}
+      <DocumentUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+      />
     </div>
   )
 }
