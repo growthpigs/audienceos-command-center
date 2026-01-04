@@ -15,8 +15,26 @@ import {
   type ActiveFilters,
   type SortOption,
 } from "@/components/linear"
-import { mockClients, type Client, owners } from "@/lib/mock-data"
+import { usePipelineStore, type Client as StoreClient } from "@/stores/pipeline-store"
+import { getOwnerData, type MinimalClient } from "@/types/client"
 import { sortClients, type SortMode } from "@/lib/client-priority"
+
+// Convert store client to UI client format (returns MinimalClient)
+function adaptStoreClient(client: StoreClient): MinimalClient {
+  return {
+    id: client.id,
+    name: client.name,
+    logo: client.name.substring(0, 2).toUpperCase(),
+    stage: client.stage,
+    health: client.health_status,
+    owner: client.owner || "Unassigned",
+    daysInStage: client.days_in_stage,
+    supportTickets: 0,
+    statusNote: client.notes || undefined,
+    tier: "Core",
+    blocker: null,
+  }
+}
 
 // Filter configurations for Client List
 const clientFiltersConfig: FilterConfig[] = [
@@ -97,7 +115,7 @@ const clientSortOptions: SortOption[] = [
 ]
 
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, AlertCircle, Loader2 } from "lucide-react"
 import { ToastProvider } from "@/components/linear"
 import { IntelligenceCenter } from "@/components/views/intelligence-center"
 import { OnboardingHub } from "@/components/views/onboarding-hub"
@@ -117,7 +135,7 @@ function CommandCenterContent() {
   const pathname = usePathname()
 
   const [activeView, setActiveView] = useState<LinearView>("pipeline")
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [selectedClient, setSelectedClient] = useState<MinimalClient | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   // Separate view modes: Pipeline defaults to board (Kanban), Clients defaults to list
   const [pipelineViewMode, setPipelineViewMode] = useState<"list" | "board">("board")
@@ -140,8 +158,18 @@ function CommandCenterContent() {
   const [intelligenceInitialSection, setIntelligenceInitialSection] = useState<string | undefined>()
   const [intelligenceInitialCartridgeTab, setIntelligenceInitialCartridgeTab] = useState<"voice" | "style" | "preferences" | "instructions" | "brand" | undefined>()
 
-  // Use mock clients for now
-  const clients = mockClients
+  // Pipeline store - fetches from Supabase API
+  const { clients: storeClients, fetchClients, isLoading, error: apiError } = usePipelineStore()
+
+  // Fetch clients on mount
+  useEffect(() => {
+    fetchClients()
+  }, [fetchClients])
+
+  // Convert store clients to UI format
+  const clients: MinimalClient[] = useMemo(() => {
+    return storeClients.map(adaptStoreClient)
+  }, [storeClients])
 
   // Sync URL params when filters change
   const updateUrlParams = useCallback((filters: ActiveFilters) => {
@@ -220,11 +248,7 @@ function CommandCenterContent() {
   // Transform client to detail panel format
   const clientForPanel = useMemo(() => {
     if (!selectedClient) return null
-    const ownerData = owners.find((o) => o.name === selectedClient.owner) || {
-      name: selectedClient.owner,
-      avatar: selectedClient.owner[0],
-      color: "bg-primary",
-    }
+    const ownerData = getOwnerData(selectedClient.owner)
     return {
       id: selectedClient.logo,
       name: selectedClient.name,
@@ -235,7 +259,7 @@ function CommandCenterContent() {
         initials: ownerData.avatar,
         color: ownerData.color,
       },
-      tier: selectedClient.tier,
+      tier: selectedClient.tier || "Core",
       daysInStage: selectedClient.daysInStage,
       blocker: selectedClient.blocker,
       statusNote: selectedClient.statusNote,
@@ -275,44 +299,66 @@ function CommandCenterContent() {
                 </Button>
               }
             />
-            {viewMode === "board" ? (
-              <KanbanBoard
-                clients={filteredClients}
-                onClientClick={(client) => setSelectedClient(client)}
-              />
-            ) : (
-              <div className="flex-1 overflow-y-auto">
-                {filteredClients.map((client) => {
-                  const ownerData = owners.find((o) => o.name === client.owner) || {
-                    name: client.owner,
-                    avatar: client.owner[0],
-                    color: "bg-primary",
-                  }
-                  return (
-                    <ClientRow
-                      key={client.id}
-                      id={client.logo}
-                      name={client.name}
-                      stage={client.stage}
-                      health={client.health}
-                      owner={{
-                        name: ownerData.name,
-                        initials: ownerData.avatar,
-                        color: ownerData.color,
-                      }}
-                      daysInStage={client.daysInStage}
-                      blocker={client.blocker}
-                      onClick={() => setSelectedClient(client)}
-                      selected={selectedClient?.id === client.id}
-                    />
-                  )
-                })}
-                {filteredClients.length === 0 && (
-                  <div className="flex items-center justify-center h-48 text-muted-foreground">
-                    No clients found
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {/* Error state */}
+            {apiError && !isLoading && (
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="font-medium">Failed to load clients</span>
+                </div>
+                <p className="text-sm text-muted-foreground text-center max-w-md">
+                  {apiError}. Please check your connection and try again.
+                </p>
+                <Button variant="outline" size="sm" onClick={() => fetchClients()}>
+                  Retry
+                </Button>
+              </div>
+            )}
+            {/* Content - only show when not loading and no error */}
+            {!isLoading && !apiError && (
+              <>
+                {viewMode === "board" ? (
+                  <KanbanBoard
+                    clients={filteredClients}
+                    onClientClick={(client) => setSelectedClient(client)}
+                  />
+                ) : (
+                  <div className="flex-1 overflow-y-auto">
+                    {filteredClients.map((client) => {
+                      const ownerData = getOwnerData(client.owner)
+                      return (
+                        <ClientRow
+                          key={client.id}
+                          id={client.logo}
+                          name={client.name}
+                          stage={client.stage}
+                          health={client.health}
+                          owner={{
+                            name: ownerData.name,
+                            initials: ownerData.avatar,
+                            color: ownerData.color,
+                          }}
+                          daysInStage={client.daysInStage}
+                          blocker={client.blocker}
+                          onClick={() => setSelectedClient(client)}
+                          selected={selectedClient?.id === client.id}
+                        />
+                      )
+                    })}
+                    {filteredClients.length === 0 && (
+                      <div className="flex items-center justify-center h-48 text-muted-foreground">
+                        No clients found
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </>
         )
@@ -341,7 +387,7 @@ function CommandCenterContent() {
         return (
           <OnboardingHub
             onClientClick={(clientId) => {
-              const client = mockClients.find((c) => c.id === clientId)
+              const client = clients.find((c) => c.id === clientId)
               if (client) setSelectedClient(client)
             }}
           />
