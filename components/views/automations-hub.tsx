@@ -677,7 +677,7 @@ function StepConfiguration({ step }: StepConfigurationProps) {
   )
 }
 
-function TriggerConfig({ config }: { config: Record<string, any> }) {
+function TriggerConfig({ config }: { config: StepConfig }) {
   return (
     <div className="space-y-3">
       <div className="p-3 rounded-lg border border-blue-500/20 bg-blue-500/5">
@@ -715,7 +715,7 @@ function TriggerConfig({ config }: { config: Record<string, any> }) {
   )
 }
 
-function DelayConfig({ config }: { config: Record<string, any> }) {
+function DelayConfig({ config }: { config: StepConfig }) {
   return (
     <div className="space-y-3">
       <div className="p-3 rounded-lg border border-slate-500/20 bg-slate-500/5">
@@ -740,7 +740,7 @@ function DelayConfig({ config }: { config: Record<string, any> }) {
   )
 }
 
-function ActionConfig({ config }: { config: Record<string, any> }) {
+function ActionConfig({ config }: { config: StepConfig }) {
   // Determine default action type based on config
   const getDefaultActionType = () => {
     if (config.template) return "send_email"
@@ -801,7 +801,7 @@ function ActionConfig({ config }: { config: Record<string, any> }) {
   )
 }
 
-function ConditionConfig({ config }: { config: Record<string, any> }) {
+function ConditionConfig({ config }: { config: StepConfig }) {
   return (
     <div className="space-y-3">
       <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5">
