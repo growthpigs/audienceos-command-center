@@ -655,6 +655,96 @@ Soft-delete.
 
 ---
 
+## Settings
+
+### `GET /v1/settings/agency`
+Fetch agency configuration.
+
+Response:
+```json
+{
+  "id": "uuid",
+  "name": "Agency Name",
+  "logo_url": "https://...",
+  "timezone": "UTC",
+  "business_hours": { "start": "09:00", "end": "17:00" },
+  "pipeline_stages": ["Lead", "Onboarding", "Live"],
+  "health_thresholds": { "yellow": 7, "red": 14 }
+}
+```
+
+### `PATCH /v1/settings/agency`
+Update agency settings (admin only).
+
+```json
+{
+  "name": "Updated Name",
+  "timezone": "America/New_York",
+  "business_hours": { "start": "08:00", "end": "18:00" },
+  "pipeline_stages": ["Lead", "Proposal", "Onboarding", "Live", "Support"],
+  "health_thresholds": { "yellow": 10, "red": 21 }
+}
+```
+
+Validation:
+- Timezone must be valid IANA timezone
+- Min 3 pipeline stages, max 20
+- Yellow threshold < Red threshold
+
+### `GET /v1/settings/users`
+List team members (admin only).
+
+Params: `?limit=50&offset=0&is_active=true&search=name`
+
+Response:
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "email": "user@agency.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "role": "admin",
+      "is_active": true,
+      "last_active_at": "2026-01-04T10:30:00Z"
+    }
+  ],
+  "pagination": { "total": 5, "limit": 50, "offset": 0 }
+}
+```
+
+### `PATCH /v1/settings/users/{id}`
+Update user role or status (admin only).
+
+```json
+{
+  "role": "user",
+  "is_active": false
+}
+```
+
+Validation:
+- Prevents removing last admin
+- Role: "admin" or "user"
+
+### `DELETE /v1/settings/users/{id}`
+Delete user (admin only).
+
+If user has client assignments, requires:
+```json
+{
+  "reassign_to": "other-user-id"
+}
+```
+
+Validation:
+- Prevents self-deletion
+- Prevents deleting last admin
+- Target user must be active and in same agency
+
+---
+
 ## Webhooks (Inbound)
 
 ### `POST /v1/webhooks/slack/event`

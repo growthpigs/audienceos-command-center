@@ -29,10 +29,10 @@
 | support-tickets | ✅ Complete | [support-tickets.md](support-tickets.md) | 85% | 15+ components, 8 APIs, full Kanban (1,157 lines) |
 | knowledge-base | ✅ Complete | [knowledge-base.md](knowledge-base.md) | 80% | 4 components, upload modal, store (290 lines) |
 | automations | ✅ Complete | [automations.md](automations.md) | 85% | 5 components, 8 APIs, workflow engine |
-| settings | ✅ Complete | [settings.md](settings.md) | 75% | 8 sections, store (250 lines) |
+| settings | ✅ Complete | [settings.md](settings.md) | 85% | SET-001/002: Agency + User APIs complete. SET-003-007: Invitations pending |
 | ai-intelligence-layer (HGC) | 🚧 Building | [ai-intelligence-layer.md](ai-intelligence-layer.md) | 30% | **Holy Grail Chat** - Standalone project. RAG/Web/Memory working. Function calling NOT implemented. |
 
-**Overall Completion:** ~85% (UI complete, needs Supabase + third-party API integration)
+**Overall Completion:** ~86% (Settings APIs added 2026-01-04, needs invitations + email service)
 
 ---
 
@@ -65,6 +65,7 @@
 | 2026-01-01 | - | **BATCH 1 COMPLETE**: 4 features built in parallel (client-pipeline, dashboard, communications, integrations). 38 files, 4,733 lines. Build passes. 113/323 tasks done. |
 | 2025-12-31 | 10/10 | **D-2 SpecKit COMPLETE**: All 9 MVP features fully specced with correct user story numbers (US-025 to US-041). Expanded all features to 40 comprehensive implementation tasks each. Added TypeScript code snippets, edge cases, testing checklists, performance considerations, security sections, and monitoring for each feature. Total tasks: 206 → 323. |
 | 2025-12-31 | 10/10 | Added 4 missing features (support-tickets, knowledge-base, automations, settings). Expanded ai-intelligence-layer with full Chi Intelligent Chat architecture. Total tasks: 120 → 206. |
+| 2026-01-04 | 10/10 | **Phase 10 (SET-001-002)**: Agency settings + user management APIs complete. GET/PATCH /settings/agency, GET/PATCH/DELETE /settings/users. Build passes. |
 | 2025-12-31 | 9/10 | Dashboard API endpoints added to API-CONTRACTS |
 
 ---

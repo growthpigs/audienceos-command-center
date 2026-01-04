@@ -438,6 +438,61 @@ curl http://localhost:3000/api/v1/workflows | jq '.demo'  # Proves API responds
 
 See error-patterns.md "File Existence Fallacy" pattern.
 
+### Settings API Verification (2026-01-04)
+
+**Agency Settings (Admin Only)**
+
+```bash
+# Fetch agency configuration
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/settings/agency | jq '.data | {name, timezone, pipeline_stages}'
+
+# Update agency settings
+curl -X PATCH \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Agency",
+    "timezone": "America/New_York",
+    "pipeline_stages": ["Lead", "Onboarding", "Live", "Support"]
+  }' \
+  http://localhost:3000/api/v1/settings/agency | jq '.data.name'
+```
+
+**User Management (Admin Only)**
+
+```bash
+# List team members
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/settings/users?limit=10 | jq '.data | length'
+
+# Update user role (prevents last admin removal)
+curl -X PATCH \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"role": "user"}' \
+  http://localhost:3000/api/v1/settings/users/USER_ID | jq '.data.role'
+
+# Delete user with client reassignment
+curl -X DELETE \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reassign_to": "OTHER_USER_ID"}' \
+  http://localhost:3000/api/v1/settings/users/USER_ID | jq '.message'
+```
+
+**Expected Responses:**
+- GET agency: 200 with agency config
+- PATCH agency: 200 with updated config
+- GET users: 200 with paginated list
+- PATCH user: 200 with updated user OR 400 if last admin
+- DELETE user: 200 with success message OR 400 if reassignment needed
+
+**Permission Checks:**
+- All endpoints return 403 if user is not admin
+- Last admin protection prevents role demotion
+- Self-deletion is blocked
+
+---
+
 ### Schema Verification (Before Any DB Changes) (2026-01-03)
 
 **CRITICAL:** Never plan database migrations from documentation alone. Always verify actual schema.
