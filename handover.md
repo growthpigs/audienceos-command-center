@@ -2,11 +2,40 @@
 
 **Last Session:** 2026-01-04
 
+## Session 2026-01-04 (Supabase Data Connection)
+
+### Completed
+- **Agency renamed to "Diiiploy"** - Updated via chi-gateway MCP
+- **Added supabase_update MCP tool** - Deployed to chi-gateway v1.3.0 (58 tools)
+- **Chi-gateway commits pushed** - feat(supabase): add supabase_update MCP tool
+
+### Critical Finding
+Production (Vercel) is showing **mock data fallback** because env vars aren't pointing to the correct Supabase.
+
+**Chi-gateway uses:** `audienceos-cc-fresh` (project ID: `ebxshdqfaqupnvpghodi`)
+
+### Action Required: Update Vercel Env Vars
+Go to Vercel Dashboard → audienceos-command-center → Settings → Environment Variables
+
+Set these values:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://ebxshdqfaqupnvpghodi.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=[get from Supabase dashboard → API settings]
+SUPABASE_SERVICE_ROLE_KEY=[get from Supabase dashboard → API settings]
+```
+
+After updating, redeploy the site.
+
+### Remaining
+- [ ] Fix silent API error display in Pipeline view (when API fails, show error instead of mock data fallback)
+
+---
+
 ## Session 2026-01-04 (Mock Data Removal Sprint)
 
 ### Completed
 - Seeded Supabase with comprehensive demo data:
-  - "Acme Marketing Agency" - direct response marketing, ~$1M/year
+  - "Diiiploy" (was "Acme Marketing Agency") - direct response marketing, ~$1M/year
   - 15 clients across all pipeline stages (Onboarding → Off-boarding)
   - 4 users (admin, test accounts)
   - 7 communications (email/slack threads)

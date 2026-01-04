@@ -115,7 +115,7 @@ const clientSortOptions: SortOption[] = [
 ]
 
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, AlertCircle, Loader2 } from "lucide-react"
 import { ToastProvider } from "@/components/linear"
 import { IntelligenceCenter } from "@/components/views/intelligence-center"
 import { OnboardingHub } from "@/components/views/onboarding-hub"
@@ -159,7 +159,7 @@ function CommandCenterContent() {
   const [intelligenceInitialCartridgeTab, setIntelligenceInitialCartridgeTab] = useState<"voice" | "style" | "preferences" | "instructions" | "brand" | undefined>()
 
   // Pipeline store - fetches from Supabase API
-  const { clients: storeClients, fetchClients, isLoading: _isLoading } = usePipelineStore()
+  const { clients: storeClients, fetchClients, isLoading, error: apiError } = usePipelineStore()
 
   // Fetch clients on mount
   useEffect(() => {
@@ -299,40 +299,66 @@ function CommandCenterContent() {
                 </Button>
               }
             />
-            {viewMode === "board" ? (
-              <KanbanBoard
-                clients={filteredClients}
-                onClientClick={(client) => setSelectedClient(client)}
-              />
-            ) : (
-              <div className="flex-1 overflow-y-auto">
-                {filteredClients.map((client) => {
-                  const ownerData = getOwnerData(client.owner)
-                  return (
-                    <ClientRow
-                      key={client.id}
-                      id={client.logo}
-                      name={client.name}
-                      stage={client.stage}
-                      health={client.health}
-                      owner={{
-                        name: ownerData.name,
-                        initials: ownerData.avatar,
-                        color: ownerData.color,
-                      }}
-                      daysInStage={client.daysInStage}
-                      blocker={client.blocker}
-                      onClick={() => setSelectedClient(client)}
-                      selected={selectedClient?.id === client.id}
-                    />
-                  )
-                })}
-                {filteredClients.length === 0 && (
-                  <div className="flex items-center justify-center h-48 text-muted-foreground">
-                    No clients found
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {/* Error state */}
+            {apiError && !isLoading && (
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="font-medium">Failed to load clients</span>
+                </div>
+                <p className="text-sm text-muted-foreground text-center max-w-md">
+                  {apiError}. Please check your connection and try again.
+                </p>
+                <Button variant="outline" size="sm" onClick={() => fetchClients()}>
+                  Retry
+                </Button>
+              </div>
+            )}
+            {/* Content - only show when not loading and no error */}
+            {!isLoading && !apiError && (
+              <>
+                {viewMode === "board" ? (
+                  <KanbanBoard
+                    clients={filteredClients}
+                    onClientClick={(client) => setSelectedClient(client)}
+                  />
+                ) : (
+                  <div className="flex-1 overflow-y-auto">
+                    {filteredClients.map((client) => {
+                      const ownerData = getOwnerData(client.owner)
+                      return (
+                        <ClientRow
+                          key={client.id}
+                          id={client.logo}
+                          name={client.name}
+                          stage={client.stage}
+                          health={client.health}
+                          owner={{
+                            name: ownerData.name,
+                            initials: ownerData.avatar,
+                            color: ownerData.color,
+                          }}
+                          daysInStage={client.daysInStage}
+                          blocker={client.blocker}
+                          onClick={() => setSelectedClient(client)}
+                          selected={selectedClient?.id === client.id}
+                        />
+                      )
+                    })}
+                    {filteredClients.length === 0 && (
+                      <div className="flex items-center justify-center h-48 text-muted-foreground">
+                        No clients found
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </>
         )
