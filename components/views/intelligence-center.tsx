@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard"
 import { cn } from "@/lib/utils"
 import { CartridgesPage } from "@/components/cartridges"
+import { ChatInterface } from "@/components/chat/chat-interface"
 import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -344,7 +345,7 @@ interface IntelligenceCenterProps {
 export function IntelligenceCenter({ onBack, initialSection = "overview", initialCartridgeTab }: IntelligenceCenterProps) {
   const [activeSection, setActiveSection] = useState(initialSection)
   const [chatFilter, setChatFilter] = useState<ChatFilterTab>("all")
-  const { agencyId: _agencyId, isLoading: _authLoading } = useAuth()
+  const { agencyId, isLoading: authLoading } = useAuth()
 
   // Training Data state
   const [trainingDocs, setTrainingDocs] = useState<TrainingDocument[]>(mockTrainingDocs)
@@ -570,6 +571,32 @@ export function IntelligenceCenter({ onBack, initialSection = "overview", initia
       )}
 
       {activeSection === "chat" && (
+        <SettingsContentSection title="Chat">
+          {authLoading ? (
+            <div className="bg-card border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">Loading...</p>
+            </div>
+          ) : agencyId ? (
+            <ChatInterface agencyId={agencyId} />
+          ) : (
+            <div className="bg-card border border-border rounded-lg p-8 text-center">
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+              <p className="text-muted-foreground mb-4">
+                Please sign in to use the chat interface.
+              </p>
+              <button
+                onClick={() => window.location.href = "/login"}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
+              >
+                Sign In
+              </button>
+            </div>
+          )}
+        </SettingsContentSection>
+      )}
+
+      {activeSection === "history" && (
         <SettingsContentSection title="Chat History">
           {/* Chat Filter Tabs */}
           <div className="flex items-center gap-1 mb-4 p-1 bg-secondary/50 rounded-lg w-fit">
