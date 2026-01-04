@@ -71,7 +71,7 @@ function generateMockFirehoseItems(clients: MinimalClient[]): FirehoseItemData[]
     })
   })
 
-  // Add task items
+  // Add task items for each team member
   items.push({
     id: "task-1",
     severity: "warning",
@@ -91,6 +91,94 @@ function generateMockFirehoseItems(clients: MinimalClient[]): FirehoseItemData[]
     timestamp: new Date(now.getTime() - 60 * 60 * 1000),
     clientName: "Allbirds",
     assignee: "Brent",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-3",
+    severity: "warning",
+    title: "Campaign Budget Review",
+    description: "Brooklinen Q1 budget allocation needs approval",
+    timestamp: new Date(now.getTime() - 90 * 60 * 1000),
+    clientName: "Brooklinen",
+    assignee: "Roderic",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-4",
+    severity: "info",
+    title: "Pixel Verification",
+    description: "Glow Recipe pixel installation needs verification",
+    timestamp: new Date(now.getTime() - 120 * 60 * 1000),
+    clientName: "Glow Recipe",
+    assignee: "Chase",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-5",
+    severity: "critical",
+    title: "Attribution Discrepancy",
+    description: "Beardbrand showing 15% attribution gap vs GA4",
+    timestamp: new Date(now.getTime() - 150 * 60 * 1000),
+    clientName: "Beardbrand",
+    assignee: "Brent",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-6",
+    severity: "info",
+    title: "Onboarding Call Prep",
+    description: "Prepare materials for Ruggable kickoff call",
+    timestamp: new Date(now.getTime() - 180 * 60 * 1000),
+    clientName: "Ruggable",
+    assignee: "Trevor",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-7",
+    severity: "warning",
+    title: "Monthly Report Due",
+    description: "MVMT Watches monthly performance report deadline tomorrow",
+    timestamp: new Date(now.getTime() - 210 * 60 * 1000),
+    clientName: "MVMT Watches",
+    assignee: "Roderic",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-8",
+    severity: "info",
+    title: "Data Layer Audit",
+    description: "Complete RTA Outdoor Living data layer documentation",
+    timestamp: new Date(now.getTime() - 240 * 60 * 1000),
+    clientName: "RTA Outdoor Living",
+    assignee: "Brent",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-9",
+    severity: "warning",
+    title: "Creative Review",
+    description: "Review Alo Yoga new campaign creative assets",
+    timestamp: new Date(now.getTime() - 270 * 60 * 1000),
+    clientName: "Alo Yoga",
+    assignee: "Chase",
+    targetTab: "tasks",
+  })
+
+  items.push({
+    id: "task-10",
+    severity: "info",
+    title: "GA4 Setup Verification",
+    description: "Terren GA4 enhanced ecommerce verification pending",
+    timestamp: new Date(now.getTime() - 300 * 60 * 1000),
+    clientName: "Terren",
+    assignee: "Trevor",
     targetTab: "tasks",
   })
 
@@ -121,25 +209,36 @@ function generateMockFirehoseItems(clients: MinimalClient[]): FirehoseItemData[]
 
 // Tasks by Assignee Widget
 function TasksByAssigneeWidget({
-  clients,
+  firehoseItems,
   onOwnerClick
 }: {
-  clients: MinimalClient[]
+  firehoseItems: FirehoseItemData[]
   onOwnerClick: (owner: string) => void
 }) {
-  const tasksByOwner = clients.reduce((acc, client) => {
-    // TODO: Get task count from database when tasks are implemented
-    acc[client.owner] = (acc[client.owner] || 0)
+  // Count tasks from firehose items that have assignees
+  const tasksByOwner = firehoseItems.reduce((acc, item) => {
+    if (item.assignee) {
+      acc[item.assignee] = (acc[item.assignee] || 0) + 1
+    }
     return acc
   }, {} as Record<string, number>)
 
-  const totalTasks = Object.values(tasksByOwner).reduce((a, b) => a + b, 0)
+  // If no tasks from firehose, use mock data so the widget isn't empty
+  const hasRealData = Object.keys(tasksByOwner).length > 0
+  const displayData = hasRealData ? tasksByOwner : {
+    "Brent": 4,
+    "Trevor": 3,
+    "Roderic": 2,
+    "Chase": 2,
+  }
+
+  const totalTasks = Object.values(displayData).reduce((a, b) => a + b, 0)
 
   return (
     <div className="bg-card border border-border rounded-lg p-4">
       <h3 className="text-sm font-medium text-foreground mb-3">Tasks by Assignee</h3>
       <div className="space-y-2">
-        {Object.entries(tasksByOwner).slice(0, 4).map(([owner, count]) => {
+        {Object.entries(displayData).slice(0, 4).map(([owner, count]) => {
           const ownerData = getOwnerData(owner)
           return (
             <button
@@ -917,7 +1016,7 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
             {/* Right: Widgets (60%) - determines overall height */}
             <div className="col-span-3 flex flex-col gap-3">
               {/* Tasks by Assignee - top */}
-              <TasksByAssigneeWidget clients={clients} onOwnerClick={handleOwnerClick} />
+              <TasksByAssigneeWidget firehoseItems={firehoseItems} onOwnerClick={handleOwnerClick} />
 
               {/* 2-column grid of widgets */}
               <div className="grid grid-cols-2 gap-3">

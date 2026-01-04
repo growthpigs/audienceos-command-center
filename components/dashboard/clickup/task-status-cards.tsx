@@ -47,9 +47,11 @@ export function TaskStatusCards({
   inProgress = 2,
   completed = 8,
   completedByUser = [
-    { count: 5, name: "Unassigned", initials: "U", color: "bg-emerald-500" },
-    { count: 3, name: "Alex Smith", initials: "AS", color: "bg-blue-500" },
-    { count: 1, name: "John Doe", initials: "JD", color: "bg-purple-500" },
+    { count: 5, name: "Unassigned", initials: "U", color: "bg-gray-500" },
+    { count: 4, name: "Brent", initials: "B", color: "bg-emerald-500" },
+    { count: 3, name: "Trevor", initials: "T", color: "bg-amber-500" },
+    { count: 2, name: "Roderic", initials: "R", color: "bg-blue-500" },
+    { count: 1, name: "Chase", initials: "C", color: "bg-purple-500" },
   ],
 }: TaskStatusCardsProps) {
   return (

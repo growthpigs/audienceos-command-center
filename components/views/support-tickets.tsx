@@ -45,7 +45,7 @@ const mockTickets: Ticket[] = [
       {
         id: "act-1",
         type: "created",
-        actor: { name: "John Smith", initials: "JS", color: "bg-blue-600" },
+        actor: { name: "Client Contact", initials: "CC", color: "bg-slate-600" },
         timestamp: "Dec 28, 2024 at 10:30 AM",
       },
       {
@@ -165,7 +165,7 @@ const mockTickets: Ticket[] = [
       {
         id: "act-9",
         type: "created",
-        actor: { name: "John Smith", initials: "JS", color: "bg-blue-600" },
+        actor: { name: "Client Contact", initials: "CC", color: "bg-slate-600" },
         timestamp: "Dec 27, 2024 at 3:00 PM",
       },
       {

@@ -24,14 +24,18 @@ interface TaskChartsProps {
 
 export function TaskCharts({
   pieData = [
-    { label: "Alex Smith", value: 5, percentage: 19.23, color: "#ef4444" },
-    { label: "Sam Lee", value: 2, percentage: 7.69, color: "#3b82f6" },
-    { label: "Unassigned", value: 19, percentage: 73.07, color: "#6b7280" },
+    { label: "Brent", value: 8, percentage: 30.77, color: "#10b981" },
+    { label: "Trevor", value: 6, percentage: 23.08, color: "#f59e0b" },
+    { label: "Roderic", value: 4, percentage: 15.38, color: "#3b82f6" },
+    { label: "Chase", value: 3, percentage: 11.54, color: "#8b5cf6" },
+    { label: "Unassigned", value: 5, percentage: 19.23, color: "#6b7280" },
   ],
   barData = [
-    { label: "Alex Smith", value: 4, color: "#ef4444" },
-    { label: "Sam Lee", value: 5, color: "#f87171" },
-    { label: "Unassigned", value: 14, color: "#6b7280" },
+    { label: "Brent", value: 4, color: "#10b981" },
+    { label: "Trevor", value: 5, color: "#f59e0b" },
+    { label: "Roderic", value: 2, color: "#3b82f6" },
+    { label: "Chase", value: 3, color: "#8b5cf6" },
+    { label: "Unassigned", value: 6, color: "#6b7280" },
   ],
 }: TaskChartsProps) {
   // Calculate pie chart segments
