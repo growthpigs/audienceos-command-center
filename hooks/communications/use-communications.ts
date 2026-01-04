@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
+import { fetchWithCsrf } from '@/lib/csrf'
 import type { CommunicationWithMeta, CommunicationsFilters } from '@/stores/communications-store'
 import type { Database } from '@/types/database'
 
@@ -181,7 +182,7 @@ export function useUpdateCommunication() {
       if (error) throw new Error(error.message)
       return data
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       // Invalidate and refetch
       queryClient.invalidateQueries({
         queryKey: communicationsKeys.all,
@@ -207,9 +208,8 @@ export function useSendReply() {
       sendImmediately?: boolean
     }) => {
       // Call the API to send reply via Slack/Gmail
-      const response = await fetch(`/api/v1/communications/${messageId}/reply`, {
+      const response = await fetchWithCsrf(`/api/v1/communications/${messageId}/reply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content, send_immediately: sendImmediately }),
       })
 
@@ -240,9 +240,8 @@ export function useGenerateDraft() {
       messageId: string
       tone?: 'professional' | 'casual'
     }) => {
-      const response = await fetch('/api/v1/assistant/draft', {
+      const response = await fetchWithCsrf('/api/v1/assistant/draft', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'reply',
           context: { message_id: messageId },

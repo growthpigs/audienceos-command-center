@@ -2,7 +2,7 @@
 
 import React from "react"
 import { cn } from "@/lib/utils"
-import { X, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
+import { X, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface DateOption {
@@ -54,7 +54,7 @@ export function DatePickerModal({
   onOpenChange,
   title = "Set due date",
   onSelect,
-  selectedDate,
+  selectedDate: _selectedDate,
 }: DatePickerModalProps) {
   const [hoveredOption, setHoveredOption] = React.useState<string | null>(null)
   const quickOptions = getQuickOptions()
@@ -132,8 +132,7 @@ export function DatePickerModal({
         <div className="p-2">
           <button
             onClick={() => {
-              // Could open a calendar picker here
-              console.log("Custom date picker")
+              // TODO: Open calendar picker
             }}
             className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-secondary transition-colors"
           >

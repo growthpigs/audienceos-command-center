@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { mockClients } from "@/lib/mock-data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -443,6 +444,12 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
   )
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
+
   // Group clients by onboarding stage
   const clientsByStage = mockClients.reduce((acc, client) => {
     const stage = getOnboardingStage(client.stage)
@@ -470,12 +477,16 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
   const isCompact = selectedClient !== null
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* LEFT PANEL - Stages List (always visible) */}
-      <div className={cn(
-        "flex flex-col border-r border-border/50 bg-muted/30 shrink-0 transition-all duration-200 overflow-hidden",
-        isCompact ? "w-72" : "flex-1"
-      )}>
+      <motion.div
+        layout
+        initial={false}
+        animate={{ width: isCompact ? 288 : "100%" }}
+        transition={slideTransition}
+        className="flex flex-col border-r border-border/50 bg-muted/30 overflow-hidden"
+        style={{ minWidth: isCompact ? 288 : undefined }}
+      >
         {/* Header */}
         <div className="px-4 py-3 border-b border-border/50 bg-background shrink-0">
           <h1 className="text-base font-semibold text-foreground">Onboarding Hub</h1>
@@ -487,10 +498,7 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
         </div>
 
         {/* Stages List */}
-        <div className={cn(
-          "flex-1 overflow-y-auto",
-          isCompact ? "" : "p-4 space-y-3"
-        )}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {onboardingStages.map((stage) => {
             const clients = clientsByStage[stage.id] || []
             const isExpanded = expandedStages.has(stage.id)
@@ -509,19 +517,28 @@ export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
             )
           })}
         </div>
-      </div>
+      </motion.div>
 
       {/* RIGHT PANEL - Client Detail View */}
-      {selectedClient && selectedStage ? (
-        <ClientDetailPanel
-          client={selectedClient}
-          stage={selectedStage}
-          onClose={() => setSelectedClient(null)}
-          onClientClick={onClientClick}
-        />
-      ) : (
-        <div className="hidden" />
-      )}
+      <AnimatePresence mode="wait">
+        {selectedClient && selectedStage && (
+          <motion.div
+            key="client-detail-panel"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={slideTransition}
+            className="flex-1 flex flex-col bg-background overflow-hidden"
+          >
+            <ClientDetailPanel
+              client={selectedClient}
+              stage={selectedStage}
+              onClose={() => setSelectedClient(null)}
+              onClientClick={onClientClick}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

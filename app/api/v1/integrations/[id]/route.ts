@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
-import { withRateLimit, isValidUUID, createErrorResponse, withTimeout } from '@/lib/security'
+import { withRateLimit, withCsrfProtection, isValidUUID, createErrorResponse, withTimeout } from '@/lib/security'
 import { decryptToken, deserializeEncryptedToken } from '@/lib/crypto'
 import type { IntegrationProvider } from '@/types/database'
 
@@ -24,7 +24,7 @@ const REVOCATION_ENDPOINTS: Record<IntegrationProvider, string | null> = {
 async function revokeProviderTokens(
   provider: IntegrationProvider,
   accessToken: string | null,
-  refreshToken: string | null
+  _refreshToken: string | null
 ): Promise<{ success: boolean; error?: string }> {
   const revokeUrl = REVOCATION_ENDPOINTS[provider]
 
@@ -97,9 +97,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const supabase = await createRouteHandlerClient(cookies)
 
     // Get authenticated user (SEC-006)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
+    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
 
-    if (!user) {
+    if (!user || !agencyId) {
       return createErrorResponse(401, authError || 'Unauthorized')
     }
 
@@ -107,6 +107,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .from('integration')
       .select('*')
       .eq('id', id)
+      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
       .single()
 
     if (error || !integration) {
@@ -128,6 +129,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
   if (rateLimitResponse) return rateLimitResponse
 
+  // CSRF protection (TD-005)
+  const csrfError = withCsrfProtection(request)
+  if (csrfError) return csrfError
+
   try {
     const { id } = await params
 
@@ -139,9 +144,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const supabase = await createRouteHandlerClient(cookies)
 
     // Get authenticated user (SEC-006)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
+    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
 
-    if (!user) {
+    if (!user || !agencyId) {
       return createErrorResponse(401, authError || 'Unauthorized')
     }
 
@@ -177,6 +182,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .from('integration')
       .update(updates)
       .eq('id', id)
+      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
       .select()
       .single()
 
@@ -203,6 +209,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
   if (rateLimitResponse) return rateLimitResponse
 
+  // CSRF protection (TD-005)
+  const csrfError = withCsrfProtection(request)
+  if (csrfError) return csrfError
+
   try {
     const { id } = await params
 
@@ -214,9 +224,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const supabase = await createRouteHandlerClient(cookies)
 
     // Get authenticated user (SEC-006)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
+    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
 
-    if (!user) {
+    if (!user || !agencyId) {
       return createErrorResponse(401, authError || 'Unauthorized')
     }
 
@@ -225,6 +235,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       .from('integration')
       .select('id, provider, access_token, refresh_token')
       .eq('id', id)
+      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
       .single()
 
     if (!existing) {
@@ -244,7 +255,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Delete the integration
-    const { error } = await supabase.from('integration').delete().eq('id', id)
+    const { error } = await supabase
+      .from('integration')
+      .delete()
+      .eq('id', id)
+      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
 
     if (error) {
       return createErrorResponse(500, 'Failed to delete integration')

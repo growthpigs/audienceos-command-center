@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils"
 import {
   X,
   Download,
-  ExternalLink,
   FileText,
   Clock,
   User,
@@ -37,7 +36,6 @@ import {
   FILE_TYPE_INFO,
   INDEX_STATUS_INFO,
 } from "@/types/knowledge-base"
-import type { IndexStatus } from "@/types/database"
 
 interface DocumentPreviewModalProps {
   document: KnowledgeBaseDocument

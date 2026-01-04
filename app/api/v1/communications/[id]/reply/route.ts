@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient } from '@/lib/supabase'
-import { withRateLimit, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
+import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { withRateLimit, withCsrfProtection, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
 import type { Database } from '@/types/database'
 
 type Communication = Database['public']['Tables']['communication']['Row']
@@ -18,6 +18,10 @@ export async function POST(
   // Rate limit: 30 replies per minute
   const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
   if (rateLimitResponse) return rateLimitResponse
+
+  // CSRF protection (TD-005)
+  const csrfError = withCsrfProtection(request)
+  if (csrfError) return csrfError
 
   try {
     const { id: messageId } = await params
@@ -49,14 +53,11 @@ export async function POST(
 
     const supabase = await createRouteHandlerClient(cookies)
 
-    // Get current user (from Supabase auth)
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    // Get authenticated user with server verification (SEC-006)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
 
-    if (authError || !user) {
-      return createErrorResponse(401, 'Authentication required')
+    if (!user) {
+      return createErrorResponse(401, authError || 'Authentication required')
     }
 
     // Get the original message to determine platform and thread

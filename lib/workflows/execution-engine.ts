@@ -6,14 +6,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Json } from '@/types/database'
 import type {
-  Workflow,
   WorkflowTrigger,
   WorkflowAction,
   WorkflowExecutionContext,
   ClientSnapshot,
   ActionResult,
   WorkflowExecutionResult,
-  ActionResultStatus,
 } from '@/types/workflow'
 import { substituteVariables } from './action-registry'
 import { createWorkflowRun, completeWorkflowRun, getWorkflow } from './workflow-queries'
@@ -288,7 +286,7 @@ export class WorkflowEngine {
     action: WorkflowAction & { type: 'create_task' },
     context: WorkflowExecutionContext
   ): Promise<ActionResult> {
-    const { title, description, priority, dueInDays, assignToTriggeredUser } = action.config
+    const { title, description, priority: _priority, dueInDays, assignToTriggeredUser } = action.config
 
     // Substitute variables
     const processedTitle = substituteVariables(title, {
@@ -387,7 +385,7 @@ export class WorkflowEngine {
     action: WorkflowAction & { type: 'draft_communication' },
     context: WorkflowExecutionContext
   ): Promise<ActionResult> {
-    const { platform, template, tone, instructions } = action.config
+    const { platform, template, tone, instructions: _instructions } = action.config
 
     // In production, this would use Claude API to generate a draft
     // For now, we'll create a simple template

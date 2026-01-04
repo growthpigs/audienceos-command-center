@@ -1,11 +1,10 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   DocumentCard,
-  DocumentCardSkeleton,
-  type DocumentType,
   type DocumentCategory,
   categoryLabels,
 } from "@/components/linear/document-card"
@@ -207,6 +206,12 @@ export function KnowledgeBase() {
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all")
   const [categoryFilter, setCategoryFilter] = useState<DocumentCategory | "all">("all")
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
+
   // Filter documents
   const filteredDocuments = useMemo((): Document[] => {
     let result: Document[] = mockDocuments
@@ -241,8 +246,8 @@ export function KnowledgeBase() {
     return result
   }, [viewFilter, categoryFilter, searchQuery])
 
-  const handleStar = (docId: string) => {
-    console.log("Toggle star:", docId)
+  const handleStar = (_docId: string) => {
+    // TODO: Implement star toggle API call
   }
 
   // Helper to render document cards with proper typing
@@ -258,13 +263,15 @@ export function KnowledgeBase() {
   )
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* Document list - shrinks when preview panel is open */}
-      <div
-        className={cn(
-          "flex flex-col border-r border-border transition-all duration-200",
-          selectedDocument ? "w-[280px]" : "flex-1"
-        )}
+      <motion.div
+        layout
+        initial={false}
+        animate={{ width: selectedDocument ? 280 : "100%" }}
+        transition={slideTransition}
+        className="flex flex-col border-r border-border overflow-hidden"
+        style={{ minWidth: selectedDocument ? 280 : undefined }}
       >
         <ListHeader
           title="Knowledge Base"
@@ -352,21 +359,31 @@ export function KnowledgeBase() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Preview/Editor panel */}
-      {selectedDocument && (
-        <div className="flex-1">
-          <DocumentPreviewPanel
-            document={selectedDocument}
-            onClose={() => setSelectedDocument(null)}
-            onStar={() => handleStar(selectedDocument.id)}
-            onDownload={() => console.log("Download:", selectedDocument.name)}
-            onShare={() => console.log("Share:", selectedDocument.name)}
-            onDelete={() => console.log("Delete:", selectedDocument.name)}
-          />
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {selectedDocument && (
+          <motion.div
+            key="document-preview"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 600, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={slideTransition}
+            className="flex flex-col bg-background overflow-hidden"
+            style={{ minWidth: 0 }}
+          >
+            <DocumentPreviewPanel
+              document={selectedDocument}
+              onClose={() => setSelectedDocument(null)}
+              onStar={() => handleStar(selectedDocument.id)}
+              onDownload={() => { /* TODO: Implement download */ }}
+              onShare={() => { /* TODO: Implement share */ }}
+              onDelete={() => { /* TODO: Implement delete */ }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

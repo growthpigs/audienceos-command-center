@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { withCsrfProtection } from '@/lib/security'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -8,14 +9,18 @@ interface RouteParams {
 
 // PUT /api/v1/clients/[id]/stage - Update client stage (for kanban drag-drop)
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  // CSRF protection (TD-005)
+  const csrfError = withCsrfProtection(request)
+  if (csrfError) return csrfError
+
   try {
     const { id } = await params
     const supabase = await createRouteHandlerClient(cookies)
 
     // Get authenticated user with server verification (SEC-006)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
+    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
 
-    if (!user) {
+    if (!user || !agencyId) {
       return NextResponse.json(
         { error: authError || 'Unauthorized' },
         { status: 401 }
@@ -37,6 +42,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       .from('client')
       .select('stage')
       .eq('id', id)
+      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
       .single()
 
     if (fetchError || !currentClient) {
@@ -56,6 +62,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         days_in_stage: 0, // Reset when stage changes
       })
       .eq('id', id)
+      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
       .select()
       .single()
 

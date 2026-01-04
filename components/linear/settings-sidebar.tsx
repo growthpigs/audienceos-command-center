@@ -2,7 +2,7 @@
 
 import React from "react"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, Building2, User, Users, Plus, Sparkles, Settings } from "lucide-react"
+import { ChevronLeft, Users, Plus, Sparkles, Settings } from "lucide-react"
 
 export interface SettingsSection {
   id: string
@@ -130,7 +130,7 @@ export const intelligenceSettingsGroups: SettingsGroup[] = [
     icon: <Sparkles className="w-4 h-4" />,
     sections: [
       { id: "overview", label: "Overview" },
-      { id: "chat", label: "Chat" },
+      { id: "chat", label: "Chat History" },
       { id: "activity", label: "Activity" },
     ],
   },
@@ -139,7 +139,7 @@ export const intelligenceSettingsGroups: SettingsGroup[] = [
     label: "Configuration",
     icon: <Settings className="w-4 h-4" />,
     sections: [
-      { id: "cartridges", label: "Cartridges" },
+      { id: "cartridges", label: "Training Cartridges" },
       { id: "prompts", label: "Custom Prompts" },
       { id: "knowledge", label: "AI Training Data" },
     ],

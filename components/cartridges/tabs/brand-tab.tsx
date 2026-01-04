@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Check, Edit, Trash2, Loader2, Zap, FileText, Building2 } from "lucide-react"
-import { type BrandCartridge, type BensonBlueprint } from "@/types/cartridges"
+import { type BrandCartridge } from "@/types/cartridges"
 
 export function BrandTab() {
   const [brandCartridge, setBrandCartridge] = useState<BrandCartridge | null>(null)
@@ -33,8 +32,7 @@ export function BrandTab() {
   }
 
   const handleSave = async () => {
-    // TODO: API call to save brand
-    console.log("Saving brand:", formData)
+    // TODO: API call to save brand cartridge
     setIsEditing(false)
   }
 
@@ -54,7 +52,6 @@ export function BrandTab() {
     const file = e.target.files?.[0]
     if (!file) return
     // TODO: API call to upload logo
-    console.log("Uploading logo:", file)
   }
 
   // Calculate word count for core messaging

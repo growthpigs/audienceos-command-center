@@ -32,9 +32,10 @@ const accountItems: Array<{
 interface SettingsLayoutProps {
   children: React.ReactNode
   onBack?: () => void
+  onBrandClick?: () => void
 }
 
-export function SettingsLayout({ children, onBack }: SettingsLayoutProps) {
+export function SettingsLayout({ children, onBack, onBrandClick }: SettingsLayoutProps) {
   const { activeSection, setActiveSection, hasUnsavedChanges } = useSettingsStore()
   const { user } = useAuthStore()
 
@@ -104,6 +105,14 @@ export function SettingsLayout({ children, onBack }: SettingsLayoutProps) {
                   {item.label}
                 </button>
               ))}
+              {onBrandClick && (
+                <button
+                  onClick={onBrandClick}
+                  className="block w-full text-left px-3 py-2 text-sm rounded-md transition-colors cursor-pointer text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                >
+                  Brand
+                </button>
+              )}
             </nav>
           </div>
 

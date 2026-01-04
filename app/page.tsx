@@ -15,7 +15,7 @@ import {
   type ActiveFilters,
   type SortOption,
 } from "@/components/linear"
-import { mockClients, type Client, owners, type Stage, type HealthStatus, type Owner, type Tier } from "@/lib/mock-data"
+import { mockClients, type Client, owners } from "@/lib/mock-data"
 import { sortClients, type SortMode } from "@/lib/client-priority"
 
 // Filter configurations for Client List
@@ -135,6 +135,10 @@ function CommandCenterContent() {
 
   // Sort state - default to priority (smart sorting)
   const [clientSort, setClientSort] = useState<SortMode>("priority")
+
+  // Intelligence Center state for deep linking
+  const [intelligenceInitialSection, setIntelligenceInitialSection] = useState<string | undefined>()
+  const [intelligenceInitialCartridgeTab, setIntelligenceInitialCartridgeTab] = useState<"voice" | "style" | "preferences" | "instructions" | "brand" | undefined>()
 
   // Use mock clients for now
   const clients = mockClients
@@ -325,7 +329,13 @@ function CommandCenterContent() {
         )
 
       case "intelligence":
-        return <IntelligenceCenter />
+        return (
+          <IntelligenceCenter
+            key={`intelligence-${intelligenceInitialSection}-${intelligenceInitialCartridgeTab}`}
+            initialSection={intelligenceInitialSection}
+            initialCartridgeTab={intelligenceInitialCartridgeTab}
+          />
+        )
 
       case "onboarding":
         return (
@@ -354,7 +364,15 @@ function CommandCenterContent() {
         return <AutomationsHub />
 
       case "settings":
-        return <SettingsView />
+        return (
+          <SettingsView
+            onBrandClick={() => {
+              setIntelligenceInitialSection("cartridges")
+              setIntelligenceInitialCartridgeTab("brand")
+              setActiveView("intelligence")
+            }}
+          />
+        )
 
       default:
         return (
@@ -373,6 +391,9 @@ function CommandCenterContent() {
         onViewChange={(view) => {
           setActiveView(view)
           setSelectedClient(null)
+          // Clear intelligence initial props when navigating normally
+          setIntelligenceInitialSection(undefined)
+          setIntelligenceInitialCartridgeTab(undefined)
         }}
         onQuickCreate={() => setCommandPaletteOpen(true)}
         detailPanel={

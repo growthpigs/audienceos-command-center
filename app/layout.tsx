@@ -1,14 +1,11 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono, Poppins } from "next/font/google"
+import { Inter } from "next/font/google"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
-const poppins = Poppins({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  variable: "--font-poppins",
+  variable: "--font-sans",
 })
 
 // <CHANGE> Updated metadata for AudienceOS
@@ -25,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased ${poppins.variable}`} suppressHydrationWarning>{children}</body>
+      <body className={`font-sans antialiased ${inter.variable}`} suppressHydrationWarning>{children}</body>
     </html>
   )
 }

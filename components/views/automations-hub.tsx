@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import { ListHeader } from "@/components/linear"
 import {
@@ -57,12 +58,36 @@ interface AutomationTemplate {
   steps: AutomationStep[]
 }
 
+// Step configuration types for automation workflows
+interface StepConfig {
+  // Trigger configs
+  stage?: string
+  schedule?: string
+  channels?: string
+  // Delay configs
+  duration?: number
+  unit?: 'minutes' | 'hours' | 'days'
+  // Action configs
+  template?: string
+  pattern?: string
+  channel?: string
+  endpoint?: string
+  priority?: string
+  recipient?: string
+  source?: string
+  model?: string
+  delay?: string
+  // Condition configs
+  condition?: string
+  threshold?: number
+}
+
 interface AutomationStep {
   id: string
   order: number
   name: string
   type: "trigger" | "delay" | "action" | "condition"
-  config: Record<string, any>
+  config: StepConfig
   icon: React.ReactNode
 }
 
@@ -196,6 +221,12 @@ export function AutomationsHub() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
+
   // Calculate counts
   const counts = useMemo(() => {
     return {
@@ -243,13 +274,15 @@ export function AutomationsHub() {
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* LEFT PANEL - Automations list (shrinks when detail is open) */}
-      <div
-        className={cn(
-          "flex flex-col border-r border-border transition-all duration-200",
-          selectedAutomation ? "w-[280px]" : "flex-1"
-        )}
+      <motion.div
+        layout
+        initial={false}
+        animate={{ width: selectedAutomation ? 280 : "100%" }}
+        transition={slideTransition}
+        className="flex flex-col border-r border-border overflow-hidden"
+        style={{ minWidth: selectedAutomation ? 280 : undefined }}
       >
         <ListHeader
           title="Automations"
@@ -308,11 +341,19 @@ export function AutomationsHub() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* MIDDLE PANEL - Steps list (when automation selected) */}
-      {selectedAutomation && (
-        <div className="w-[320px] border-r border-border flex flex-col bg-background">
+      <AnimatePresence mode="wait">
+        {selectedAutomation && (
+          <motion.div
+            key="steps-panel"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={slideTransition}
+            className="border-r border-border flex flex-col bg-background overflow-hidden"
+            style={{ minWidth: 0 }}>
           {/* Header */}
           <div className="h-[52px] px-4 flex items-center justify-between border-b border-border shrink-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -432,12 +473,20 @@ export function AutomationsHub() {
               Add Step
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* RIGHT PANEL - Step configuration (when step selected) */}
-      {selectedAutomation && selectedStep && (
-        <div className="flex-1 flex flex-col bg-background">
+      <AnimatePresence mode="wait">
+        {selectedAutomation && selectedStep && (
+          <motion.div
+            key="config-panel"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={slideTransition}
+            className="flex-1 flex flex-col bg-background">
           {/* Panel Header */}
           <div className="h-[52px] px-4 flex items-center justify-between border-b border-border shrink-0">
             <div className="flex items-center gap-2">
@@ -474,8 +523,9 @@ export function AutomationsHub() {
           <div className="flex-1 overflow-y-auto p-4">
             <StepConfiguration step={selectedStep} />
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -627,7 +677,7 @@ function StepConfiguration({ step }: StepConfigurationProps) {
   )
 }
 
-function TriggerConfig({ config }: { config: Record<string, any> }) {
+function TriggerConfig({ config }: { config: StepConfig }) {
   return (
     <div className="space-y-3">
       <div className="p-3 rounded-lg border border-blue-500/20 bg-blue-500/5">
@@ -665,7 +715,7 @@ function TriggerConfig({ config }: { config: Record<string, any> }) {
   )
 }
 
-function DelayConfig({ config }: { config: Record<string, any> }) {
+function DelayConfig({ config }: { config: StepConfig }) {
   return (
     <div className="space-y-3">
       <div className="p-3 rounded-lg border border-slate-500/20 bg-slate-500/5">
@@ -690,7 +740,7 @@ function DelayConfig({ config }: { config: Record<string, any> }) {
   )
 }
 
-function ActionConfig({ config }: { config: Record<string, any> }) {
+function ActionConfig({ config }: { config: StepConfig }) {
   // Determine default action type based on config
   const getDefaultActionType = () => {
     if (config.template) return "send_email"
@@ -751,7 +801,7 @@ function ActionConfig({ config }: { config: Record<string, any> }) {
   )
 }
 
-function ConditionConfig({ config }: { config: Record<string, any> }) {
+function ConditionConfig({ config }: { config: StepConfig }) {
   return (
     <div className="space-y-3">
       <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5">

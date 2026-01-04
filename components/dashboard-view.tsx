@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import { motion, AnimatePresence } from "motion/react"
+import { useState, useMemo, useEffect, useRef } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import {
   LinearKPICard,
-  LinearKPICardSkeleton,
   FirehoseFeed,
   DashboardTabs,
   type LinearKPIData,
@@ -14,7 +13,7 @@ import {
 } from "./dashboard"
 import { type Client, owners } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
-import { MessageSquare, Send, Clock, User, AlertCircle, TrendingDown, Calendar, ExternalLink, X, CheckCircle2, CheckSquare, AlertTriangle, TrendingUp, Tag } from "lucide-react"
+import { MessageSquare, Send, Clock, AlertCircle, ExternalLink, X, CheckCircle2, CheckSquare, AlertTriangle, TrendingUp } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -355,7 +354,7 @@ function LoadByStatusWidget({ clients }: { clients: Client[] }) {
         {/* Donut Chart */}
         <div className="relative w-24 h-24">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-            {segments.map((segment, i) => {
+            {segments.map((segment) => {
               const strokeDasharray = `${(segment.percent / 100) * circumference} ${circumference}`
               const strokeDashoffset = -cumulativePercent / 100 * circumference
               cumulativePercent += segment.percent
@@ -776,6 +775,15 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null)
   const [selectedPerfId, setSelectedPerfId] = useState<string | null>(null)
 
+  // Track previous tab to clear stale selections on tab switch
+  const prevTabRef = useRef<DashboardTab>(activeTab)
+
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
+
   const firehoseItems = useMemo(() => generateMockFirehoseItems(clients), [clients])
 
   // KPI data
@@ -826,28 +834,40 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
     }
   }
 
-  const handleStageClick = (stage: string) => {
+  const handleStageClick = (_stage: string) => {
     setActiveTab("clients")
     // In real app, would set filter to stage
   }
 
-  const handleOwnerClick = (owner: string) => {
+  const handleOwnerClick = (_owner: string) => {
     setActiveTab("tasks")
     // In real app, would set filter to owner
   }
 
-  const handleTierClick = (tier: string) => {
+  const handleTierClick = (_tier: string) => {
     setActiveTab("clients")
     // In real app, would set filter to tier
   }
 
   // Filter clients/items for each tab
-  const alertClients = clients.filter(c => c.health === "Red" || c.health === "Blocked")
   const taskItems = firehoseItems.filter(item => item.targetTab === "tasks")
   const alertItems = firehoseItems.filter(item => item.targetTab === "alerts" || item.severity === "critical")
   const perfItems = firehoseItems.filter(item => item.targetTab === "performance")
 
-  // Auto-select first item when switching to a tab
+  // Clear stale selections when switching tabs to prevent drawer content mismatch
+  useEffect(() => {
+    const prevTab = prevTabRef.current
+    if (prevTab !== activeTab) {
+      // Tab changed - clear ALL selections to ensure clean state
+      setSelectedTaskId(null)
+      setSelectedClientId(null)
+      setSelectedAlertId(null)
+      setSelectedPerfId(null)
+      prevTabRef.current = activeTab
+    }
+  }, [activeTab])
+
+  // Auto-select first item when switching to a tab (runs after clearing effect)
   useEffect(() => {
     if (activeTab === "tasks" && taskItems.length > 0 && !selectedTaskId) {
       setSelectedTaskId(taskItems[0].id)
@@ -953,11 +973,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedTask && (
                 <motion.div
                   key="task-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="w-96 shrink-0"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={slideTransition}
+                  className="shrink-0 overflow-hidden"
                 >
                   <TaskDetailDrawer item={selectedTask} onClose={() => setSelectedTaskId(null)} />
                 </motion.div>
@@ -1011,11 +1031,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedClient && (
                 <motion.div
                   key="client-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="w-96 shrink-0"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={slideTransition}
+                  className="shrink-0 overflow-hidden"
                 >
                   <ClientDetailDrawer client={selectedClient} onClose={() => setSelectedClientId(null)} />
                 </motion.div>
@@ -1060,11 +1080,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedAlert && (
                 <motion.div
                   key="alert-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="w-96 shrink-0"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={slideTransition}
+                  className="shrink-0 overflow-hidden"
                 >
                   <AlertDetailDrawer item={selectedAlert} onClose={() => setSelectedAlertId(null)} />
                 </motion.div>
@@ -1113,11 +1133,11 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
               {selectedPerf && (
                 <motion.div
                   key="perf-drawer"
-                  initial={{ x: 384, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 384, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="w-96 shrink-0"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 384, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={slideTransition}
+                  className="shrink-0 overflow-hidden"
                 >
                   <PerformanceDetailDrawer item={selectedPerf} onClose={() => setSelectedPerfId(null)} />
                 </motion.div>

@@ -1,16 +1,13 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   InboxItem,
-  InboxItemSkeleton,
   TicketDetailPanel,
   ListHeader,
-  type TicketPriority,
-  type TicketStatus,
   type Ticket,
-  type TicketActivity,
 } from "@/components/linear"
 import { mockClients } from "@/lib/mock-data"
 import {
@@ -18,7 +15,6 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  Filter,
 } from "lucide-react"
 
 // Mock tickets data
@@ -232,6 +228,12 @@ export function SupportTickets() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all")
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Reduced motion support
+  const prefersReducedMotion = useReducedMotion()
+  const slideTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
+
   // Calculate counts
   const counts = useMemo(() => {
     return {
@@ -274,25 +276,26 @@ export function SupportTickets() {
     return tickets
   }, [activeFilter, searchQuery])
 
-  const handleComment = (content: string) => {
-    console.log("New comment:", content)
-    // In real app, would add to ticket activities
+  const handleComment = (_content: string) => {
+    // TODO: Implement comment creation API call
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* Ticket list - shrinks when detail panel is open */}
-      <div
-        className={cn(
-          "flex flex-col border-r border-border transition-all duration-200",
-          selectedTicket ? "w-[280px]" : "flex-1"
-        )}
+      <motion.div
+        layout
+        initial={false}
+        animate={{ width: selectedTicket ? 280 : "100%" }}
+        transition={slideTransition}
+        className="flex flex-col border-r border-border overflow-hidden"
+        style={{ minWidth: selectedTicket ? 280 : undefined }}
       >
         <ListHeader
           title="Support Tickets"
           count={filteredTickets.length}
-          onSearch={setSearchQuery}
-          searchValue={searchQuery}
+          onSearch={!selectedTicket ? setSearchQuery : undefined}
+          searchValue={!selectedTicket ? searchQuery : undefined}
           searchPlaceholder="Search tickets..."
         />
 
@@ -344,18 +347,27 @@ export function SupportTickets() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Ticket detail panel */}
-      {selectedTicket && (
-        <div className="flex-1">
-          <TicketDetailPanel
-            ticket={selectedTicket}
-            onClose={() => setSelectedTicket(null)}
-            onComment={handleComment}
-          />
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {selectedTicket && (
+          <motion.div
+            key="ticket-detail-panel"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={slideTransition}
+            className="flex-1 flex flex-col bg-background overflow-hidden"
+          >
+            <TicketDetailPanel
+              ticket={selectedTicket}
+              onClose={() => setSelectedTicket(null)}
+              onComment={handleComment}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

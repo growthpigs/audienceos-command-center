@@ -133,14 +133,6 @@ const statusConfig: Record<IntegrationStatus, { icon: React.ReactNode; label: st
   },
 }
 
-const categoryLabels: Record<IntegrationCategory, string> = {
-  advertising: "Advertising",
-  communication: "Communication",
-  analytics: "Analytics",
-  crm: "CRM",
-  productivity: "Productivity",
-}
-
 interface IntegrationCardProps {
   integration: Integration
   onClick?: () => void
@@ -307,7 +299,7 @@ export function IntegrationsHub() {
           <IntegrationCardComponent
             key={integration.id}
             integration={integration}
-            onClick={() => console.log("Configure", integration.name)}
+            onClick={() => { /* TODO: Open configuration modal */ }}
           />
         ))}
       </div>

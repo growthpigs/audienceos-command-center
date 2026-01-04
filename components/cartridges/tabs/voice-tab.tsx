@@ -26,8 +26,8 @@ import { Mic, Plus, X, Settings, Check } from "lucide-react"
 import { type VoiceCartridge, type VoiceParams, getDefaultVoiceParams } from "@/types/cartridges"
 
 export function VoiceTab() {
-  const [voiceCartridges, setVoiceCartridges] = useState<VoiceCartridge[]>([])
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [voiceCartridges, _setVoiceCartridges] = useState<VoiceCartridge[]>([])
+  const [_editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     displayName: "",
@@ -65,8 +65,7 @@ export function VoiceTab() {
   }
 
   const handleSave = async () => {
-    // TODO: API call to save cartridge
-    console.log("Saving voice cartridge:", { ...formData, voiceParams })
+    // TODO: API call to save voice cartridge
     setIsCreating(false)
     setFormData({ name: "", displayName: "", systemInstructions: "" })
     setVoiceParams(getDefaultVoiceParams())

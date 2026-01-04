@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -163,9 +163,9 @@ function formatChanges(changes: Record<string, { before: unknown; after: unknown
 }
 
 export function AuditLogSection() {
-  const { auditLog, setAuditLog, isLoadingAuditLog, setLoadingAuditLog } = useSettingsStore()
+  const { auditLog, setAuditLog, isLoadingAuditLog, setLoadingAuditLog: _setLoadingAuditLog } = useSettingsStore()
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
+  const [_selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
 
   // Load mock data
   useEffect(() => {
