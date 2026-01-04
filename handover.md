@@ -392,3 +392,58 @@ User switched to Senior QA Architect role demanding 9/10 confidence before conti
 ---
 
 *Session completed: 2026-01-04 ~18:00*
+
+---
+
+## Session 2026-01-04 ~19:00 - Dead Code Cleanup
+
+**Status:** ✅ Complete
+**Confidence:** 10/10
+
+### Cleanup Summary
+
+User pointed out inconsistent design patterns in the app. Investigation revealed:
+
+**Finding:** `components/dashboard/clickup/` directory contained 14 files of **dead code**
+- Old ClickUp-style design (team member cards with stats, progress bars, etc.)
+- **Not imported anywhere** in the application
+- App exclusively uses new Linear design from `components/dashboard/` and `components/linear/`
+
+**Action:** Removed entire directory (2,248 lines of dead code)
+
+### Files Deleted
+
+| File | Lines |
+|------|-------|
+| action-bar.tsx | ~50 |
+| board-view.tsx | ~350 |
+| calendar-view.tsx | ~280 |
+| clickup-dashboard.tsx | ~170 |
+| index.ts | ~20 |
+| list-view.tsx | ~300 |
+| metric-card-sparkline.tsx | ~160 |
+| navigation-tabs.tsx | ~50 |
+| progress-list.tsx | ~200 |
+| task-activity.tsx | ~130 |
+| task-charts.tsx | ~200 |
+| task-status-cards.tsx | ~110 |
+| team-view.tsx | ~210 |
+| **TOTAL** | **~2,248** |
+
+### Verification
+
+- ✅ Build passes (0 errors)
+- ✅ No broken imports
+- ✅ App running correctly in browser
+- ✅ Linear design exclusively used
+- ✅ Pushed to main (commit: 4f9e662)
+
+### Commit
+
+```
+4f9e662 chore: remove dead ClickUp dashboard components
+```
+
+---
+
+*Session completed: 2026-01-04 ~19:00*
