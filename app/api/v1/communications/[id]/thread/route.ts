@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient } from '@/lib/supabase'
+import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { withRateLimit, isValidUUID, createErrorResponse } from '@/lib/security'
 import type { Database } from '@/types/database'
 
 type Communication = Database['public']['Tables']['communication']['Row']
@@ -13,28 +14,54 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 100 requests per minute
+  const rateLimitResponse = withRateLimit(request)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { id: messageId } = await params
+
+    // Validate UUID format
+    if (!isValidUUID(messageId)) {
+      return createErrorResponse(400, 'Invalid message ID format')
+    }
+
     const supabase = await createRouteHandlerClient(cookies)
 
-    // First, get the message to find its thread_id
+    // Get authenticated user with server verification (SEC-006)
+    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
+
+    if (!user || !agencyId) {
+      return createErrorResponse(401, authError || 'Unauthorized')
+    }
+
+    // First, get the message to find its thread_id and client_id
     const { data: message, error: msgError } = await supabase
       .from('communication')
-      .select('thread_id')
+      .select('thread_id, client_id')
       .eq('id', messageId)
       .single()
 
     if (msgError) {
       if (msgError.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'not_found', message: 'Message not found' },
-          { status: 404 }
-        )
+        return createErrorResponse(404, 'Message not found')
       }
       throw msgError
     }
 
-    const msgData = message as { thread_id: string | null }
+    const msgData = message as { thread_id: string | null; client_id: string }
+
+    // Verify the communication's client belongs to user's agency (SEC-007)
+    const { data: client, error: clientError } = await supabase
+      .from('client')
+      .select('id')
+      .eq('id', msgData.client_id)
+      .eq('agency_id', agencyId)
+      .single()
+
+    if (clientError || !client) {
+      return createErrorResponse(404, 'Message not found')
+    }
 
     // Use thread_id if it exists, otherwise the message is the thread root
     const threadId = msgData.thread_id || messageId
@@ -56,10 +83,9 @@ export async function GET(
       count: threadMessages?.length || 0,
     })
   } catch (error) {
-    console.error('Error fetching thread:', error)
-    return NextResponse.json(
-      { error: 'internal_error', message: 'An unexpected error occurred' },
-      { status: 500 }
-    )
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error fetching thread:', error)
+    }
+    return createErrorResponse(500, 'Internal server error')
   }
 }

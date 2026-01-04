@@ -226,10 +226,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       if (!Array.isArray(tags)) {
         return createErrorResponse(400, 'Tags must be an array')
       }
+      // Early reject if too many tags to prevent DoS via processing
+      if (tags.length > 100) {
+        return createErrorResponse(400, 'Too many tags (max 100)')
+      }
+      // Limit first, then filter/map for efficiency
       updates.tags = tags
+        .slice(0, 20)
         .filter((t): t is string => typeof t === 'string')
         .map((t) => sanitizeString(t).slice(0, 50))
-        .slice(0, 20)
     }
 
     if (is_active !== undefined) {
