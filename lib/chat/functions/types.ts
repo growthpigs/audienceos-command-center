@@ -89,6 +89,7 @@ export interface AgencyStats {
   activeClients: number;
   atRiskClients: number;
   openAlerts: number;
+  resolvedAlertsThisPeriod?: number;
   avgHealthScore: number;
 }
 
