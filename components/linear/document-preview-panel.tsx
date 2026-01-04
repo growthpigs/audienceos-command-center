@@ -155,10 +155,10 @@ export function DocumentPreviewPanel({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Preview area */}
-        <div className="aspect-[16/9] bg-secondary/50 flex items-center justify-center border-b border-border">
+        {/* Preview area - compact */}
+        <div className="min-h-[120px] max-h-[200px] bg-secondary/50 flex items-center justify-center border-b border-border">
           {document.thumbnail ? (
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full min-h-[120px]">
               <Image
                 src={document.thumbnail}
                 alt={document.name}
@@ -167,9 +167,9 @@ export function DocumentPreviewPanel({
               />
             </div>
           ) : (
-            <div className="text-center text-muted-foreground">
-              <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Preview not available</p>
+            <div className="text-center text-muted-foreground py-6">
+              <FileText className="w-10 h-10 mx-auto mb-1.5 opacity-50" />
+              <p className="text-xs">Preview not available</p>
             </div>
           )}
         </div>
@@ -184,18 +184,18 @@ export function DocumentPreviewPanel({
           )}
         </div>
 
-        {/* Metadata */}
-        <div className="p-4 space-y-2">
+        {/* Metadata - compact */}
+        <div className="px-3 py-2 space-y-1.5">
           {/* Category */}
           {document.category && (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Folder className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Folder className="w-3 h-3" />
                 <span>Category</span>
               </div>
               <span
                 className={cn(
-                  "text-xs px-2 py-0.5 rounded font-medium",
+                  "text-[10px] px-1.5 py-0.5 rounded font-medium",
                   categoryColors[document.category]
                 )}
               >
@@ -207,49 +207,49 @@ export function DocumentPreviewPanel({
           {/* Client */}
           {document.clientName && (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <User className="w-3 h-3" />
                 <span>Client</span>
               </div>
-              <span className="text-sm text-foreground">{document.clientName}</span>
+              <span className="text-xs text-foreground">{document.clientName}</span>
             </div>
           )}
 
           {/* Size */}
           {document.size && (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <FileText className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <FileText className="w-3 h-3" />
                 <span>Size</span>
               </div>
-              <span className="text-sm text-foreground">{document.size}</span>
+              <span className="text-xs text-foreground">{document.size}</span>
             </div>
           )}
 
           {/* Created */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
               <span>Created</span>
             </div>
             <div className="text-right">
-              <span className="text-sm text-foreground">{document.createdAt}</span>
+              <span className="text-xs text-foreground">{document.createdAt}</span>
               {document.createdBy && (
-                <p className="text-xs text-muted-foreground">by {document.createdBy}</p>
+                <p className="text-[10px] text-muted-foreground">by {document.createdBy}</p>
               )}
             </div>
           </div>
 
           {/* Updated */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
               <span>Updated</span>
             </div>
             <div className="text-right">
-              <span className="text-sm text-foreground">{document.updatedAt}</span>
+              <span className="text-xs text-foreground">{document.updatedAt}</span>
               {document.updatedBy && (
-                <p className="text-xs text-muted-foreground">by {document.updatedBy}</p>
+                <p className="text-[10px] text-muted-foreground">by {document.updatedBy}</p>
               )}
             </div>
           </div>
@@ -257,37 +257,37 @@ export function DocumentPreviewPanel({
           {/* Views */}
           {document.viewCount !== undefined && (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Eye className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Eye className="w-3 h-3" />
                 <span>Views</span>
               </div>
-              <span className="text-sm text-foreground">{document.viewCount}</span>
+              <span className="text-xs text-foreground">{document.viewCount}</span>
             </div>
           )}
 
           {/* Downloads */}
           {document.downloadCount !== undefined && (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Download className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Download className="w-3 h-3" />
                 <span>Downloads</span>
               </div>
-              <span className="text-sm text-foreground">{document.downloadCount}</span>
+              <span className="text-xs text-foreground">{document.downloadCount}</span>
             </div>
           )}
 
           {/* Tags */}
           {document.tags && document.tags.length > 0 && (
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Tag className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Tag className="w-3 h-3" />
                 <span>Tags</span>
               </div>
-              <div className="flex items-center gap-1 flex-wrap justify-end max-w-[60%]">
+              <div className="flex items-center gap-1 flex-wrap justify-end max-w-[65%]">
                 {document.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
                   >
                     {tag}
                   </span>
@@ -298,15 +298,15 @@ export function DocumentPreviewPanel({
 
           {/* AI Training */}
           {onToggleTraining && (
-            <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <BrainCircuit className="w-4 h-4" />
+            <div className="flex items-center justify-between pt-1.5 border-t border-border mt-1.5">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <BrainCircuit className="w-3 h-3" />
                 <span>Use for AI Training</span>
               </div>
               <button
                 onClick={onToggleTraining}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer",
+                  "flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors cursor-pointer",
                   document.useForTraining
                     ? "bg-foreground text-background"
                     : "bg-secondary text-muted-foreground hover:bg-secondary/80"
@@ -314,7 +314,7 @@ export function DocumentPreviewPanel({
               >
                 {document.useForTraining ? (
                   <>
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3 h-3" />
                     Enabled
                   </>
                 ) : (

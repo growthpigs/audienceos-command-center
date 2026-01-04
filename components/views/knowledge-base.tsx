@@ -488,10 +488,10 @@ export function KnowledgeBase() {
       {/* Document list - shrinks when preview panel is open */}
       <motion.div
         initial={false}
-        animate={{ width: selectedDocument ? 280 : "100%" }}
+        animate={{ width: selectedDocument ? 400 : "100%" }}
         transition={slideTransition}
         className="flex flex-col border-r border-border overflow-hidden"
-        style={{ minWidth: selectedDocument ? 280 : undefined, flexShrink: selectedDocument ? 0 : undefined }}
+        style={{ minWidth: selectedDocument ? 400 : undefined, flexShrink: selectedDocument ? 0 : undefined }}
       >
         <ListHeader
           title="Knowledge Base"
@@ -631,17 +631,16 @@ export function KnowledgeBase() {
         </div>
       </motion.div>
 
-      {/* Preview/Editor panel */}
+      {/* Preview/Editor panel - fills remaining space */}
       <AnimatePresence mode="wait">
         {selectedDocument && (
           <motion.div
             key="document-preview"
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 600, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
+            initial={{ flex: 0, opacity: 0 }}
+            animate={{ flex: 1, opacity: 1 }}
+            exit={{ flex: 0, opacity: 0 }}
             transition={slideTransition}
-            className="flex flex-col bg-background overflow-hidden"
-            style={{ minWidth: 0 }}
+            className="flex flex-col bg-background overflow-hidden min-w-0"
           >
             <DocumentPreviewPanel
               document={selectedDocument}
