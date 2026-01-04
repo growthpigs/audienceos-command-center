@@ -277,6 +277,11 @@ export function KnowledgeBase() {
     setSelectedDocument(prev =>
       prev?.id === docId ? { ...prev, starred: !prev.starred } : prev
     )
+<<<<<<< HEAD
+=======
+    // TODO: Persist to API when backend is ready
+    // fetchWithCsrf(`/api/v1/documents/${docId}/star`, { method: 'POST' })
+>>>>>>> feature/integration-phase-2-3
   }, [])
 
   // Toggle AI training status on a document
@@ -296,6 +301,8 @@ export function KnowledgeBase() {
     setSelectedDocument(prev =>
       prev?.id === docId ? { ...prev, useForTraining: !prev.useForTraining } : prev
     )
+    // TODO: Persist to API when backend is ready
+    // fetchWithCsrf(`/api/v1/documents/${docId}/training`, { method: 'POST' })
   }, [])
 
   // Add a document from Google Drive
@@ -309,8 +316,13 @@ export function KnowledgeBase() {
       id: `drive-${fileId}`,
       name: displayName || "Google Drive Document",
       type: "document",
+<<<<<<< HEAD
       category: "templates",
       description: "Imported from Google Drive",
+=======
+      category: "templates", // Default category, could be detected
+      description: `Imported from Google Drive`,
+>>>>>>> feature/integration-phase-2-3
       updatedAt: "Just now",
       createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       updatedBy: "You",
@@ -329,6 +341,15 @@ export function KnowledgeBase() {
       title: "Document added",
       description: `"${newDoc.name}" has been imported from Google Drive`,
     })
+<<<<<<< HEAD
+=======
+
+    // TODO: Actually process the file via API when backend is ready
+    // const response = await fetchWithCsrf('/api/v1/documents/drive-import', {
+    //   method: 'POST',
+    //   body: JSON.stringify({ url, displayName }),
+    // })
+>>>>>>> feature/integration-phase-2-3
   }, [])
 
   // Helper to render document cards with proper typing
