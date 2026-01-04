@@ -168,19 +168,25 @@ export function Sidebar({ activeView, onViewChange, collapsed, onCollapsedChange
         ))}
       </nav>
 
-      {/* User Profile */}
+      {/* User Profile - clickable to open settings */}
       <div className="p-3 border-t border-border">
-        <div className={cn("flex items-center gap-2.5", collapsed && "justify-center")}>
-          <Avatar className="h-7 w-7">
-            <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">B</AvatarFallback>
+        <button
+          onClick={() => onViewChange("settings")}
+          className={cn(
+            "flex items-center gap-2.5 w-full hover:bg-accent/50 rounded-md p-1.5 -m-1.5 transition-colors cursor-pointer",
+            collapsed && "justify-center"
+          )}
+        >
+          <Avatar className="h-7 w-7 bg-emerald-500">
+            <AvatarFallback className="bg-emerald-500 text-white text-xs font-medium">B</AvatarFallback>
           </Avatar>
           {!collapsed && (
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-[13px] font-medium text-foreground truncate">Brent</p>
-              <p className="text-[11px] text-muted-foreground truncate">Head of Fulfillment</p>
+              <p className="text-[11px] text-muted-foreground truncate">CEO</p>
             </div>
           )}
-        </div>
+        </button>
       </div>
     </div>
   )

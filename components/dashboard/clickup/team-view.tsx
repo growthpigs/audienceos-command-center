@@ -32,7 +32,7 @@ const defaultMembers: TeamMember[] = [
     name: "Brent",
     initials: "B",
     color: "bg-emerald-500",
-    role: "Head of Fulfillment",
+    role: "CEO",
     email: "brent@diiiploy.io",
     assignedClients: 8,
     openTasks: 12,

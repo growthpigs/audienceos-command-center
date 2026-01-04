@@ -117,7 +117,7 @@ export function LinearSidebar({
   onQuickCreate,
   user = {
     name: "Brent",
-    role: "Head of Fulfillment",
+    role: "CEO",
     initials: "B",
     color: "bg-emerald-500",
   },
@@ -299,27 +299,34 @@ export function LinearSidebar({
         </div>
       </nav>
 
-      {/* User Profile Footer */}
+      {/* User Profile Footer - clickable to open settings */}
       <div className="p-3 border-t border-sidebar-border">
         {collapsed ? (
           <button
-            onClick={() => setCollapsed(false)}
+            onClick={() => onViewChange("settings")}
             className="w-full flex justify-center p-2 hover:bg-secondary rounded transition-colors cursor-pointer"
           >
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-        ) : (
-          <div className="flex items-center gap-3">
             <Avatar className={cn("h-8 w-8", user.color)}>
               <AvatarFallback className={cn(user.color, "text-sm font-medium text-white")}>
                 {user.initials}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
+          </button>
+        ) : (
+          <button
+            onClick={() => onViewChange("settings")}
+            className="flex items-center gap-3 w-full hover:bg-secondary rounded-md p-2 -m-2 transition-colors cursor-pointer"
+          >
+            <Avatar className={cn("h-8 w-8", user.color)}>
+              <AvatarFallback className={cn(user.color, "text-sm font-medium text-white")}>
+                {user.initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
               <p className="text-xs text-muted-foreground truncate">{user.role}</p>
             </div>
-          </div>
+          </button>
         )}
       </div>
     </motion.div>
