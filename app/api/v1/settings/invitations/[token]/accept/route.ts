@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient, createServiceRoleClient } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 
+// Note: createRouteHandlerClient and cookies are used in GET handler below
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -18,13 +20,17 @@ export async function POST(
       )
     }
 
-    // Use service role client to bypass RLS for invitation lookup
+    // Use service role client to bypass RLS and for admin operations
     const serviceSupabase = createServiceRoleClient()
-    const supabase = await createRouteHandlerClient(cookies)
 
     // 1. Validate invitation (using service role to bypass RLS)
-    const invClient = serviceSupabase || supabase
-    const { data: invitation, error: invError } = await (invClient
+    if (!serviceSupabase) {
+      return NextResponse.json(
+        { error: 'Service unavailable - contact administrator' },
+        { status: 503 }
+      )
+    }
+    const { data: invitation, error: invError } = await (serviceSupabase
       .from('user_invitations' as any)
       .select('*')
       .eq('token', token)
@@ -53,15 +59,14 @@ export async function POST(
       )
     }
 
-    // 2. Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // 2. Create auth user (using admin API to auto-confirm email)
+    const { data: authData, error: authError } = await serviceSupabase.auth.admin.createUser({
       email: invitation.email,
       password,
-      options: {
-        data: {
-          first_name: first_name.trim(),
-          last_name: last_name.trim(),
-        },
+      email_confirm: true, // Auto-confirm since this is an invitation flow
+      user_metadata: {
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
       },
     })
 
@@ -73,7 +78,7 @@ export async function POST(
     }
 
     // 3. Create user record in database (using service role to bypass RLS)
-    const { data: newUser, error: userError } = await (invClient
+    const { data: newUser, error: userError } = await (serviceSupabase
       .from('user' as any)
       .insert({
         id: authData.user.id,
@@ -98,7 +103,7 @@ export async function POST(
     }
 
     // 4. Mark invitation as accepted (using service role to bypass RLS)
-    await (invClient
+    await (serviceSupabase
       .from('user_invitations' as any)
       .update({ accepted_at: new Date().toISOString() })
       .eq('token', token) as any)
