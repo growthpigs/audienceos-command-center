@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useSettingsStore } from "@/stores/settings-store"
+import { fetchWithCsrf } from "@/lib/csrf"
 import {
   Workflow,
   GripVertical,
@@ -104,19 +105,43 @@ export function PipelineSection() {
     }
 
     setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    updateAgencySettings({
-      pipeline_stages: stages,
-      health_thresholds: { yellow_days: yellowDays, red_days: redDays },
-    })
+    try {
+      const response = await fetchWithCsrf('/api/v1/settings/agency', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          pipeline_stages: stages,
+          health_thresholds: { yellow: yellowDays, red: redDays },
+        }),
+      })
 
-    setIsSaving(false)
-    setHasUnsavedChanges(false)
-    toast({
-      title: "Pipeline settings saved",
-      description: "Your pipeline configuration has been updated.",
-    })
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to save pipeline settings')
+      }
+
+      const { data } = await response.json()
+      updateAgencySettings({
+        pipeline_stages: data.pipeline_stages,
+        health_thresholds: data.health_thresholds,
+      })
+
+      setHasUnsavedChanges(false)
+      toast({
+        title: "Pipeline settings saved",
+        description: "Your pipeline configuration has been updated.",
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save pipeline settings'
+      console.error('[PipelineSection] Error saving settings:', message)
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (

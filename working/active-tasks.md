@@ -21,6 +21,13 @@
 
 ## ✅ Recently Completed
 
+### Agency Profile Wire-up (SET-008) - 2026-01-05
+- [x] SET-008: AgencyProfile - Connected agency settings form to real API
+- [x] Replaced DEFAULT_AGENCY mock with /api/v1/settings/agency fetch
+- [x] Implemented handleSave with PATCH to real endpoint using fetchWithCsrf
+- [x] Added loading skeleton and error states
+- Commit: `935b90e`
+
 ### Settings Wire-up (SET-006, SET-007) - 2026-01-05
 - [x] SET-006: UserEdit - Connected profile form to PATCH /users/[id]
 - [x] SET-007: UserDelete - Added confirmation dialog + DELETE /users/[id]
