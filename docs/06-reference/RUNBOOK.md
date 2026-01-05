@@ -1,7 +1,9 @@
 # AudienceOS Command Center - Runbook
 
 > **Operational reference for development, deployment, and troubleshooting**
-> Last Updated: 2026-01-04
+> Last Updated: 2026-01-05
+>
+> **Recent Updates (2026-01-05):** Chat system loading optimizations, API response structure fixes, deployment workflow documentation
 
 ---
 
@@ -536,6 +538,114 @@ grep -n "tenant_id\|agency_id" /path/to/revos/supabase/migrations/*.sql
 ```
 
 **Related:** EP-061 "Schema Assumption Fallacy" in error-patterns.md
+
+---
+
+## Chat System Architecture & Deployment (2026-01-05)
+
+### How Chat Loading Works
+
+**Critical path (should be <16ms from page load to chat visible):**
+
+1. **app/layout.tsx** - Root layout mounts
+2. **useEffect (line 36)** - Portal host set to `document.body` (~1ms)
+3. **shouldShowChat decision (line 58)** - Check: `chatPortalHost && !excludedPath` (NOT `!isLoading`)
+4. **createPortal() renders ChatInterface** into document.body (~5-10ms)
+5. **ChatInterface mounts** and renders persistent input bar (should appear immediately)
+6. **Message panel slides up on focus** (when user clicks input)
+7. **Auth completes in background** (doesn't block chat UI)
+
+**Key:** Chat appears IMMEDIATELY, auth/data fetching happens asynchronously.
+
+### Common Chat Loading Bugs (Fixed 2026-01-05)
+
+#### Bug #1: Chat blocked by auth loading
+**Symptom:** Chat takes 10-15 seconds to appear after page load
+**Root cause:** `shouldShowChat &&= !isLoading` gate prevents render until auth completes
+**Fix:** Remove `isLoading` from condition. Chat renders immediately, auth happens in background.
+**Status:** ✅ Fixed in commit `0c78d04`
+
+#### Bug #2: API response structure mismatch
+**Symptom:** Chat shows "I received your message." instead of actual API response
+**Root cause:**
+- API returns: `{ message: { id, content, route, ... }, sessionId }`
+- Chat expected: `{ id, content, route, ... }` (flat structure)
+**Fix:** Extract `data.message` before accessing properties
+**Status:** ✅ Fixed in commit `c61e8d9`
+
+#### Bug #3: Message panel narrower than input bar
+**Symptom:** Messages appear misaligned/narrower than input field below
+**Root cause:** Messages used `max-w-[80%]` while input bar was 85% width
+**Fix:** Change message max-width to `max-w-[85%]` to match input bar
+**Status:** ✅ Fixed in commit `088fe6c`
+
+#### Bug #4: Supabase auth getSession() hangs
+**Symptom:** App takes 30+ seconds to load, or timeout at 5s mark
+**Root cause:** `autoRefreshToken: true` + `detectSessionInUrl: true` caused infinite hangs
+**Fix:** Disable both options, rely on cookie-based session
+**Status:** ✅ Fixed in commit `68e427b`
+
+### Deployment Checklist (CRITICAL)
+
+**BEFORE DEPLOYING:**
+
+- [ ] **Commit all changes** to local repo (`git status` shows clean)
+- [ ] **Run tests** (`npm run test` passes)
+- [ ] **Type check** (`npm run typecheck` no errors)
+- [ ] **Build locally** (`npm run build` succeeds)
+- [ ] **PUSH to GitHub** (`git push origin main` - DO NOT FORGET THIS!)
+- [ ] **Verify on GitHub** - Open GitHub repo and confirm commits appear
+
+**AFTER PUSHING:**
+
+- [ ] **Verify Vercel auto-deploys** (check Vercel dashboard, should trigger within 1-2 min)
+- [ ] **Check deployment status** (Vercel shows "Ready" not "Building" or "Failed")
+- [ ] **Test in production** (hard refresh with Cmd+Shift+R or Ctrl+Shift+R)
+- [ ] **Check browser console** for diagnostic logs:
+  ```
+  [CHAT-VIS] Visibility decision: { shouldShowChat: true, isLoading: ... }
+  [CHAT-COMPONENT] ChatInterface mounted
+  ```
+- [ ] **Type a message** and verify:
+  - Chat shows actual response (not "I received your message.")
+  - Route indicator displays (Web/RAG/Dashboard/Casual)
+  - Timestamp and message align properly
+
+### Common Deployment Mistakes
+
+| Mistake | Symptom | Fix |
+|---------|---------|-----|
+| Forgot to push to GitHub | Code committed locally but Vercel deploys old version | `git push origin main` |
+| Edited wrong file | Changes don't take effect | Search codebase for correct import location |
+| Changed API response structure without updating UI | Chat shows fallback text | Extract nested data structure in chat component |
+| Uncommitted changes | Some fixes missing from deployment | `git add -A && git commit` |
+| Hard-refresh browser not done | Seeing cached old JavaScript | Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows) |
+| Environment variables changed on Vercel | API calls fail with 401/500 | Check Vercel project settings → Environment Variables |
+
+### Debugging Deployed Chat Issues
+
+**Chat not appearing at all:**
+1. Check browser console for errors
+2. Run `[CHAT-VIS]` log should appear immediately (not after delay)
+3. Check if route is in `EXCLUDED_PATHS` ["/login", "/invite", "/onboarding"]
+4. Verify `app/layout.tsx` includes `<ChatInterface>` in createPortal
+
+**Chat shows "I received your message." on all replies:**
+1. Check API response in Network tab
+2. Look for `{ message: { ... }, sessionId: "..." }` structure
+3. If correct, chat component needs line `const messageData = data.message`
+4. If wrong structure, API route returned invalid format
+
+**Message panel misaligned with input bar:**
+1. Inspect message bubble width in DevTools
+2. Should be `max-w-[85%]` same as input bar (`width: 85%`)
+3. If different, input bar padding/margin needs adjustment
+
+**Auth timeout/hang:**
+1. Check Supabase status (Status page)
+2. Verify `lib/supabase.ts` has `autoRefreshToken: false`
+3. Run `npm run dev` and check for network waterfall in DevTools
+4. If `getSession()` takes >5s, check Supabase connection
 
 ---
 
