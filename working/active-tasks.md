@@ -1,6 +1,41 @@
 # Active Tasks
 
-## 📊 Session Summary (2026-01-05)
+## 📊 Session Summary (2026-01-05 - Continued)
+
+### Runtime-First Verification Session
+**Approach:** Fix blockers one by one with runtime verification after each fix.
+
+### Blocker 1: Auth Enforcement - FIXED ✅
+- **Problem:** Unauthenticated users could access dashboard (saw hardcoded "Brent CEO")
+- **Root Cause:** middleware.ts allowed demo mode bypass on protected routes
+- **Fix:** Removed '/' from PUBLIC_ROUTES, cleared DEMO_ALLOWED arrays
+- **Verified:** Unauthenticated requests now redirect to /login
+- **Commit:** `a40e9c4`
+
+### Blocker 2: Invitation Flow - FIXED ✅
+- **Problem:** Couldn't create test users - no auth + app user linkage
+- **Sub-issues Fixed:**
+  1. Added `/api/v1/settings/invitations/` to PUBLIC_ROUTES (commit `1128881`)
+  2. Created `createServiceRoleClient()` to bypass RLS for invitation lookup (commit `92e8fff`)
+  3. Updated POST to use service role for all DB operations (commit `9c1a55d`)
+  4. Switched from `signUp()` to `admin.createUser()` for auto-email-confirm (commit `401bc66`)
+- **Test Credentials Created:**
+  - Email: `e2e.test2@gmail.com`
+  - Password: `TestPassword123!`
+  - Role: admin
+- **Verified:** Full login → dashboard with real user profile "E2E Tester"
+
+### Results
+- Dashboard shows real user (not hardcoded)
+- 20 clients loading with real data
+- All KPIs, charts, firehose populated
+- Invitation flow works end-to-end
+
+**Commits This Session:** a40e9c4, 1128881, 92e8fff, 9c1a55d, 401bc66
+
+---
+
+## Previous Session (2026-01-05 - Earlier)
 
 **Critical Issue Fixed:** 401 "No session" errors across all authenticated API endpoints
 - **Root Cause:** Missing `credentials: 'include'` in fetch() calls
@@ -13,7 +48,7 @@
 - CLAUDE.md - Complete project status, deployment info, feature matrix, testing checklist
 - features/INDEX.md - Validation history and completion metrics
 
-**Commits This Session:** 59cd1e6, 467828a, 4d7cdd7, 582dd05
+**Commits:** 59cd1e6, 467828a, 4d7cdd7, 582dd05
 
 ---
 
