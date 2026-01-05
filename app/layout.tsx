@@ -40,17 +40,16 @@ export default function RootLayout({
   }, [])
 
   // Determine if chat should be visible
-  // Only show chat when:
+  // Show chat when:
   // 1. Portal host is ready
   // 2. Not on excluded paths (login, invite, onboarding)
   // 3. Auth check complete (not loading)
-  // 4. User is authenticated with valid agencyId
+  // Note: We don't require isAuthenticated because auth can timeout.
+  // The API will handle authentication - the UI should always be available.
   const shouldShowChat =
     chatPortalHost &&
     !EXCLUDED_PATHS.some((path) => pathname.startsWith(path)) &&
-    !isLoading &&
-    isAuthenticated &&
-    agencyId
+    !isLoading
 
   return (
     <html lang="en">
@@ -59,7 +58,7 @@ export default function RootLayout({
         {shouldShowChat &&
           createPortal(
             <ChatInterface
-              agencyId={agencyId}
+              agencyId={agencyId || 'demo-agency'}
               userId={profile?.id || 'anonymous'}
               context={chatContext}
             />,
