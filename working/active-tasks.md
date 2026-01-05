@@ -25,13 +25,28 @@
   - Role: admin
 - **Verified:** Full login → dashboard with real user profile "E2E Tester"
 
+### Blocker 3: @supabase/ssr Auth Hang - FIXED ✅
+- **Problem:** Profile showed "Brent CEO" (hardcoded fallback) instead of "E2E Tester"
+- **Symptoms:** Auth timeout after 5000ms, useAuth hook never completing
+- **Root Cause:** `@supabase/ssr` client's `getSession()` AND `setSession()` methods hang indefinitely
+  - Hangs occur BEFORE any network request (internal client state issue)
+  - Both methods affected - not version-specific
+  - Direct REST API calls work perfectly (~200-300ms)
+- **Fix:** Bypass ALL Supabase auth methods:
+  1. `getSessionFromCookie()` - parse auth cookie directly (no Supabase calls)
+  2. `fetchProfileDirect()` - call REST API with Authorization header
+  - Commit `2b96351` attempted setSession fix (still hung)
+  - Commit `5ccc45c` implemented complete REST API bypass (SUCCESS)
+- **Verified:** Dashboard now shows "E2E Tester" with correct profile data
+
 ### Results
-- Dashboard shows real user (not hardcoded)
+- Dashboard shows real user "E2E Tester" (not hardcoded "Brent CEO")
 - 20 clients loading with real data
 - All KPIs, charts, firehose populated
 - Invitation flow works end-to-end
+- Auth completes via direct REST API
 
-**Commits This Session:** a40e9c4, 1128881, 92e8fff, 9c1a55d, 401bc66
+**Commits This Session:** a40e9c4, 1128881, 92e8fff, 9c1a55d, 401bc66, 2b96351, 5ccc45c
 
 ---
 
