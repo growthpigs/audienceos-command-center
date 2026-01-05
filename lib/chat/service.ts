@@ -21,7 +21,7 @@ import type {
   FunctionCall,
 } from './types';
 
-const DEFAULT_MODEL = 'gemini-3-flash-preview';
+const DEFAULT_MODEL = 'gemini-2.0-flash-001';
 const GEMINI_TIMEOUT_MS = 30000; // 30 second timeout for AI requests
 
 /**
