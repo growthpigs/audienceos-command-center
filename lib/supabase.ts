@@ -210,3 +210,34 @@ export async function getAuthenticatedUser(
 
 // Re-export types for convenience
 export type { Database }
+
+// =============================================================================
+// DEPRECATED EXPORTS (for compatibility with older code)
+// =============================================================================
+
+/**
+ * Alias for createClient() - use createClient() instead
+ * @deprecated Use createClient() instead
+ */
+export function getSupabaseClient() {
+  return createClient()
+}
+
+/**
+ * Placeholder for SessionRepository - not implemented
+ * Chat service legacy compatibility
+ * @deprecated SessionRepository interface no longer used
+ */
+export interface SessionRepository {
+  save: (session: unknown) => Promise<void>
+  load: (id: string) => Promise<unknown>
+}
+
+/**
+ * Placeholder for getSessionRepository - returns null
+ * Chat service legacy compatibility
+ * @deprecated Use Zustand stores for session management instead
+ */
+export function getSessionRepository(): SessionRepository | null {
+  return null
+}

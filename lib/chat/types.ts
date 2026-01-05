@@ -22,6 +22,25 @@ export interface RouterDecision {
   route: RouteType;
   confidence: number;
   reasoning?: string;
+  estimatedLatencyMs?: number;
+}
+
+/**
+ * Alias for RouterDecision (legacy naming)
+ */
+export type QueryRoute = RouterDecision;
+
+/**
+ * Router context for classification
+ */
+export interface RouterContext {
+  sessionContext?: SessionContext;
+  recentMessages?: ChatMessage[];
+  currentPage?: string;
+  userPreferences?: {
+    preferredSources?: RouteType[];
+    disabledSources?: RouteType[];
+  };
 }
 
 /**
@@ -114,6 +133,7 @@ export interface ChatRequest {
   agencyId: string;
   userId: string;
   context?: SessionContext;
+  history?: ChatMessage[];
 }
 
 /**
@@ -142,6 +162,16 @@ export interface StreamChunk {
 }
 
 /**
+ * Stream options for handling responses
+ */
+export interface StreamOptions {
+  onChunk: (chunk: StreamChunk) => void;
+  onComplete: (message: ChatMessage) => void;
+  onError: (error: Error) => void;
+  signal?: AbortSignal;
+}
+
+/**
  * Chat error with actionable guidance
  */
 export class ChatError extends Error {
@@ -152,5 +182,15 @@ export class ChatError extends Error {
   ) {
     super(message);
     this.name = 'ChatError';
+  }
+}
+
+/**
+ * Session persistence error
+ */
+export class SessionPersistenceError extends ChatError {
+  constructor(message: string, retryable: boolean = true) {
+    super(message, 'SESSION_PERSISTENCE_ERROR', retryable);
+    this.name = 'SessionPersistenceError';
   }
 }
