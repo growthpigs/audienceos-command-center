@@ -19,20 +19,22 @@
 - Accept URLs can be shared manually
 - To enable: `vercel env add RESEND_API_KEY`
 
-## 🚧 Next Features (After Blockers Clear)
+## ✅ Recently Completed
+
+### Settings Wire-up (SET-006, SET-007) - 2026-01-05
+- [x] SET-006: UserEdit - Connected profile form to PATCH /users/[id]
+- [x] SET-007: UserDelete - Added confirmation dialog + DELETE /users/[id]
+- [x] Replaced mock data with real API fetch
+- [x] Added loading/error states
+- Commit: `a07a8c1`
+
+## 🚧 Next Features
 
 ### Feature: Multi-Org Roles
 - urgency: 8
 - importance: 9
-- confidence: 7
+- confidence: 4 (needs spec)
 - impact: 9
-- tier: IMMEDIATE
+- tier: BLOCKED - Needs specification before implementation
 - description: Advanced RBAC. Define roles, assign permissions, enforce at API level.
-
-### Feature: Settings Completion (SET-004-007)
-- urgency: 7
-- importance: 8
-- confidence: 8
-- impact: 7
-- tier: IMMEDIATE
-- description: Billing settings, API keys, webhook management, notification preferences.
+- next: Create feature spec with role types, permission matrix, enforcement points
