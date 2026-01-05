@@ -447,3 +447,60 @@ User pointed out inconsistent design patterns in the app. Investigation revealed
 ---
 
 *Session completed: 2026-01-04 ~19:00*
+
+---
+
+## Session 2026-01-05 ~16:45 - Properties Panel Pattern Fix
+
+**Status:** ✅ Complete
+**Confidence:** 10/10
+
+### Problem
+
+User reported metadata layout in document-preview-panel.tsx was wrong - values were right-aligned (pushed to edge) instead of left-aligned at consistent "tab stop" positions (Mobbin Properties pattern).
+
+### Solution
+
+Fixed all 3 detail panels to use consistent Properties Panel Pattern:
+
+| Panel | Pattern | Label Width |
+|-------|---------|-------------|
+| document-preview-panel.tsx | `grid-cols-[80px_1fr_80px_1fr]` | 80px (4-col) |
+| ticket-detail-panel.tsx | `grid-cols-[100px_1fr]` | 100px (2-col) |
+| client-detail-panel.tsx | `grid-cols-[80px_1fr]` | 80px (2-col) |
+
+**Key Rule:** ALL text left-aligned. NO `text-right` on values. Fixed-width labels create consistent tab stops.
+
+### Commits
+
+| Hash | Message |
+|------|---------|
+| 74fef84 | docs(design-system): add Properties Panel Pattern with correct grid alignment |
+| 86daf2b | refactor(panels): apply consistent Properties Panel Pattern across all detail panels |
+
+### Also Fixed
+
+- Added mock mode to `/api/v1/clients/route.ts` - returns 15 demo clients when NEXT_PUBLIC_MOCK_MODE=true
+
+### Documentation
+
+Added "Properties Panel Pattern (CRITICAL)" section to `docs/03-design/DESIGN-SYSTEM.md` (line 376) with:
+- Correct grid patterns
+- Code examples (DO vs DON'T)
+- Visual explanation of the alignment difference
+
+### Verified
+
+- ✅ Knowledge Base → document preview panel (browser verified)
+- ✅ Support → ticket detail panel (browser verified)
+- ✅ Pipeline → client detail panel (browser verified)
+- ✅ Build passes (npm run build)
+- ✅ All pushed to main
+
+### Mem0 Entry
+
+Stored Properties Panel Pattern critical rule for future reference.
+
+---
+
+*Session completed: 2026-01-05 ~16:45*
