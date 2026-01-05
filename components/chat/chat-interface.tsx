@@ -323,7 +323,7 @@ export function ChatInterface({
             onClick={closePanel}
           />
 
-          {/* Message Panel - iOS Liquid Glass style */}
+          {/* Message Panel - iOS Liquid Glass style (light theme) */}
           <div
             className="fixed left-1/2 z-[9999] flex flex-col"
             style={{
@@ -333,12 +333,12 @@ export function ChatInterface({
               maxHeight: "85vh",
               bottom: "88px", // Above the chat bar
               transform: "translateX(-50%)",
-              background: "rgba(255, 255, 255, 0.05)",
-              backdropFilter: "blur(24px) saturate(180%)",
-              WebkitBackdropFilter: "blur(24px) saturate(180%)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
+              background: "rgba(255, 255, 255, 0.85)",
+              backdropFilter: "blur(40px) saturate(180%)",
+              WebkitBackdropFilter: "blur(40px) saturate(180%)",
+              border: "1px solid rgba(0, 0, 0, 0.08)",
               borderRadius: "20px",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.05)",
+              boxShadow: "0 8px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)",
               animation: isClosing
                 ? "slideDown 0.2s ease-out forwards"
                 : "slideUp 0.35s ease-out forwards",
@@ -346,19 +346,19 @@ export function ChatInterface({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Panel Header with Handle */}
-            <div className="border-b border-white/10 relative">
+            <div className="border-b border-black/5 relative">
               {/* Handle Bar */}
               <div
                 className={`flex items-center justify-center pt-3 pb-3 px-8 group ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
                 onMouseDown={handleDragStart}
               >
-                <div className={`w-12 h-1 rounded-full pointer-events-none transition-colors ${isDragging ? "bg-blue-500" : "bg-gray-500 group-hover:bg-gray-400"}`} />
+                <div className={`w-12 h-1 rounded-full pointer-events-none transition-colors ${isDragging ? "bg-blue-500" : "bg-gray-300 group-hover:bg-gray-400"}`} />
               </div>
 
               {/* Close Button */}
               <button
                 onClick={closePanel}
-                className="absolute top-2.5 right-2 text-gray-400 hover:text-gray-200 transition-colors p-1 rounded hover:bg-white/5"
+                className="absolute top-2.5 right-2 text-gray-500 hover:text-gray-700 transition-colors p-1 rounded hover:bg-black/5"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -367,7 +367,7 @@ export function ChatInterface({
               {/* Expand Button */}
               <button
                 onClick={() => setPanelHeight(panelHeight === 85 ? 50 : 85)}
-                className="absolute top-2.5 right-10 text-gray-400 hover:text-gray-200 transition-colors p-1 rounded hover:bg-white/5"
+                className="absolute top-2.5 right-10 text-gray-500 hover:text-gray-700 transition-colors p-1 rounded hover:bg-black/5"
                 title={panelHeight === 85 ? "Minimize" : "Expand"}
               >
                 {panelHeight === 85 ? (
@@ -386,12 +386,12 @@ export function ChatInterface({
               style={{ minHeight: 0 }}
             >
               {messages.length === 0 && !isLoading && (
-                <div className="text-gray-400 text-center py-8">
+                <div className="text-gray-500 text-center py-8">
                   <div className="flex flex-col items-center">
-                    <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 mb-4">
-                      <Sparkles className="h-8 w-8 text-blue-400" />
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-black/5 mb-4">
+                      <Sparkles className="h-8 w-8 text-blue-500" />
                     </div>
-                    <p className="text-sm text-gray-400 max-w-[400px]">
+                    <p className="text-sm text-gray-500 max-w-[400px]">
                       Ask me anything about your clients, alerts, or agency data.
                       I can search your knowledge base and help with insights.
                     </p>
@@ -422,13 +422,13 @@ export function ChatInterface({
                     className={cn(
                       "relative w-full max-w-[80%] p-3 rounded-lg",
                       msg.role === "user"
-                        ? "bg-blue-600 text-white"
-                        : "bg-white/5 text-gray-100 border border-white/10"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-800 border border-black/5"
                     )}
                   >
                     <div className="text-[14px] leading-[1.5]">
                       {msg.role === "assistant" ? (
-                        <div className="prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <div className="prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                           <MessageContent
                             content={msg.content}
                             citations={msg.citations}
@@ -459,7 +459,7 @@ export function ChatInterface({
               {/* Streaming message */}
               {isLoading && streaming.displayedText && (
                 <div className="flex flex-col items-start">
-                  <div className="max-w-[80%] p-3 rounded-lg bg-white/5 text-gray-100 border border-white/10">
+                  <div className="max-w-[80%] p-3 rounded-lg bg-gray-100 text-gray-800 border border-black/5">
                     <p className="text-[14px] leading-[1.5]">
                       {streaming.displayedText}
                       {streaming.isAnimating && <TypingCursor visible />}
@@ -470,8 +470,8 @@ export function ChatInterface({
 
               {/* Loading indicator */}
               {isLoading && !streaming.displayedText && (
-                <div className="flex items-center gap-3 text-gray-400">
-                  <div className="p-2 rounded-lg bg-white/5">
+                <div className="flex items-center gap-3 text-gray-500">
+                  <div className="p-2 rounded-lg bg-gray-100">
                     <Loader2 className="h-4 w-4 animate-spin" />
                   </div>
                   <span className="text-sm">Thinking...</span>
@@ -485,7 +485,7 @@ export function ChatInterface({
         </>
       )}
 
-      {/* PERSISTENT CHAT BAR - iOS Liquid Glass style */}
+      {/* PERSISTENT CHAT BAR - iOS Liquid Glass style (light theme) */}
       <div
         className="fixed left-1/2 flex items-center gap-3 z-[10000]"
         style={{
@@ -493,25 +493,25 @@ export function ChatInterface({
           maxWidth: MAX_PANEL_WIDTH,
           bottom: "16px", // 16px from bottom of viewport
           transform: "translateX(-50%)",
-          background: "rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(24px) saturate(180%)",
-          WebkitBackdropFilter: "blur(24px) saturate(180%)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
+          background: "rgba(255, 255, 255, 0.72)",
+          backdropFilter: "blur(40px) saturate(180%)",
+          WebkitBackdropFilter: "blur(40px) saturate(180%)",
+          border: "1px solid rgba(0, 0, 0, 0.08)",
           borderRadius: "20px",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.05)",
+          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)",
           padding: "12px 16px",
         }}
       >
         {/* Stacked Buttons */}
         <div className="flex flex-col gap-1.5">
           <button
-            className="w-8 h-8 rounded-md border border-white/20 flex items-center justify-center text-gray-400 hover:text-gray-200 hover:border-white/30 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-md border border-black/10 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-black/20 hover:bg-black/5 transition-colors cursor-pointer"
             title="Chat History"
           >
             <MessageSquare className="w-4 h-4" />
           </button>
           <button
-            className="w-8 h-8 rounded-md border border-white/10 flex items-center justify-center text-gray-500 cursor-not-allowed"
+            className="w-8 h-8 rounded-md border border-black/5 flex items-center justify-center text-gray-400 cursor-not-allowed"
             disabled
             title="Attachments (coming soon)"
           >
@@ -538,8 +538,8 @@ export function ChatInterface({
           className={cn(
             "w-12 h-12 rounded-xl border flex items-center justify-center transition-all cursor-pointer",
             isLoading || !inputValue.trim()
-              ? "border-white/10 text-gray-500 cursor-not-allowed"
-              : "border-white/20 text-gray-200 hover:border-white/30 hover:text-white"
+              ? "border-black/5 text-gray-400 cursor-not-allowed bg-transparent"
+              : "border-blue-500 text-white bg-blue-500 hover:bg-blue-600 hover:border-blue-600"
           )}
         >
           {isLoading ? (
