@@ -17,7 +17,7 @@
 -- Sunset Realty: KPI drop
 INSERT INTO alert (
   id, agency_id, client_id, type, severity,
-  title, description, suggested_action, status, created_at, updated_at
+  title, description, suggested_action, status, confidence, created_at, updated_at
 ) VALUES (
   gen_random_uuid(),
   '11111111-1111-1111-1111-111111111111',
@@ -28,6 +28,7 @@ INSERT INTO alert (
   'Sunset Realty''s return on ad spend fell from $3.85 to $2.38. Campaign performance has degraded significantly.',
   'Review ad creatives, audience targeting, and bid strategy. Consider pausing underperforming ad sets.',
   'active',
+  0.95,
   NOW() - INTERVAL '2 hours',
   NOW() - INTERVAL '2 hours'
 );
@@ -35,7 +36,7 @@ INSERT INTO alert (
 -- Coastal Coffee: Integration disconnected (critical)
 INSERT INTO alert (
   id, agency_id, client_id, type, severity,
-  title, description, suggested_action, status, created_at, updated_at
+  title, description, suggested_action, status, confidence, created_at, updated_at
 ) VALUES (
   gen_random_uuid(),
   '11111111-1111-1111-1111-111111111111',
@@ -46,6 +47,7 @@ INSERT INTO alert (
   'Coastal Coffee''s Meta Ads connection has been lost. Real-time data sync has stopped since 6 hours ago.',
   'Have Coastal Coffee reauthorize their Meta Ads account in integrations settings.',
   'active',
+  1.0,
   NOW() - INTERVAL '6 hours',
   NOW() - INTERVAL '6 hours'
 );
@@ -57,7 +59,7 @@ INSERT INTO alert (
 -- Coastal Coffee: Inactivity
 INSERT INTO alert (
   id, agency_id, client_id, type, severity,
-  title, description, suggested_action, status, created_at, updated_at
+  title, description, suggested_action, status, confidence, created_at, updated_at
 ) VALUES (
   gen_random_uuid(),
   '11111111-1111-1111-1111-111111111111',
@@ -68,6 +70,7 @@ INSERT INTO alert (
   'Coastal Coffee has not logged in or made any changes since December 27. This is unusual for their account.',
   'Schedule a check-in call to understand current status and needs.',
   'active',
+  0.88,
   NOW() - INTERVAL '1 day',
   NOW() - INTERVAL '1 day'
 );
@@ -75,7 +78,7 @@ INSERT INTO alert (
 -- TechCorp Solutions: Budget pacing risk
 INSERT INTO alert (
   id, agency_id, client_id, type, severity,
-  title, description, suggested_action, status, created_at, updated_at
+  title, description, suggested_action, status, confidence, created_at, updated_at
 ) VALUES (
   gen_random_uuid(),
   '11111111-1111-1111-1111-111111111111',
@@ -86,6 +89,7 @@ INSERT INTO alert (
   'TechCorp Solutions is spending faster than planned. At current pace, monthly budget will be exhausted by January 18 instead of January 31.',
   'Review daily budget caps, bid adjustments, and dayparting settings. Consider reducing bid multipliers.',
   'active',
+  0.92,
   NOW() - INTERVAL '12 hours',
   NOW() - INTERVAL '12 hours'
 );
@@ -97,7 +101,7 @@ INSERT INTO alert (
 -- Sunset Realty: Conversion rate declining
 INSERT INTO alert (
   id, agency_id, client_id, type, severity,
-  title, description, suggested_action, status, created_at, updated_at
+  title, description, suggested_action, status, confidence, created_at, updated_at
 ) VALUES (
   gen_random_uuid(),
   '11111111-1111-1111-1111-111111111111',
@@ -108,6 +112,7 @@ INSERT INTO alert (
   'Sunset Realty''s conversion rate dropped from 3.2% to 2.6%. This suggests issues with landing page or post-click experience.',
   'Audit landing page for UX issues, form friction, and page load times. Consider A/B testing new variations.',
   'active',
+  0.85,
   NOW() - INTERVAL '4 hours',
   NOW() - INTERVAL '4 hours'
 );
@@ -115,7 +120,7 @@ INSERT INTO alert (
 -- TechCorp Solutions: High cost per acquisition
 INSERT INTO alert (
   id, agency_id, client_id, type, severity,
-  title, description, suggested_action, status, created_at, updated_at
+  title, description, suggested_action, status, confidence, created_at, updated_at
 ) VALUES (
   gen_random_uuid(),
   '11111111-1111-1111-1111-111111111111',
@@ -126,6 +131,7 @@ INSERT INTO alert (
   'TechCorp Solutions'' CPA rose from $47 to $54. This indicates reduced targeting efficiency.',
   'Review audience overlap, expand exclusion lists, and optimize audience interest targeting.',
   'active',
+  0.82,
   NOW() - INTERVAL '18 hours',
   NOW() - INTERVAL '18 hours'
 );
@@ -137,7 +143,7 @@ INSERT INTO alert (
 -- Sunset Realty: Low impression volume
 INSERT INTO alert (
   id, agency_id, client_id, type, severity,
-  title, description, suggested_action, status, created_at, updated_at
+  title, description, suggested_action, status, confidence, created_at, updated_at
 ) VALUES (
   gen_random_uuid(),
   '11111111-1111-1111-1111-111111111111',
@@ -148,6 +154,7 @@ INSERT INTO alert (
   'Sunset Realty''s impressions are below daily average. Budget may be spread too thin across campaigns.',
   'Check ad scheduling, audience size, and bid strategy. Consider consolidating budgets to top performers.',
   'active',
+  0.78,
   NOW() - INTERVAL '8 hours',
   NOW() - INTERVAL '8 hours'
 );
