@@ -132,7 +132,7 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const response = await fetch('/api/v1/clients')
+      const response = await fetch('/api/v1/clients', { credentials: 'include' })
 
       if (!response.ok) {
         throw new Error('Failed to fetch clients')

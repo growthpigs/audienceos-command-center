@@ -259,7 +259,7 @@ export const useSettingsStore = create<SettingsState>()(
       fetchAgencySettings: async () => {
         set({ isLoadingAgency: true })
         try {
-          const response = await fetch('/api/v1/settings/agency')
+          const response = await fetch('/api/v1/settings/agency', { credentials: 'include' })
           if (!response.ok) {
             throw new Error('Failed to fetch agency settings')
           }
@@ -294,7 +294,7 @@ export const useSettingsStore = create<SettingsState>()(
       fetchTeamMembers: async () => {
         set({ isLoadingMembers: true })
         try {
-          const response = await fetch('/api/v1/settings/users')
+          const response = await fetch('/api/v1/settings/users', { credentials: 'include' })
           if (!response.ok) {
             throw new Error('Failed to fetch team members')
           }
@@ -321,7 +321,7 @@ export const useSettingsStore = create<SettingsState>()(
       fetchInvitations: async () => {
         set({ isLoadingInvitations: true })
         try {
-          const response = await fetch('/api/v1/settings/invitations')
+          const response = await fetch('/api/v1/settings/invitations', { credentials: 'include' })
           if (!response.ok) {
             throw new Error('Failed to fetch invitations')
           }

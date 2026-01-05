@@ -135,7 +135,7 @@ function AgencyProfileSection({ loading }: { loading: boolean }) {
   React.useEffect(() => {
     const fetchAgencySettings = async () => {
       try {
-        const response = await fetch('/api/v1/settings/agency')
+        const response = await fetch('/api/v1/settings/agency', { credentials: 'include' })
         if (response.ok) {
           const { data } = await response.json()
           setFormData({
@@ -229,7 +229,7 @@ function TeamMembersSection({ loading }: { loading: boolean }) {
   React.useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('/api/v1/settings/users?limit=50')
+        const response = await fetch('/api/v1/settings/users?limit=50', { credentials: 'include' })
         if (response.ok) {
           const { data } = await response.json()
           setUsers(data)

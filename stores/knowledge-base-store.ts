@@ -147,7 +147,7 @@ export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const response = await fetch('/api/v1/documents')
+      const response = await fetch('/api/v1/documents', { credentials: 'include' })
 
       if (!response.ok) {
         throw new Error('Failed to fetch documents')

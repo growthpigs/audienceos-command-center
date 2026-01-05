@@ -82,7 +82,7 @@ export const useAutomationsStore = create<AutomationsState>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const res = await fetch('/api/v1/workflows')
+      const res = await fetch('/api/v1/workflows', { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch workflows')
       const data = await res.json()
       set({ workflows: data.workflows || [], isLoading: false })
@@ -99,7 +99,7 @@ export const useAutomationsStore = create<AutomationsState>((set, get) => ({
     set({ runsLoading: true })
 
     try {
-      const res = await fetch('/api/v1/workflows?include_runs=true&runs_limit=20')
+      const res = await fetch('/api/v1/workflows?include_runs=true&runs_limit=20', { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch runs')
       const data = await res.json()
 

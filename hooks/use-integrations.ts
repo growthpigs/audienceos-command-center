@@ -64,7 +64,7 @@ export function useIntegrations() {
     if (!initialFetchDone.current) {
       initialFetchDone.current = true
       store.setLoading(true)
-      fetch('/api/v1/integrations')
+      fetch('/api/v1/integrations', { credentials: 'include' })
         .then(res => res.json())
         .then(({ data }) => store.setIntegrations(data || []))
         .catch(error => {
@@ -85,7 +85,7 @@ export function useIntegrations() {
   const refetch = () => {
     const store = useIntegrationsStore.getState()
     store.setLoading(true)
-    fetch('/api/v1/integrations')
+    fetch('/api/v1/integrations', { credentials: 'include' })
       .then(res => res.json())
       .then(({ data }) => store.setIntegrations(data || []))
       .catch(error => {

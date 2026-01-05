@@ -2,7 +2,7 @@
 
 **Location:** `~/PAI/projects/command_center_audience_OS/features/`
 **Purpose:** Track status of all product features
-**Last Audit:** 2026-01-04 (Documentation accuracy audit)
+**Last Audit:** 2026-01-05 (Added multi-org-roles spec)
 
 ---
 
@@ -40,11 +40,11 @@
 
 ## Phase 2 Features (Deferred)
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| user-invitations | ⏳ Deferred | Data model ready (USER_INVITATION), API exists |
-| multi-org-roles | ⏳ Deferred | Advanced permissions beyond Agency Admin |
-| zoom-integration | ⏳ Deferred | Zoom v2+ for call recordings/transcripts |
+| Feature | Status | Spec File | Notes |
+|---------|--------|-----------|-------|
+| user-invitations | ⏳ Deferred | - | Data model ready (USER_INVITATION), API exists |
+| multi-org-roles | 📝 Specced | [multi-org-roles.md](multi-org-roles.md) | RBAC with Owner/Admin/Manager/Member + custom roles. 60 tasks. US-042 to US-045. |
+| zoom-integration | ⏳ Deferred | - | Zoom v2+ for call recordings/transcripts |
 
 ---
 
@@ -83,7 +83,7 @@
 | **Third-party APIs** | ⏳ Pending | Gmail, Slack, Google Ads, Meta (OAuth handlers exist, need testing) |
 | **Testing** | ⏳ Pending | Unit tests (14), E2E tests (3), more tests in progress |
 | **Monitoring** | ⏳ Pending | Sentry integration needed |
-| **Multi-Org Roles** | 📝 Speccing | Feature spec being created |
+| **Multi-Org Roles** | 📝 Specced | [multi-org-roles.md](multi-org-roles.md) - 60 tasks, ready to implement |
 
 ---
 

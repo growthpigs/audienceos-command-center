@@ -188,7 +188,7 @@ export const useTicketStore = create<TicketState>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const response = await fetch('/api/v1/tickets')
+      const response = await fetch('/api/v1/tickets', { credentials: 'include' })
 
       if (!response.ok) {
         throw new Error('Failed to fetch tickets')
@@ -206,7 +206,7 @@ export const useTicketStore = create<TicketState>((set, get) => ({
 
   fetchTicketById: async (id) => {
     try {
-      const response = await fetch(`/api/v1/tickets/${id}`)
+      const response = await fetch(`/api/v1/tickets/${id}`, { credentials: 'include' })
 
       if (!response.ok) {
         throw new Error('Failed to fetch ticket')
@@ -224,7 +224,7 @@ export const useTicketStore = create<TicketState>((set, get) => ({
     set({ isLoadingNotes: true })
 
     try {
-      const response = await fetch(`/api/v1/tickets/${ticketId}/notes`)
+      const response = await fetch(`/api/v1/tickets/${ticketId}/notes`, { credentials: 'include' })
 
       if (!response.ok) {
         throw new Error('Failed to fetch notes')

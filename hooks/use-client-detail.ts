@@ -98,7 +98,7 @@ export function useClientDetail(clientId: string | null): UseClientDetailResult 
     setError(null)
 
     try {
-      const response = await fetch(`/api/v1/clients/${clientId}`)
+      const response = await fetch(`/api/v1/clients/${clientId}`, { credentials: 'include' })
 
       if (!response.ok) {
         if (response.status === 401) {

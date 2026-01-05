@@ -126,7 +126,7 @@ export const useDashboardStore = create<DashboardState>()(
         set({ kpisLoading: true, kpisError: null })
 
         try {
-          const response = await fetch('/api/v1/dashboard/kpis')
+          const response = await fetch('/api/v1/dashboard/kpis', { credentials: 'include' })
 
           if (!response.ok) {
             throw new Error('Failed to fetch KPIs')
@@ -156,7 +156,7 @@ export const useDashboardStore = create<DashboardState>()(
         set({ trendsLoading: true, trendsError: null })
 
         try {
-          const response = await fetch(`/api/v1/dashboard/trends?period=${selectedPeriod}`)
+          const response = await fetch(`/api/v1/dashboard/trends?period=${selectedPeriod}`, { credentials: 'include' })
 
           if (!response.ok) {
             throw new Error('Failed to fetch trends')
