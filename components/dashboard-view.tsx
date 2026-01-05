@@ -14,7 +14,7 @@ import {
 import { type MinimalClient, getOwnerData } from "@/types/client"
 import { useDashboardStore } from "@/stores/dashboard-store"
 import { cn } from "@/lib/utils"
-import { MessageSquare, Send, Clock, AlertCircle, ExternalLink, X, CheckCircle2, CheckSquare, AlertTriangle, TrendingUp } from "lucide-react"
+import { Clock, AlertCircle, ExternalLink, X, CheckCircle2, CheckSquare, AlertTriangle, TrendingUp } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button"
 interface DashboardViewProps {
   clients: MinimalClient[]
   onClientClick: (client: MinimalClient) => void
-  onNavigateToChat?: () => void
 }
 
 // Mock firehose data - will be replaced with real data
@@ -493,34 +492,6 @@ function LoadByStatusWidget({ clients }: { clients: MinimalClient[] }) {
   )
 }
 
-// HGC Input Bar - Click to navigate to Intelligence Center Chat
-interface HGCInputBarProps {
-  onNavigateToChat?: () => void
-}
-
-function HGCInputBar({ onNavigateToChat }: HGCInputBarProps) {
-  const handleClick = () => {
-    if (onNavigateToChat) {
-      onNavigateToChat()
-    }
-  }
-
-  return (
-    <div className="border-t border-border bg-card px-4 py-3">
-      <button
-        onClick={handleClick}
-        className="flex items-center gap-3 w-full text-left hover:bg-muted/50 rounded-lg p-1 -m-1 transition-colors cursor-pointer"
-      >
-        <MessageSquare className="w-5 h-5 text-muted-foreground shrink-0" />
-        <span className="flex-1 text-sm text-muted-foreground">
-          Ask about your clients...
-        </span>
-        <Send className="w-4 h-4 text-muted-foreground" />
-      </button>
-    </div>
-  )
-}
-
 // Task Detail Drawer
 function TaskDetailDrawer({
   item,
@@ -869,7 +840,7 @@ function PerformanceDetailDrawer({
   )
 }
 
-export function DashboardView({ clients, onClientClick, onNavigateToChat }: DashboardViewProps) {
+export function DashboardView({ clients, onClientClick }: DashboardViewProps) {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview")
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
@@ -1293,8 +1264,6 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
         ) : null}
       </div>
 
-      {/* HGC Input Bar */}
-      <HGCInputBar onNavigateToChat={onNavigateToChat} />
     </div>
   )
 }

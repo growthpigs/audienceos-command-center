@@ -184,16 +184,6 @@ function CommandCenterContent() {
     fetchClients()
   }, [fetchClients])
 
-  // Set chat context for dashboard page
-  useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).setChatContext) {
-      (window as any).setChatContext({
-        page: "dashboard",
-        context: "User is viewing the Command Center dashboard with client pipeline and metrics",
-        prompt: "Ask about clients, pipeline metrics, health status, or anything else",
-      })
-    }
-  }, [])
 
   // Convert store clients to UI format
   const clients: MinimalClient[] = useMemo(() => {
@@ -398,7 +388,6 @@ function CommandCenterContent() {
             <DashboardView
               clients={filteredClients}
               onClientClick={(client) => setSelectedClient(client)}
-              onNavigateToChat={() => setActiveView("intelligence")}
             />
           </div>
         )
