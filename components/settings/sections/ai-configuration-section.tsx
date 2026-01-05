@@ -12,26 +12,18 @@ import { useSettingsStore } from "@/stores/settings-store"
 import { Bot, Sparkles, MessageSquare, Zap, BarChart3, CheckCircle2, Loader2 } from "lucide-react"
 import type { TokenUsageStats } from "@/types/settings"
 
-// Mock token usage for demo
-const MOCK_TOKEN_USAGE: TokenUsageStats = {
-  current_usage: 32450,
+// Default token usage
+const DEFAULT_TOKEN_USAGE: TokenUsageStats = {
+  current_usage: 0,
   limit: 50000,
-  percent_used: 64.9,
+  percent_used: 0,
   usage_by_feature: {
-    "Chat Assistant": 18500,
-    "Draft Replies": 8200,
-    "Alert Analysis": 3750,
-    "Document RAG": 2000,
+    "Chat Assistant": 0,
+    "Draft Replies": 0,
+    "Alert Analysis": 0,
+    "Document RAG": 0,
   },
-  daily_usage: [
-    { date: "2024-12-25", tokens: 4200 },
-    { date: "2024-12-26", tokens: 5100 },
-    { date: "2024-12-27", tokens: 4800 },
-    { date: "2024-12-28", tokens: 6200 },
-    { date: "2024-12-29", tokens: 5300 },
-    { date: "2024-12-30", tokens: 4100 },
-    { date: "2024-12-31", tokens: 2750 },
-  ],
+  daily_usage: [],
 }
 
 // AI Features that can be toggled
@@ -67,21 +59,57 @@ export function AIConfigurationSection() {
   const {
     tokenUsage,
     setTokenUsage,
-    isLoadingTokenUsage: _isLoadingTokenUsage,
-    setLoadingTokenUsage: _setLoadingTokenUsage,
     setHasUnsavedChanges,
   } = useSettingsStore()
 
   // Local form state
+  const [isLoading, setIsLoading] = useState(true)
   const [assistantName, setAssistantName] = useState("Chi")
   const [responseTone, setResponseTone] = useState<"professional" | "casual" | "technical">("professional")
   const [responseLength, setResponseLength] = useState<"brief" | "detailed" | "comprehensive">("detailed")
   const [enabledFeatures, setEnabledFeatures] = useState<string[]>(AI_FEATURES.map((f) => f.id))
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Load token usage on mount
+  // Load AI configuration on mount
   useEffect(() => {
-    setTokenUsage(MOCK_TOKEN_USAGE)
+    const fetchAIConfig = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const response = await fetch('/api/v1/settings/agency')
+        if (!response.ok) {
+          throw new Error('Failed to load settings')
+        }
+
+        const { data: agency } = await response.json()
+        const config = agency.ai_config || {}
+
+        // Populate form with fetched data
+        setAssistantName(config.assistant_name || 'Chi')
+        setResponseTone(config.response_tone || 'professional')
+        setResponseLength(config.response_length || 'detailed')
+        setEnabledFeatures(config.enabled_features || AI_FEATURES.map(f => f.id))
+
+        // Set token usage
+        setTokenUsage({
+          current_usage: 0,
+          limit: config.token_limit || 50000,
+          usage_by_feature: {},
+          daily_usage: [],
+          percent_used: 0,
+        })
+      } catch (err) {
+        console.error('[AIConfigurationSection] Error loading AI config:', err)
+        setError('Failed to load AI configuration')
+        setTokenUsage(DEFAULT_TOKEN_USAGE)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAIConfig()
   }, [setTokenUsage])
 
   const handleFeatureToggle = (featureId: string) => {
@@ -93,16 +121,59 @@ export function AIConfigurationSection() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    setHasUnsavedChanges(false)
-    toast({
-      title: "AI settings saved",
-      description: "Your AI configuration has been updated.",
-    })
+    setError(null)
+
+    try {
+      const response = await fetch('/api/v1/settings/agency', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ai_config: {
+            assistant_name: assistantName,
+            response_tone: responseTone,
+            response_length: responseLength,
+            enabled_features: enabledFeatures,
+            token_limit: tokenUsage?.limit || 50000,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to save settings')
+      }
+
+      setHasUnsavedChanges(false)
+      toast({
+        title: "AI settings saved",
+        description: "Your AI configuration has been updated.",
+      })
+    } catch (err) {
+      console.error('[AIConfigurationSection] Error saving AI config:', err)
+      const message = err instanceof Error ? err.message : 'Failed to save AI configuration'
+      setError(message)
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const usagePercent = tokenUsage?.percent_used || 0
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-24 bg-secondary rounded-lg" />
+        <div className="h-24 bg-secondary rounded-lg" />
+        <div className="h-32 bg-secondary rounded-lg" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -116,6 +187,13 @@ export function AIConfigurationSection() {
           Customize AI behavior and monitor usage
         </p>
       </div>
+
+      {/* Error state */}
+      {error && (
+        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+          <p className="text-xs text-destructive">{error}</p>
+        </div>
+      )}
 
       {/* Token Usage Card */}
       <Card className="bg-card border-border shadow-sm">

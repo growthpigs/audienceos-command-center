@@ -1,111 +1,130 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Loader2, AlertCircle, CheckCircle2, Mail, Info } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import * as React from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 
-interface InvitationDetails {
+interface UserInvitation {
+  id: string
   email: string
-  role: string
-  agency_name: string
+  role: "admin" | "user"
   expires_at: string
+  accepted_at: string | null
 }
 
-export default function InvitationPage() {
+export default function InvitePage({
+  params,
+}: {
+  params: Promise<{ token: string }>
+}) {
+  const [token, setToken] = React.useState<string>("")
+  const [invitation, setInvitation] = React.useState<UserInvitation | null>(null)
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [error, setError] = React.useState("")
+  const [firstName, setFirstName] = React.useState("")
+  const [lastName, setLastName] = React.useState("")
+  const [password, setPassword] = React.useState("")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [success, setSuccess] = React.useState(false)
   const router = useRouter()
-  const params = useParams()
-  const { toast } = useToast()
 
-  const token = params?.token as string
-
-  // Form state
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [invitationDetails, setInvitationDetails] = useState<InvitationDetails | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  // Validate invitation on mount
-  useEffect(() => {
-    const validateInvitation = async () => {
-      if (!token) {
-        setError('Invalid invitation link')
-        setIsLoading(false)
-        return
-      }
-
+  // Load and validate invitation on mount
+  React.useEffect(() => {
+    const loadInvitation = async () => {
       try {
+        const resolvedParams = await params
+        setToken(resolvedParams.token)
+
+        // Validate invitation token
         const response = await fetch(
-          `/api/v1/settings/invitations/${token}`,
-          { method: 'GET' }
+          `/api/v1/settings/invitations/${resolvedParams.token}/accept`,
+          {
+            method: "GET",
+          }
         )
 
         if (!response.ok) {
-          const data = await response.json()
           if (response.status === 410) {
-            setError('This invitation has expired. Please contact your administrator to request a new one.')
+            setError("This invitation has expired or has already been accepted")
+          } else if (response.status === 404) {
+            setError("This invitation link is invalid")
           } else {
-            setError(data.message || 'Invalid invitation link')
+            const errorData = await response.json().catch(() => ({}))
+            setError(
+              errorData.error || "Failed to load invitation. Please try again."
+            )
           }
           setIsLoading(false)
           return
         }
 
         const data = await response.json()
-        setInvitationDetails(data.invitation)
-        setError(null)
+        setInvitation(data.invitation)
+        setIsLoading(false)
       } catch (err) {
-        setError('Failed to validate invitation. Please try again later.')
-        console.error('Invitation validation error:', err)
-      } finally {
+        console.error("[InvitePage] Error loading invitation:", err)
+        setError("Network error. Please check your connection and try again.")
         setIsLoading(false)
       }
     }
 
-    validateInvitation()
-  }, [token])
+    loadInvitation()
+  }, [params])
 
-  const validateForm = (): string | null => {
-    if (!firstName.trim()) return 'First name is required'
-    if (!lastName.trim()) return 'Last name is required'
-    if (firstName.trim().length < 2) return 'First name must be at least 2 characters'
-    if (lastName.trim().length < 2) return 'Last name must be at least 2 characters'
-    if (!password) return 'Password is required'
-    if (password.length < 8) return 'Password must be at least 8 characters'
-    if (password !== confirmPassword) return 'Passwords do not match'
+  // Validate password strength
+  const validatePassword = (pwd: string): string | null => {
+    if (!pwd) return "Password is required"
+    if (pwd.length < 8) return "Password must be at least 8 characters"
+    if (!/[a-z]/.test(pwd))
+      return "Password must contain a lowercase letter"
+    if (!/[A-Z]/.test(pwd))
+      return "Password must contain an uppercase letter"
+    if (!/[0-9]/.test(pwd)) return "Password must contain a number"
     return null
   }
 
+  // Validate form
+  const validateForm = (): string | null => {
+    if (!firstName.trim()) return "First name is required"
+    if (!lastName.trim()) return "Last name is required"
+
+    const passwordError = validatePassword(password)
+    if (passwordError) return passwordError
+
+    return null
+  }
+
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const validationError = validateForm()
 
+    // Client-side validation
+    const validationError = validateForm()
     if (validationError) {
       setError(validationError)
       return
     }
 
+    if (!token || !invitation) {
+      setError("Invalid invitation state. Please refresh the page.")
+      return
+    }
+
     setIsSubmitting(true)
-    setError(null)
+    setError("")
 
     try {
-      const response = await fetch(
+      // Accept invitation via API
+      const acceptResponse = await fetch(
         `/api/v1/settings/invitations/${token}/accept`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             first_name: firstName.trim(),
             last_name: lastName.trim(),
@@ -114,47 +133,94 @@ export default function InvitationPage() {
         }
       )
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to accept invitation')
+      if (!acceptResponse.ok) {
+        const errorData = await acceptResponse.json().catch(() => ({}))
+        setError(
+          errorData.error ||
+            "Failed to accept invitation. Please try again later."
+        )
+        setIsSubmitting(false)
+        return
       }
 
-      const data = await response.json()
+      setSuccess(true)
 
-      toast({
-        title: 'Account created successfully',
-        description: 'You can now log in to your account',
+      // Auto-login user
+      const supabase = createClient()
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: invitation.email,
+        password,
       })
 
-      // Redirect to login or dashboard
+      if (signInError) {
+        console.error("[InvitePage] Sign in error:", signInError)
+        // Account was created, but auto-login failed
+        // Redirect to login page instead
+        setTimeout(() => {
+          router.push(`/login?email=${encodeURIComponent(invitation.email)}`)
+          router.refresh()
+        }, 1500)
+        return
+      }
+
+      // Successful login - redirect to dashboard
       setTimeout(() => {
-        router.push('/auth/login')
+        router.push("/")
+        router.refresh()
       }, 1500)
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'Failed to accept invitation. Please try again.'
-
-      setError(errorMessage)
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      })
-    } finally {
+      console.error("[InvitePage] Submission error:", err)
+      setError("Network error. Please check your connection and try again.")
       setIsSubmitting(false)
     }
   }
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Setting up your account
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Validating your invitation...
+              Verifying your invitation...
+            </p>
+          </div>
+
+          <div className="flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error && !success) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Invitation Issue
+            </h1>
+          </div>
+
+          <div className="space-y-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+            <div className="flex gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-destructive">{error}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground text-center">
+              If you believe this is an error, please contact your agency
+              administrator for a new invitation.
             </p>
           </div>
         </div>
@@ -162,181 +228,222 @@ export default function InvitationPage() {
     )
   }
 
-  if (error && !invitationDetails) {
+  // Success state
+  if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-4">
-            <AlertCircle className="h-12 w-12 text-destructive" />
-            <div className="text-center">
-              <h1 className="text-xl font-semibold mb-2">Invitation Invalid</h1>
-              <p className="text-sm text-muted-foreground mb-6">{error}</p>
-              <Link href="/">
-                <Button variant="outline" className="w-full">
-                  Back to Home
-                </Button>
-              </Link>
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Welcome, {firstName}!
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Your account has been created
+            </p>
+          </div>
+
+          <div className="space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
+            <div className="flex gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-green-900">
+                  Signing you in...
+                </p>
+              </div>
             </div>
+          </div>
+
+          <div className="flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         </div>
       </div>
     )
   }
 
-  if (!invitationDetails) {
-    return null
-  }
-
+  // Form state
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Mail className="h-6 w-6 text-white" />
-            <h1 className="text-2xl font-bold text-white">Welcome!</h1>
-          </div>
-          <p className="text-purple-100 text-sm">
-            Create your account to join {invitationDetails.agency_name}
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-bold tracking-tight">
+            Accept Invitation
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Create your account to get started
           </p>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Invitation Details */}
-          <div className="bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/20 rounded-lg p-4">
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              <span className="font-semibold">Email:</span>{' '}
-              {invitationDetails.email}
-            </p>
-            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
-              <span className="font-semibold">Role:</span>{' '}
-              <span className="capitalize">{invitationDetails.role}</span>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Email (read-only) */}
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-xs font-medium">
+              Email Address
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={invitation?.email || ""}
+              disabled
+              className="bg-muted text-muted-foreground cursor-not-allowed"
+            />
+            <p className="text-xs text-muted-foreground">
+              This email was used to send the invitation
             </p>
           </div>
 
-          {/* Error Alert */}
+          {/* First Name */}
+          <div className="space-y-2">
+            <Label htmlFor="firstName" className="text-xs font-medium">
+              First Name
+            </Label>
+            <Input
+              id="firstName"
+              type="text"
+              placeholder="John"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              disabled={isSubmitting}
+              autoComplete="given-name"
+              required
+            />
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-2">
+            <Label htmlFor="lastName" className="text-xs font-medium">
+              Last Name
+            </Label>
+            <Input
+              id="lastName"
+              type="text"
+              placeholder="Doe"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              disabled={isSubmitting}
+              autoComplete="family-name"
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-xs font-medium">
+              Password
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isSubmitting}
+              autoComplete="new-password"
+              required
+            />
+            <div className="space-y-1 pt-1 text-xs text-muted-foreground">
+              <div
+                className={cn(
+                  "flex items-center gap-2",
+                  password.length >= 8
+                    ? "text-green-600"
+                    : "text-muted-foreground"
+                )}
+              >
+                <div
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    password.length >= 8 ? "bg-green-600" : "bg-border"
+                  )}
+                />
+                At least 8 characters
+              </div>
+              <div
+                className={cn(
+                  "flex items-center gap-2",
+                  /[a-z]/.test(password)
+                    ? "text-green-600"
+                    : "text-muted-foreground"
+                )}
+              >
+                <div
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    /[a-z]/.test(password) ? "bg-green-600" : "bg-border"
+                  )}
+                />
+                One lowercase letter
+              </div>
+              <div
+                className={cn(
+                  "flex items-center gap-2",
+                  /[A-Z]/.test(password)
+                    ? "text-green-600"
+                    : "text-muted-foreground"
+                )}
+              >
+                <div
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    /[A-Z]/.test(password) ? "bg-green-600" : "bg-border"
+                  )}
+                />
+                One uppercase letter
+              </div>
+              <div
+                className={cn(
+                  "flex items-center gap-2",
+                  /[0-9]/.test(password)
+                    ? "text-green-600"
+                    : "text-muted-foreground"
+                )}
+              >
+                <div
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    /[0-9]/.test(password) ? "bg-green-600" : "bg-border"
+                  )}
+                />
+                One number
+              </div>
+            </div>
+          </div>
+
+          {/* Error message */}
           {error && (
-            <div className="flex items-start gap-2 py-3 px-3 bg-red-50 dark:bg-red-500/5 border border-red-200 dark:border-red-500/20 rounded-md">
-              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-500 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-red-600 dark:text-red-500">
-                {error}
-              </p>
+            <div className="space-y-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+              <p className="text-xs text-destructive">{error}</p>
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-sm">
-                  First Name
-                </Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="John"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  disabled={isSubmitting}
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-sm">
-                  Last Name
-                </Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  placeholder="Doe"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  disabled={isSubmitting}
-                  className="h-9"
-                />
-              </div>
-            </div>
+          {/* Submit button */}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting || !firstName || !lastName || !password}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm">
-                Password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isSubmitting}
-                  className="h-9 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
+          {/* Role display */}
+          {invitation && (
+            <div className="pt-2 text-center">
               <p className="text-xs text-muted-foreground">
-                At least 8 characters
+                You'll be added as a{" "}
+                <span className="font-medium capitalize">
+                  {invitation.role}
+                </span>
               </p>
             </div>
-
-            {/* Confirm Password */}
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm">
-                Confirm Password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isSubmitting}
-                  className="h-9 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  {showConfirmPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-9 gap-2"
-            >
-              {isSubmitting && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
-              Create Account & Accept Invitation
-            </Button>
-          </form>
-
-          {/* Terms */}
-          <p className="text-xs text-muted-foreground text-center">
-            By creating an account, you agree to our{' '}
-            <Link href="/terms" className="hover:underline text-primary">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="hover:underline text-primary">
-              Privacy Policy
-            </Link>
-          </p>
-        </div>
+          )}
+        </form>
       </div>
     </div>
   )

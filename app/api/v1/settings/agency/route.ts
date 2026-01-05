@@ -95,6 +95,7 @@ export async function PATCH(request: NextRequest) {
       business_hours,
       pipeline_stages,
       health_thresholds,
+      ai_config,
     } = body
 
     // Validate and sanitize fields
@@ -190,6 +191,94 @@ export async function PATCH(request: NextRequest) {
         }
       }
       updates.health_thresholds = health_thresholds
+    }
+
+    if (ai_config !== undefined) {
+      if (ai_config !== null && typeof ai_config !== 'object') {
+        return createErrorResponse(400, 'AI config must be an object or null')
+      }
+
+      if (ai_config && typeof ai_config === 'object') {
+        const {
+          assistant_name,
+          response_tone,
+          response_length,
+          enabled_features,
+          token_limit,
+        } = ai_config as Record<string, unknown>
+
+        // Validate assistant_name
+        if (assistant_name !== undefined && typeof assistant_name !== 'string') {
+          return createErrorResponse(400, 'Assistant name must be a string')
+        }
+        if (
+          assistant_name !== undefined &&
+          (assistant_name.length < 1 || assistant_name.length > 50)
+        ) {
+          return createErrorResponse(400, 'Assistant name must be 1-50 characters')
+        }
+
+        // Validate response_tone
+        const validTones = ['professional', 'casual', 'technical']
+        if (
+          response_tone !== undefined &&
+          !validTones.includes(response_tone as string)
+        ) {
+          return createErrorResponse(
+            400,
+            'Response tone must be professional, casual, or technical'
+          )
+        }
+
+        // Validate response_length
+        const validLengths = ['brief', 'detailed', 'comprehensive']
+        if (
+          response_length !== undefined &&
+          !validLengths.includes(response_length as string)
+        ) {
+          return createErrorResponse(
+            400,
+            'Response length must be brief, detailed, or comprehensive'
+          )
+        }
+
+        // Validate enabled_features
+        if (enabled_features !== undefined && !Array.isArray(enabled_features)) {
+          return createErrorResponse(400, 'Enabled features must be an array')
+        }
+        if (enabled_features && Array.isArray(enabled_features)) {
+          const validFeatures = [
+            'chat_assistant',
+            'draft_replies',
+            'alert_analysis',
+            'document_rag',
+          ]
+          const invalidFeatures = (enabled_features as string[]).filter(
+            f => !validFeatures.includes(f)
+          )
+          if (invalidFeatures.length > 0) {
+            return createErrorResponse(
+              400,
+              `Invalid features: ${invalidFeatures.join(', ')}`
+            )
+          }
+        }
+
+        // Validate token_limit
+        if (
+          token_limit !== undefined &&
+          (typeof token_limit !== 'number' ||
+            token_limit < 1000 ||
+            token_limit > 1000000)
+        ) {
+          return createErrorResponse(
+            400,
+            'Token limit must be a number between 1000 and 1000000'
+          )
+        }
+      }
+
+      updates.ai_config = ai_config
     }
 
     if (Object.keys(updates).length === 0) {
