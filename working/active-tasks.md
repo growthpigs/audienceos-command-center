@@ -1,5 +1,22 @@
 # Active Tasks
 
+## 📊 Session Summary (2026-01-05)
+
+**Critical Issue Fixed:** 401 "No session" errors across all authenticated API endpoints
+- **Root Cause:** Missing `credentials: 'include'` in fetch() calls
+- **Impact:** Client list, dashboard, tickets, settings, knowledge base, automations all failing to load data
+- **Fix:** Added credentials parameter to 10+ locations across stores and hooks
+- **Result:** Overall project completion jumped from 92% to 95%
+
+**Documentation Updated:**
+- RUNBOOK.md - Production URLs updated to Agro Bros Vercel project
+- CLAUDE.md - Complete project status, deployment info, feature matrix, testing checklist
+- features/INDEX.md - Validation history and completion metrics
+
+**Commits This Session:** 59cd1e6, 467828a, 4d7cdd7, 582dd05
+
+---
+
 ## ✅ Completed Features
 - [x] Settings (SET-001-002): Agency + User management
 - [x] User Invitations (SET-003): 95% complete - verified 2026-01-05
@@ -62,11 +79,28 @@
 - Total: 525 tests passing
 - Commit: `59cd1e6`
 
-### Auth Credentials Fix - 2026-01-05
-- [x] Added `credentials: 'include'` to authenticated API fetch calls
-- [x] Fixed stores: pipeline-store, dashboard-store, ticket-store, settings-store
-- [x] Resolves 401 "No session" errors on authenticated endpoints
+### Auth Credentials Fix - 2026-01-05 ✅ CRITICAL BUG FIX
+- [x] Root cause: fetch() calls missing `credentials: 'include'` parameter
+- [x] Impact: All authenticated API endpoints returning 401 "No session"
+- [x] Fixed stores (10+):
+  - pipeline-store.ts - fetchClients()
+  - dashboard-store.ts - fetchKPIs(), fetchTrends()
+  - ticket-store.ts - fetchTickets(), fetchTicketById(), fetchNotes()
+  - settings-store.ts - fetchAgencySettings(), fetchTeamMembers(), fetchInvitations()
+  - knowledge-base-store.ts - fetchDocuments()
+  - automations-store.ts - fetchWorkflows(), fetchRuns()
+  - use-client-detail.ts - fetch client details
+  - use-integrations.ts - fetch integrations
+  - app/client/settings/page.tsx - fetch agency settings and users
+- [x] All data-dependent features now load correctly
+- [x] Overall completion: 92% → 95%
 - Commit: `59cd1e6`
+
+### Documentation Updates - 2026-01-05 ✅
+- [x] RUNBOOK.md - Updated production URLs to Agro Bros Vercel project
+- [x] CLAUDE.md - Comprehensive project status (features, deployment, sprint summary)
+- [x] features/INDEX.md - Updated completion status and validation history
+- Commits: `467828a`, `4d7cdd7`, `582dd05`
 
 ## 🚧 Next Features
 
