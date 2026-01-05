@@ -32,7 +32,7 @@
 | automations | ✅ Complete | [automations.md](automations.md) | 85% | 5 components, 8 APIs, workflow engine |
 | settings | ✅ Complete | [settings.md](settings.md) | 85% | SET-001/002: Agency + User APIs complete. SET-003-007: Invitations pending |
 | ai-intelligence-layer (HGC) | 🚧 Building | [ai-intelligence-layer.md](ai-intelligence-layer.md) | 30% | **Holy Grail Chat** - Standalone project. RAG/Web/Memory working. Function calling NOT implemented. |
-| dashboard-redesign | 📝 Specced | [dashboard-redesign.md](dashboard-redesign.md) | 0% | Linear design system refresh for dashboard |
+| dashboard-redesign | ✅ Complete | [dashboard-redesign.md](dashboard-redesign.md) | 90% | Linear design system (merged from linear-rebuild worktree) |
 
 **Overall Completion:** ~86% (Settings APIs added 2026-01-04, needs invitations + email service)
 

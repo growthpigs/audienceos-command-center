@@ -36,6 +36,8 @@ import {
   FILE_TYPE_INFO,
   INDEX_STATUS_INFO,
 } from "@/types/knowledge-base"
+import { SendToAiButton } from "@/components/ui/send-to-ai-button"
+import { Share2, Trash2, Eye } from "lucide-react"
 
 interface DocumentPreviewModalProps {
   document: KnowledgeBaseDocument
@@ -212,120 +214,138 @@ ${doc.tags.map((tag) => `- ${tag}`).join("\n")}
 
   // Render details tab
   const renderDetails = () => (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-4">
-        {/* File Information */}
-        <div className="space-y-3">
-          <h3 className="text-[11px] font-medium text-foreground">File Information</h3>
-          <div className="grid grid-cols-2 gap-3 text-[10px]">
-            <div>
-              <p className="text-muted-foreground">File Name</p>
-              <p className="font-medium">{doc.file_name}</p>
+    <div className="h-full flex flex-col">
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {/* Description */}
+          {doc.description && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{doc.description}</p>
             </div>
-            <div>
-              <p className="text-muted-foreground">File Type</p>
-              <Badge variant="outline" className={cn("text-[9px] px-1 py-0", fileInfo.color, fileInfo.bgColor, "border-transparent")}>
-                {fileInfo.label}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-muted-foreground">File Size</p>
-              <p className="font-medium">{formatFileSize(doc.file_size)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Pages</p>
-              <p className="font-medium">{doc.page_count || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Word Count</p>
-              <p className="font-medium">{doc.word_count?.toLocaleString() || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Category</p>
-              <p className="font-medium">{CATEGORY_LABELS[doc.category]}</p>
-            </div>
-          </div>
-        </div>
+          )}
 
-        {/* Description */}
-        {doc.description && (
-          <div className="space-y-1.5">
-            <h3 className="text-[11px] font-medium text-foreground">Description</h3>
-            <p className="text-[10px] text-muted-foreground">{doc.description}</p>
-          </div>
-        )}
-
-        {/* Tags */}
-        {doc.tags.length > 0 && (
-          <div className="space-y-1.5">
-            <h3 className="text-[11px] font-medium text-foreground">Tags</h3>
-            <div className="flex flex-wrap gap-1">
-              {doc.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-[9px] px-1 py-0">
-                  <Tag className="mr-0.5 h-2.5 w-2.5" />
-                  {tag}
+          {/* Two-Column Metadata Grid */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px]">
+            {/* Left Column */}
+            <div className="space-y-3">
+              <div>
+                <p className="text-muted-foreground mb-0.5">Category</p>
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5">
+                  {CATEGORY_LABELS[doc.category]}
                 </Badge>
-              ))}
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Size</p>
+                <p className="font-medium">{formatFileSize(doc.file_size)}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Created</p>
+                <p className="font-medium">
+                  {new Date(doc.created_at).toLocaleDateString()}
+                  {doc.uploader_name && (
+                    <span className="text-muted-foreground font-normal"> by {doc.uploader_name}</span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-3">
+              <div>
+                <p className="text-muted-foreground mb-0.5">Views</p>
+                <p className="font-medium">{doc.usage_count || 0}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Downloads</p>
+                <p className="font-medium">--</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Updated</p>
+                <p className="font-medium">
+                  {new Date(doc.updated_at).toLocaleDateString()}
+                </p>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Client */}
-        {doc.client_name && (
-          <div className="space-y-1.5">
-            <h3 className="text-[11px] font-medium text-foreground">Client</h3>
-            <Badge variant="outline" className="text-[9px] px-1 py-0">{doc.client_name}</Badge>
-          </div>
-        )}
+          {/* Tags - Two Column Distribution */}
+          {doc.tags.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] text-muted-foreground">Tags</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {doc.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0.5 justify-start">
+                    <Tag className="mr-1 h-2.5 w-2.5 shrink-0" />
+                    <span className="truncate">{tag}</span>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {/* Index Status */}
-        <div className="space-y-1.5">
-          <h3 className="text-[11px] font-medium text-foreground">Index Status</h3>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className={cn("text-[9px] px-1 py-0", indexInfo.color, indexInfo.bgColor, "border-transparent")}
-            >
-              {doc.index_status === "indexed" && <CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />}
-              {doc.index_status === "indexing" && <Loader2 className="mr-0.5 h-2.5 w-2.5 animate-spin" />}
-              {doc.index_status === "failed" && <AlertCircle className="mr-0.5 h-2.5 w-2.5" />}
-              {indexInfo.label}
-            </Badge>
-            {doc.index_status === "failed" && (
-              <Button variant="outline" size="sm" className="h-6 text-[9px]">
-                <RefreshCw className="mr-1 h-2.5 w-2.5" />
-                Re-index
-              </Button>
+          {/* Client & Index Status Row */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[10px]">
+            {doc.client_name && (
+              <div>
+                <p className="text-muted-foreground mb-0.5">Client</p>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0.5">{doc.client_name}</Badge>
+              </div>
             )}
+            <div>
+              <p className="text-muted-foreground mb-0.5">Index Status</p>
+              <div className="flex items-center gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={cn("text-[9px] px-1.5 py-0.5", indexInfo.color, indexInfo.bgColor, "border-transparent")}
+                >
+                  {doc.index_status === "indexed" && <CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />}
+                  {doc.index_status === "indexing" && <Loader2 className="mr-0.5 h-2.5 w-2.5 animate-spin" />}
+                  {doc.index_status === "failed" && <AlertCircle className="mr-0.5 h-2.5 w-2.5" />}
+                  {indexInfo.label}
+                </Badge>
+                {doc.index_status === "failed" && (
+                  <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[9px]">
+                    <RefreshCw className="h-2.5 w-2.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+      </ScrollArea>
 
-        {/* Metadata */}
-        <div className="space-y-3">
-          <h3 className="text-[11px] font-medium text-foreground">Metadata</h3>
-          <div className="grid grid-cols-2 gap-3 text-[10px]">
-            <div>
-              <p className="text-muted-foreground flex items-center gap-0.5">
-                <User className="h-2.5 w-2.5" /> Uploaded By
-              </p>
-              <p className="font-medium">{doc.uploader_name || "Unknown"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground flex items-center gap-0.5">
-                <Clock className="h-2.5 w-2.5" /> Upload Date
-              </p>
-              <p className="font-medium">{new Date(doc.created_at).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground flex items-center gap-0.5">
-                <Clock className="h-2.5 w-2.5" /> Last Updated
-              </p>
-              <p className="font-medium">{new Date(doc.updated_at).toLocaleDateString()}</p>
-            </div>
-          </div>
+      {/* Action Buttons - Fixed at Bottom */}
+      <div className="border-t p-3 bg-background">
+        <div className="grid grid-cols-2 gap-2">
+          <SendToAiButton
+            context={{
+              type: "document",
+              id: doc.id,
+              title: doc.title,
+              metadata: {
+                category: doc.category,
+                tags: doc.tags,
+                fileName: doc.file_name,
+              },
+            }}
+            label="Send to AI"
+            className="h-8 text-[10px]"
+          />
+          <Button variant="outline" size="sm" className="h-8 text-[10px]">
+            <Share2 className="mr-1.5 h-3 w-3" />
+            Share
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 text-[10px]">
+            <Download className="mr-1.5 h-3 w-3" />
+            Download
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 text-[10px] text-destructive hover:text-destructive">
+            <Trash2 className="mr-1.5 h-3 w-3" />
+            Delete
+          </Button>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   )
 
   // Render analytics tab
