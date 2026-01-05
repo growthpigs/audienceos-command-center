@@ -114,8 +114,8 @@ supabase gen types typescript --local > types/database.ts
 
 | Environment | URL | Status |
 |-------------|-----|--------|
-| **Production** | [audienceos-command-center-5e7i.vercel.app](https://audienceos-command-center-5e7i.vercel.app) | Active |
-| **Vercel Team** | Agro Bros | growthpigs/audienceos-co... |
+| **Production** | [audienceos-agro-bros.vercel.app](https://audienceos-agro-bros.vercel.app) | Active |
+| **Vercel Project** | [vercel.com/agro-bros/audienceos](https://vercel.com/agro-bros/audienceos) | Active |
 
 **Deployment:** Auto-deploys on push to `main` branch.
 
