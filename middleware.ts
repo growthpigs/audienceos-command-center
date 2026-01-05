@@ -92,9 +92,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Skip public routes
+  // Skip public routes (but ensure CSRF cookie is set - TD-005)
   if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    return ensureCsrfCookie(request, response)
   }
 
   // Create response to modify if needed
