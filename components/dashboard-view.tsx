@@ -12,6 +12,7 @@ import {
   type FirehoseTab,
 } from "./dashboard"
 import { type MinimalClient, getOwnerData } from "@/types/client"
+import { useDashboardStore } from "@/stores/dashboard-store"
 import { cn } from "@/lib/utils"
 import { MessageSquare, Send, Clock, AlertCircle, ExternalLink, X, CheckCircle2, CheckSquare, AlertTriangle, TrendingUp } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -878,6 +879,14 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
   // Track previous tab to clear stale selections on tab switch
   const prevTabRef = useRef<DashboardTab>(activeTab)
 
+  // Dashboard store - fetches KPIs from API
+  const { kpis: storeKpis, kpisLoading, fetchKPIs } = useDashboardStore()
+
+  // Fetch KPIs on mount
+  useEffect(() => {
+    fetchKPIs()
+  }, [fetchKPIs])
+
   // Reduced motion support
   const prefersReducedMotion = useReducedMotion()
   const slideTransition = prefersReducedMotion
@@ -886,37 +895,74 @@ export function DashboardView({ clients, onClientClick, onNavigateToChat }: Dash
 
   const firehoseItems = useMemo(() => generateMockFirehoseItems(clients), [clients])
 
-  // KPI data
-  const kpis: LinearKPIData[] = [
-    {
-      label: "total clients",
-      value: clients.length,
-      change: 12,
-      changeLabel: "from last month",
-      sparklineData: [28, 29, 30, 29, 31, 30, 32],
-    },
-    {
-      label: "this month",
-      value: "$58.5K",
-      change: 8.2,
-      changeLabel: "vs target",
-      sparklineData: [45, 48, 52, 50, 55, 54, 58.5],
-    },
-    {
-      label: "pending resolution",
-      value: clients.filter(c => (c.supportTickets || 0) > 0).length,
-      change: -58,
-      changeLabel: "from last week",
-      sparklineData: [12, 10, 8, 7, 6, 5, 5],
-    },
-    {
-      label: "average score",
-      value: "94%",
-      change: 6,
-      changeLabel: "this quarter",
-      sparklineData: [88, 89, 90, 91, 92, 93, 94],
-    },
-  ]
+  // Transform store KPIs to LinearKPIData format
+  const kpis: LinearKPIData[] = useMemo(() => {
+    // If API data available, use it
+    if (storeKpis) {
+      return [
+        {
+          label: storeKpis.activeOnboardings?.label ?? "active onboardings",
+          value: storeKpis.activeOnboardings?.displayValue ?? storeKpis.activeOnboardings?.value ?? 0,
+          change: storeKpis.activeOnboardings?.changePercent ?? 0,
+          changeLabel: storeKpis.activeOnboardings?.trend === "up" ? "increase" : storeKpis.activeOnboardings?.trend === "down" ? "decrease" : "no change",
+          sparklineData: [], // API doesn't provide sparkline data
+        },
+        {
+          label: storeKpis.atRiskClients?.label ?? "at risk clients",
+          value: storeKpis.atRiskClients?.displayValue ?? storeKpis.atRiskClients?.value ?? 0,
+          change: storeKpis.atRiskClients?.changePercent ?? 0,
+          changeLabel: storeKpis.atRiskClients?.trend === "up" ? "increase" : storeKpis.atRiskClients?.trend === "down" ? "decrease" : "no change",
+          sparklineData: [],
+        },
+        {
+          label: storeKpis.supportHoursWeek?.label ?? "support hours",
+          value: storeKpis.supportHoursWeek?.displayValue ?? `${storeKpis.supportHoursWeek?.value ?? 0}h`,
+          change: storeKpis.supportHoursWeek?.changePercent ?? 0,
+          changeLabel: "this week",
+          sparklineData: [],
+        },
+        {
+          label: storeKpis.avgInstallTime?.label ?? "avg install time",
+          value: storeKpis.avgInstallTime?.displayValue ?? `${storeKpis.avgInstallTime?.value ?? 0}d`,
+          change: storeKpis.avgInstallTime?.changePercent ?? 0,
+          changeLabel: storeKpis.avgInstallTime?.trend === "up" ? "slower" : storeKpis.avgInstallTime?.trend === "down" ? "faster" : "no change",
+          sparklineData: [],
+        },
+      ]
+    }
+
+    // Fallback to client-derived data while loading
+    return [
+      {
+        label: "total clients",
+        value: clients.length,
+        change: 0,
+        changeLabel: kpisLoading ? "loading..." : "no data",
+        sparklineData: [],
+      },
+      {
+        label: "at risk",
+        value: clients.filter(c => c.health === "Red" || c.health === "Yellow").length,
+        change: 0,
+        changeLabel: kpisLoading ? "loading..." : "no data",
+        sparklineData: [],
+      },
+      {
+        label: "pending resolution",
+        value: clients.filter(c => (c.supportTickets || 0) > 0).length,
+        change: 0,
+        changeLabel: kpisLoading ? "loading..." : "no data",
+        sparklineData: [],
+      },
+      {
+        label: "healthy",
+        value: clients.filter(c => c.health === "Green").length,
+        change: 0,
+        changeLabel: kpisLoading ? "loading..." : "no data",
+        sparklineData: [],
+      },
+    ]
+  }, [storeKpis, clients, kpisLoading])
 
   const handleFirehoseItemClick = (item: FirehoseItemData) => {
     // Navigate to the correct tab

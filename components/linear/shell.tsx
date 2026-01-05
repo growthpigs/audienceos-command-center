@@ -10,6 +10,12 @@ interface LinearShellProps {
   onQuickCreate?: () => void
   children: React.ReactNode
   detailPanel?: React.ReactNode
+  user?: {
+    name: string
+    role: string
+    initials: string
+    color?: string
+  }
 }
 
 export function LinearShell({
@@ -18,6 +24,7 @@ export function LinearShell({
   onQuickCreate,
   children,
   detailPanel,
+  user,
 }: LinearShellProps) {
   const prefersReducedMotion = useReducedMotion()
 
@@ -33,7 +40,7 @@ export function LinearShell({
 
   return (
     <div className="flex h-screen bg-background text-foreground">
-      <LinearSidebar activeView={activeView} onViewChange={onViewChange} onQuickCreate={onQuickCreate} />
+      <LinearSidebar activeView={activeView} onViewChange={onViewChange} onQuickCreate={onQuickCreate} user={user} />
       <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
       <AnimatePresence mode="wait">
         {showDetailPanel && (

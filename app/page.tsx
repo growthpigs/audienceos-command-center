@@ -18,6 +18,7 @@ import {
 import { usePipelineStore, type Client as StoreClient } from "@/stores/pipeline-store"
 import { getOwnerData, type MinimalClient } from "@/types/client"
 import { sortClients, type SortMode } from "@/lib/client-priority"
+import { useAuth } from "@/hooks/use-auth"
 
 // Convert store client to UI client format (returns MinimalClient)
 function adaptStoreClient(client: StoreClient): MinimalClient {
@@ -160,6 +161,23 @@ function CommandCenterContent() {
 
   // Pipeline store - fetches from Supabase API
   const { clients: storeClients, fetchClients, isLoading, error: apiError } = usePipelineStore()
+
+  // Auth hook - provides real user data
+  const { profile, displayName, isAuthenticated } = useAuth()
+
+  // Build sidebar user from auth profile
+  const sidebarUser = useMemo(() => {
+    if (!profile) return undefined
+    const initials = profile.first_name && profile.last_name
+      ? `${profile.first_name[0]}${profile.last_name[0]}`
+      : displayName?.substring(0, 2).toUpperCase() || "U"
+    return {
+      name: displayName || "User",
+      role: profile.role || "Member",
+      initials,
+      color: "bg-emerald-500", // Could be personalized per user
+    }
+  }, [profile, displayName])
 
   // Fetch clients on mount
   useEffect(() => {
@@ -449,6 +467,7 @@ function CommandCenterContent() {
           setIntelligenceInitialCartridgeTab(undefined)
         }}
         onQuickCreate={() => setCommandPaletteOpen(true)}
+        user={sidebarUser}
         detailPanel={
           clientForPanel ? (
             <ClientDetailPanel

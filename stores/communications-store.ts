@@ -72,6 +72,7 @@ interface CommunicationsState {
 
   // API Actions
   fetchCommunications: (clientId: string, options?: { source?: SourceFilter; needsReply?: boolean; cursor?: string }) => Promise<void>
+  fetchAllCommunications: (options?: { source?: SourceFilter; needsReply?: boolean; cursor?: string; limit?: number }) => Promise<void>
   markCommunicationAsReplied: (id: string, repliedBy: string) => Promise<boolean>
 }
 
@@ -224,6 +225,74 @@ export const useCommunicationsStore = create<CommunicationsState>()(
           }
 
           const url = `/api/v1/clients/${clientId}/communications${params.toString() ? `?${params.toString()}` : ''}`
+          const response = await fetch(url)
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch communications')
+          }
+
+          const { items, pagination } = await response.json()
+
+          // If cursor was provided, append to existing communications
+          if (options.cursor) {
+            set((state) => {
+              const newCommunications = [...state.communications, ...items]
+              const threads = buildThreadHierarchy(newCommunications)
+              const unreadCount = newCommunications.filter(c => !c.is_read).length
+              const needsReplyCount = newCommunications.filter(c => c.needs_reply).length
+              return {
+                communications: newCommunications,
+                threads,
+                unreadCount,
+                needsReplyCount,
+                cursor: pagination.cursor,
+                hasMore: pagination.has_more,
+                isLoading: false,
+              }
+            })
+          } else {
+            // Fresh fetch - replace all
+            const threads = buildThreadHierarchy(items)
+            const unreadCount = items.filter((c: CommunicationWithMeta) => !c.is_read).length
+            const needsReplyCount = items.filter((c: CommunicationWithMeta) => c.needs_reply).length
+            set({
+              communications: items,
+              threads,
+              unreadCount,
+              needsReplyCount,
+              cursor: pagination.cursor,
+              hasMore: pagination.has_more,
+              isLoading: false,
+            })
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch communications',
+            isLoading: false,
+          })
+        }
+      },
+
+      // Fetch ALL communications across all clients (for dashboard)
+      fetchAllCommunications: async (options = {}) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const params = new URLSearchParams()
+          if (options.source && options.source !== 'all') {
+            params.append('source', options.source)
+          }
+          if (options.needsReply) {
+            params.append('needs_reply', 'true')
+          }
+          if (options.cursor) {
+            params.append('cursor', options.cursor)
+          }
+          if (options.limit) {
+            params.append('limit', options.limit.toString())
+          }
+
+          const url = `/api/v1/communications${params.toString() ? `?${params.toString()}` : ''}`
           const response = await fetch(url)
 
           if (!response.ok) {
