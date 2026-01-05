@@ -309,24 +309,25 @@ export function ChatInterface({
   }, [])
 
   return (
-    <div className="relative h-[600px]">
+    <>
       {/* SLIDE-UP MESSAGE PANEL */}
       {isPanelOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - covers entire viewport */}
           <div
-            className="absolute inset-0 bg-black/40 rounded-lg z-10"
+            className="fixed inset-0 bg-black/40 z-[9998]"
             onClick={closePanel}
           />
 
           {/* Message Panel */}
           <div
-            className="absolute left-1/2 bottom-[72px] z-20 flex flex-col"
+            className="fixed left-1/2 z-[9999] flex flex-col"
             style={{
               width: PANEL_WIDTH,
               maxWidth: MAX_PANEL_WIDTH,
-              height: `${panelHeight}%`,
-              maxHeight: "85%",
+              height: `${panelHeight}vh`,
+              maxHeight: "85vh",
+              bottom: "88px", // Above the chat bar
               transform: "translateX(-50%)",
               background: "rgba(30, 30, 35, 0.85)",
               backdropFilter: "blur(20px)",
@@ -480,19 +481,20 @@ export function ChatInterface({
         </>
       )}
 
-      {/* PERSISTENT CHAT BAR */}
+      {/* PERSISTENT CHAT BAR - Fixed at bottom of viewport */}
       <div
-        className="absolute bottom-0 left-1/2 flex items-center gap-3 z-30"
+        className="fixed left-1/2 flex items-center gap-3 z-[10000]"
         style={{
           width: PANEL_WIDTH,
           maxWidth: MAX_PANEL_WIDTH,
+          bottom: "16px", // 16px from bottom of viewport
           transform: "translateX(-50%)",
-          background: "rgba(30, 30, 35, 0.9)",
+          background: "rgba(30, 30, 35, 0.95)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
           borderRadius: "16px",
-          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.3)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
           padding: "12px 16px",
         }}
       >
@@ -543,7 +545,7 @@ export function ChatInterface({
           )}
         </button>
       </div>
-    </div>
+    </>
   )
 }
 
