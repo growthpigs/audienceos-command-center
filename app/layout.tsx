@@ -51,24 +51,24 @@ export default function RootLayout({
   // Show chat when:
   // 1. Portal host is ready
   // 2. Not on excluded paths (login, invite, onboarding)
-  // 3. Auth check complete (not loading)
-  // Note: We don't require isAuthenticated because auth can timeout.
-  // The API will handle authentication - the UI should always be available.
+  //
+  // NOTE: Deliberately NOT waiting for isLoading=false
+  // Chat must appear immediately for good UX, auth happens in background.
+  // API endpoints validate auth; chat UI shows graceful fallback if unauthenticated.
   const shouldShowChat =
     chatPortalHost &&
-    !EXCLUDED_PATHS.some((path) => pathname.startsWith(path)) &&
-    !isLoading
+    !EXCLUDED_PATHS.some((path) => pathname.startsWith(path))
 
   // DIAGNOSTIC: Log chat visibility decision
   useEffect(() => {
     console.log('[CHAT-VIS] Visibility decision:', {
       chatPortalHost: !!chatPortalHost,
       excludedPath: EXCLUDED_PATHS.some((path) => pathname.startsWith(path)),
-      isLoading,
+      isLoading, // Auth status - shown for info, NOT used to gate chat
       shouldShowChat,
       pathname,
     })
-  }, [chatPortalHost, shouldShowChat, isLoading, pathname])
+  }, [chatPortalHost, shouldShowChat, pathname]) // Removed isLoading from dependencies
 
   return (
     <html lang="en">
