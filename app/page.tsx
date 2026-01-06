@@ -390,22 +390,21 @@ function CommandCenterContent() {
               onClientClick={(client) => setSelectedClient(client)}
               onSendToAI={(prompt) => {
                 // Retry logic to handle race condition where chat might not be mounted yet
-                const openChat = () => {
-                  if (typeof window !== "undefined" && window.openChatWithMessage) {
+                if (typeof window !== "undefined") {
+                  if (window.openChatWithMessage) {
                     window.openChatWithMessage(prompt)
                   } else {
-                    // Chat not ready yet - retry after 50ms (max 3 attempts)
-                    console.warn('[SEND-TO-AI] Chat not ready, retrying...')
+                    // Chat not ready yet - retry after 50ms
+                    console.warn('[SEND-TO-AI] Chat not ready, retrying in 50ms...')
                     setTimeout(() => {
                       if (window.openChatWithMessage) {
                         window.openChatWithMessage(prompt)
                       } else {
-                        console.error('[SEND-TO-AI] Chat failed to load after retries')
+                        console.error('[SEND-TO-AI] Chat failed to load after retry')
                       }
                     }, 50)
                   }
                 }
-                openChat()
               }}
             />
           </div>

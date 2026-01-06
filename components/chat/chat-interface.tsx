@@ -181,22 +181,29 @@ export function ChatInterface({
   }, [messages, agencyId, userId])
 
   // Expose global method to open chat with pre-filled message
+  // NOTE: Using ref pattern to avoid stale closure issues
+  const openChatRef = useRef<((message: string) => void) | undefined>(undefined)
+
+  openChatRef.current = (message: string) => {
+    setInputValue(message)
+    setIsPanelOpen(true)
+    setIsClosing(false)
+    setIsInputFocused(true)
+    // Focus textarea after state updates
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 100)
+  }
+
   useEffect(() => {
     if (typeof window !== "undefined") {
-      (window as any).openChatWithMessage = (message: string) => {
-        setInputValue(message)
-        setIsPanelOpen(true)
-        setIsClosing(false)
-        setIsInputFocused(true)
-        // Focus textarea after state updates
-        setTimeout(() => {
-          textareaRef.current?.focus()
-        }, 100)
+      window.openChatWithMessage = (message: string) => {
+        openChatRef.current?.(message)
       }
     }
     return () => {
       if (typeof window !== "undefined") {
-        delete (window as any).openChatWithMessage
+        delete window.openChatWithMessage
       }
     }
   }, [])
@@ -1164,6 +1171,9 @@ function MessageContent({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const components: any = useMemo(
     () => ({
+      // Strip paragraph wrappers to prevent extra margins in inline contexts
+      p: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+
       // Render cite-marker as CitationBadge
       "cite-marker": ({ "data-index": dataIndex }: { "data-index"?: string }) => {
         const index = parseInt(dataIndex || "1", 10)

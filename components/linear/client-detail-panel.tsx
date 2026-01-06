@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,9 +78,28 @@ function getTierBadgeStyle(tier: string) {
   }
 }
 
+interface Note {
+  id: string
+  text: string
+  author: string
+  timestamp: Date
+}
+
 export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [noteText, setNoteText] = useState("")
+  const [notes, setNotes] = useState<Note[]>(() => {
+    // Initialize with statusNote if it exists
+    if (client.statusNote) {
+      return [{
+        id: '1',
+        text: client.statusNote,
+        author: client.owner.name,
+        timestamp: new Date()
+      }]
+    }
+    return []
+  })
 
   // Handler functions
   const handleEdit = () => {
@@ -114,9 +134,38 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
 
   const handleSendNote = () => {
     if (!noteText.trim()) return
-    // TODO: Save note via API
-    console.log("Send note:", noteText)
+
+    const newNote: Note = {
+      id: Date.now().toString(),
+      text: noteText.trim(),
+      author: client.owner.name,
+      timestamp: new Date()
+    }
+
+    // Add note to list immediately (optimistic update)
+    setNotes(prev => [newNote, ...prev])
     setNoteText("")
+
+    // TODO: Save note to API when backend endpoint is ready
+    // fetch(`/api/v1/clients/${client.id}/notes`, {
+    //   method: 'POST',
+    //   credentials: 'include',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ text: newNote.text })
+    // })
+    // .then(response => {
+    //   if (!response.ok) throw new Error('Failed to save note')
+    //   return response.json()
+    // })
+    // .then(savedNote => {
+    //   // Update with server-generated ID if needed
+    //   setNotes(prev => prev.map(n => n.id === newNote.id ? { ...n, id: savedNote.id } : n))
+    // })
+    // .catch(error => {
+    //   console.error('Failed to save note:', error)
+    //   // Revert optimistic update on error
+    //   setNotes(prev => prev.filter(n => n.id !== newNote.id))
+    // })
   }
 
   const handleAttachment = () => {
@@ -285,12 +334,16 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
         <div className="p-4 flex-1 overflow-y-auto">
           <h3 className="text-sm font-medium mb-3">Notes</h3>
 
-          {client.statusNote ? (
-            <div className="p-3 rounded bg-secondary/50 border border-border">
-              <p className="text-sm text-foreground">{client.statusNote}</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Added by {client.owner.name}
-              </p>
+          {notes.length > 0 ? (
+            <div className="space-y-3">
+              {notes.map((note) => (
+                <div key={note.id} className="p-3 rounded bg-secondary/50 border border-border">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{note.text}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {note.author} • {note.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              ))}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No notes yet</p>
@@ -299,14 +352,14 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
 
         {/* Comment Input */}
         <div className="p-4 border-t border-border">
-          <div className="flex items-center gap-2">
-            <Avatar className={cn("h-6 w-6", client.owner.color)}>
+          <div className="flex items-start gap-2">
+            <Avatar className={cn("h-6 w-6 mt-1", client.owner.color)}>
               <AvatarFallback className={cn(client.owner.color, "text-xs font-medium text-white")}>
                 {client.owner.initials}
               </AvatarFallback>
             </Avatar>
-            <Input
-              placeholder="Add a note..."
+            <Textarea
+              placeholder="Add a note... (Shift+Enter for new line)"
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               onKeyDown={(e) => {
@@ -315,25 +368,28 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
                   handleSendNote()
                 }
               }}
-              className="flex-1 bg-transparent border-none h-8 text-sm focus-visible:ring-0"
+              className="flex-1 min-h-[80px] max-h-[200px] resize-none text-sm"
+              rows={3}
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-              onClick={handleAttachment}
-            >
-              <Paperclip className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground disabled:opacity-50"
-              onClick={handleSendNote}
-              disabled={!noteText.trim()}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            <div className="flex flex-col gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                onClick={handleAttachment}
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                onClick={handleSendNote}
+                disabled={!noteText.trim()}
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
