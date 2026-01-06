@@ -106,13 +106,13 @@
 **Now: Fix Trevor's Feature List**
 
 #### High Priority (Blockers)
-1. ~~**Settings/General error**~~ - ✅ FIXED (e6b4eb2: missing credentials: 'include')
+1. ~~**Settings/General error**~~ - ✅ FIXED (d0d70f5: comprehensive auth sweep)
 2. **Settings/Brand** - ⚠️ DESIGN DECISION NEEDED
    - Current: Routes to Intelligence Center → Training Cartridges → Brand tab
    - Code shows this is INTENTIONAL (app/page.tsx:429-433)
    - Brand tab exists: components/cartridges/tabs/brand-tab.tsx
    - Question: Should Brand have its own Settings page instead?
-3. **Settings/Team invites** - Invitation fails to send
+3. ~~**Settings/Team invites**~~ - ✅ FIXED (d0d70f5: comprehensive auth sweep)
 
 #### Medium Priority (Core Features)
 4. Dashboard "Mark Complete" buttons (Tasks section)
