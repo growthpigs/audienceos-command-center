@@ -106,8 +106,12 @@
 **Now: Fix Trevor's Feature List**
 
 #### High Priority (Blockers)
-1. **Settings/General error** - "Failed to Load Agency Settings"
-2. **Settings/Brand** - Routes to wrong page (Intelligence Center)
+1. ~~**Settings/General error**~~ - ✅ FIXED (e6b4eb2: missing credentials: 'include')
+2. **Settings/Brand** - ⚠️ DESIGN DECISION NEEDED
+   - Current: Routes to Intelligence Center → Training Cartridges → Brand tab
+   - Code shows this is INTENTIONAL (app/page.tsx:429-433)
+   - Brand tab exists: components/cartridges/tabs/brand-tab.tsx
+   - Question: Should Brand have its own Settings page instead?
 3. **Settings/Team invites** - Invitation fails to send
 
 #### Medium Priority (Core Features)
