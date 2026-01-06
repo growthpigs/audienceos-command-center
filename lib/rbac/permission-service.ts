@@ -53,6 +53,16 @@ class PermissionService {
     agencyId: string,
     supabase?: SupabaseClient<Database>
   ): Promise<EffectivePermission[]> {
+    // Validate inputs
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.error('[PermissionService] Invalid userId:', userId);
+      return [];
+    }
+    if (!agencyId || typeof agencyId !== 'string' || agencyId.trim() === '') {
+      console.error('[PermissionService] Invalid agencyId:', agencyId);
+      return [];
+    }
+
     // Check cache first
     const cacheKey = `${userId}:${agencyId}`;
     const cached = this.cache.get(cacheKey);
@@ -178,6 +188,19 @@ class PermissionService {
     action: PermissionAction,
     clientId?: string
   ): boolean {
+    // Validate inputs
+    if (!resource || !action) {
+      console.error('[PermissionService] Invalid resource or action:', {
+        resource,
+        action,
+      });
+      return false;
+    }
+    if (!Array.isArray(permissions)) {
+      console.error('[PermissionService] permissions must be an array');
+      return false;
+    }
+
     for (const perm of permissions) {
       // Check resource match
       if (perm.resource !== resource) continue;
@@ -318,6 +341,12 @@ class PermissionService {
    * @param agencyId - Agency ID
    */
   invalidateCache(userId: string, agencyId: string): void {
+    // Validate inputs
+    if (!userId || !agencyId) {
+      console.error('[PermissionService] Invalid userId or agencyId for cache invalidation');
+      return;
+    }
+
     const cacheKey = `${userId}:${agencyId}`;
     this.cache.delete(cacheKey);
     console.log(`[PermissionService] Cache invalidated for ${cacheKey}`);
@@ -334,6 +363,12 @@ class PermissionService {
    * @param agencyId - Agency ID
    */
   invalidateAgencyCache(agencyId: string): void {
+    // Validate input
+    if (!agencyId) {
+      console.error('[PermissionService] Invalid agencyId for cache invalidation');
+      return;
+    }
+
     let invalidatedCount = 0;
     for (const key of this.cache.keys()) {
       if (key.endsWith(`:${agencyId}`)) {
