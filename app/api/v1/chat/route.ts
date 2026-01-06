@@ -291,8 +291,63 @@ Be concise and helpful. This query was classified as: ${route}`;
     }
   }
 
-  return candidate?.content?.parts?.[0]?.text ||
+  // Get response text
+  let responseText = candidate?.content?.parts?.[0]?.text ||
     "I'm here to help! You can ask me about clients, performance metrics, or app features.";
+
+  // Insert inline citation markers based on groundingSupports
+  // This is what HGC does - Gemini doesn't add [1][2] markers automatically
+  if (candidate?.groundingMetadata?.groundingSupports && citations.length > 0) {
+    responseText = insertInlineCitations(
+      responseText,
+      candidate.groundingMetadata.groundingSupports,
+      citations
+    );
+  }
+
+  return responseText;
+}
+
+/**
+ * Insert [1][2][3] citation markers into text based on groundingSupports
+ * Ported from HGC citation-extractor.ts
+ */
+function insertInlineCitations(
+  text: string,
+  supports: Array<{
+    segment?: { startIndex?: number; endIndex?: number; text?: string };
+    groundingChunkIndices?: number[];
+    confidenceScores?: number[];
+  }>,
+  citations: Citation[]
+): string {
+  // Sort supports by end index (descending) to insert from end to beginning
+  // This prevents index shifts as we insert markers
+  const sortedSupports = [...supports]
+    .filter((s) => s.segment?.endIndex !== undefined)
+    .sort((a, b) => (b.segment?.endIndex || 0) - (a.segment?.endIndex || 0));
+
+  let result = text;
+
+  for (const support of sortedSupports) {
+    const endIndex = support.segment?.endIndex;
+    const chunkIndices = support.groundingChunkIndices || [];
+
+    if (endIndex !== undefined && chunkIndices.length > 0) {
+      // Get citation markers for this segment (e.g., "[1][2]")
+      const markers = chunkIndices
+        .map((idx) => citations[idx] ? `[${citations[idx].index}]` : '')
+        .filter(Boolean)
+        .join('');
+
+      if (markers) {
+        // Insert markers at the end of the grounded segment
+        result = result.substring(0, endIndex) + markers + result.substring(endIndex);
+      }
+    }
+  }
+
+  return result;
 }
 
 /**
