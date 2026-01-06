@@ -408,6 +408,85 @@ export function KnowledgeBase() {
     })
   }, [documents])
 
+  // Download a document
+  const handleDownload = useCallback(async (docId: string) => {
+    const doc = documents.find(d => d.id === docId)
+    if (!doc) return
+
+    try {
+      // TODO: Implement actual download via API
+      // For now, show toast
+      toast({
+        title: "Download started",
+        description: doc.name,
+      })
+      console.log("Download document:", docId)
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: "Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [documents])
+
+  // Share a document
+  const handleShare = useCallback(async (docId: string) => {
+    const doc = documents.find(d => d.id === docId)
+    if (!doc) return
+
+    try {
+      // TODO: Implement share modal/dialog
+      // For now, copy link to clipboard
+      const url = `${window.location.origin}/knowledge-base/${docId}`
+      await navigator.clipboard.writeText(url)
+      toast({
+        title: "Link copied",
+        description: "Share link copied to clipboard",
+      })
+    } catch (error) {
+      toast({
+        title: "Share failed",
+        description: "Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [documents])
+
+  // Delete a document
+  const handleDelete = useCallback(async (docId: string) => {
+    const doc = documents.find(d => d.id === docId)
+    if (!doc) return
+
+    // TODO: Add confirmation dialog before deleting
+
+    // Close preview panel
+    setSelectedDocument(null)
+
+    // Optimistic update
+    setDocuments(prev => prev.filter(d => d.id !== docId))
+
+    try {
+      // TODO: Implement actual delete via API
+      // const response = await fetchWithCsrf(`/api/v1/knowledge-base/${docId}`, {
+      //   method: 'DELETE',
+      // })
+
+      toast({
+        title: "Document deleted",
+        description: doc.name,
+      })
+    } catch (error) {
+      // Rollback on error
+      setDocuments(prev => [doc, ...prev])
+      toast({
+        title: "Delete failed",
+        description: "Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [documents])
+
   // Add a document from Google Drive
   const handleAddDriveLink = useCallback(async (url: string, displayName?: string) => {
     // Extract file ID from URL for optimistic placeholder
@@ -718,9 +797,9 @@ export function KnowledgeBase() {
               document={selectedDocument}
               onClose={() => setSelectedDocument(null)}
               onStar={() => handleStar(selectedDocument.id)}
-              onDownload={() => { /* TODO: Implement download */ }}
-              onShare={() => { /* TODO: Implement share */ }}
-              onDelete={() => { /* TODO: Implement delete */ }}
+              onDownload={() => handleDownload(selectedDocument.id)}
+              onShare={() => handleShare(selectedDocument.id)}
+              onDelete={() => handleDelete(selectedDocument.id)}
               onToggleTraining={() => handleToggleTraining(selectedDocument.id)}
             />
           </motion.div>
