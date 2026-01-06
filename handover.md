@@ -78,28 +78,54 @@
 - Claude Code v2.0.73+ (currently: 2.0.76 ✅)
 - Extension connects via MCP automatically (no manual config in ~/.claude.json needed)
 
-**Setup Completed:**
+**Setup Completed:** ✅ FULLY WORKING
 - ✅ Updated Claude Code to 2.0.76
 - ✅ Using Claude.ai OAuth (rodericandrews@gmail.com)
 - ✅ Extra usage enabled on Claude.ai account
-- ⚠️ Chrome extension installation pending (link opened)
-- ⚠️ `/chrome` enable by default pending (requires new session)
+- ✅ Chrome extension installed (v1.0.36+)
+- ✅ `/chrome` enabled by default (in new session)
+- ✅ Verified working in separate Claude Code window
 
 **CRITICAL Discovery:** Claude in Chrome requires:
-1. **OAuth authentication** (NOT Anthropic API keys) ✅ Already using OAuth
-2. **Extra usage enabled** on Claude.ai account ✅ Just enabled
+1. **OAuth authentication** (NOT Anthropic API keys) ✅
+2. **Extra usage enabled** on Claude.ai account ✅
 
-**Action Required:**
-1. Install Chrome extension from opened link
-2. In next session: Run `/chrome` and enable by default
-3. Verify with `/mcp` to see `claude-in-chrome` tools
-4. Restart Claude Code session for extra usage to take effect
+**Status:** Available in NEXT session (or restart with `--chrome`). Not needed for current work.
 
 **Reference:** https://code.claude.com/docs/en/chrome
 
 ---
 
-### Next Steps
-1. Continue with Trevor's broken features list (auth fixes already verified)
-2. Set up Claude in Chrome properly for future sessions
-3. Systematically fix Dashboard, Settings, Pipeline issues
+### Next Steps - Trevor's Broken Features (21 items)
+
+**Auth Verification: COMPLETE** ✅
+- 17/17 E2E tests passing
+- Profile loads correctly (not "Brent CEO")
+- Auth enforcement working
+
+**Now: Fix Trevor's Feature List**
+
+#### High Priority (Blockers)
+1. **Settings/General error** - "Failed to Load Agency Settings"
+2. **Settings/Brand** - Routes to wrong page (Intelligence Center)
+3. **Settings/Team invites** - Invitation fails to send
+
+#### Medium Priority (Core Features)
+4. Dashboard "Mark Complete" buttons (Tasks section)
+5. Dashboard "View Full Details" (Clients section)
+6. Dashboard "Take Action" / "Dismiss Alert" (Alerts section)
+7. Pipeline - Edit client cards (notes, labels, documents, due dates)
+8. Pipeline - 3-dot menu items (Open, Edit, Move, Assign, Delete)
+9. Support Tickets - 3-dot menu items
+10. Knowledge Base - Preview, Send to AI, Download, Share, Delete
+11. Automations - All customization buttons
+
+#### Low Priority (UI/Polish)
+12. App Router migration (currently Pages Router)
+13. AI chat minimize button
+14. Dark mode option
+15. Sidebar collapse/expand
+16. AI chat window positioning
+17. Quick command search
+
+**Strategy:** Start with Settings errors (unblock other work), then Dashboard/Pipeline (core workflows).
