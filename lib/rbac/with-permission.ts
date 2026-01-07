@@ -30,6 +30,65 @@ export interface AuthenticatedRequest extends NextRequest {
 }
 
 /**
+ * Shared helper: Authenticate and fetch app user
+ * Used by all middleware wrappers to avoid duplication
+ */
+async function authenticateUser(): Promise<
+  | {
+      success: true;
+      user: NonNullable<Awaited<ReturnType<typeof getAuthenticatedUser>>['user']>;
+      agencyId: string;
+      appUser: {
+        id: string;
+        email: string;
+        role_id: string | null;
+        is_owner: boolean;
+      };
+    }
+  | { success: false; response: NextResponse }
+> {
+  const supabase = await createRouteHandlerClient(cookies);
+  const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase);
+
+  if (!user || !agencyId) {
+    return {
+      success: false,
+      response: NextResponse.json(
+        {
+          error: 'Unauthorized',
+          code: 'AUTH_REQUIRED',
+          message: 'You must be logged in to access this resource',
+        },
+        { status: 401 }
+      ),
+    };
+  }
+
+  const { data: appUser, error: userError } = await supabase
+    .from('user')
+    .select('id, email, role_id, is_owner')
+    .eq('id', user.id)
+    .single();
+
+  if (userError || !appUser) {
+    console.error('[authenticateUser] Failed to fetch app user:', userError);
+    return {
+      success: false,
+      response: NextResponse.json(
+        {
+          error: 'Internal Server Error',
+          code: 'USER_FETCH_FAILED',
+          message: 'Could not fetch user information',
+        },
+        { status: 500 }
+      ),
+    };
+  }
+
+  return { success: true, user, agencyId, appUser };
+}
+
+/**
  * Middleware wrapper that enforces permission checks on API routes
  *
  * @example
@@ -52,54 +111,26 @@ export function withPermission(requirement: PermissionRequirement) {
       ...args: any[]
     ): Promise<NextResponse> {
       try {
-        // 1. Create Supabase client and authenticate user
-        const supabase = await createRouteHandlerClient(cookies);
-        const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase);
-
-        if (!user || !agencyId) {
+        // 1. Authenticate and fetch user
+        const authResult = await authenticateUser();
+        if (!authResult.success) {
           console.warn('[withPermission] Authentication failed:', {
             resource: requirement.resource,
             action: requirement.action,
             path: req.nextUrl.pathname,
-            error: authError,
           });
-
-          return NextResponse.json(
-            {
-              error: 'Unauthorized',
-              code: 'AUTH_REQUIRED',
-              message: 'You must be logged in to access this resource',
-            },
-            { status: 401 }
-          );
+          return authResult.response;
         }
 
-        // 2. Fetch app user record (for roleId and isOwner)
-        const { data: appUser, error: userError } = await supabase
-          .from('user')
-          .select('id, email, role_id, is_owner')
-          .eq('id', user.id)
-          .single();
+        const { user, agencyId, appUser } = authResult;
 
-        if (userError || !appUser) {
-          console.error('[withPermission] Failed to fetch app user:', userError);
-          return NextResponse.json(
-            {
-              error: 'Internal Server Error',
-              code: 'USER_FETCH_FAILED',
-              message: 'Could not fetch user information',
-            },
-            { status: 500 }
-          );
-        }
-
-        // 3. Fetch user permissions
+        // 2. Fetch user permissions
         const permissions = await permissionService.getUserPermissions(
           user.id,
           agencyId
         );
 
-        // 4. Extract client ID from request if needed
+        // 3. Extract client ID from request if needed
         let clientId = requirement.clientId;
         if (!clientId && requirement.resource === 'clients') {
           // Try to extract from URL path: /api/v1/clients/[id]
@@ -109,7 +140,7 @@ export function withPermission(requirement: PermissionRequirement) {
           }
         }
 
-        // 5. Check permission
+        // 4. Check permission
         const hasPermission = permissionService.checkPermission(
           permissions,
           requirement.resource,
@@ -143,7 +174,7 @@ export function withPermission(requirement: PermissionRequirement) {
           );
         }
 
-        // 6. Permission granted - attach user to request and call handler
+        // 5. Permission granted - attach user to request and call handler
         const authenticatedReq = req as AuthenticatedRequest;
         authenticatedReq.user = {
           id: user.id,
@@ -223,28 +254,12 @@ export function withAnyPermission(requirements: PermissionRequirement[]) {
       req: NextRequest,
       ...args: any[]
     ): Promise<NextResponse> {
-      const supabase = await createRouteHandlerClient(cookies);
-      const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase);
-
-      if (!user || !agencyId) {
-        return NextResponse.json(
-          { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
-          { status: 401 }
-        );
+      const authResult = await authenticateUser();
+      if (!authResult.success) {
+        return authResult.response;
       }
 
-      const { data: appUser } = await supabase
-        .from('user')
-        .select('id, email, role_id, is_owner')
-        .eq('id', user.id)
-        .single();
-
-      if (!appUser) {
-        return NextResponse.json(
-          { error: 'Internal Server Error', code: 'USER_FETCH_FAILED' },
-          { status: 500 }
-        );
-      }
+      const { user, agencyId, appUser } = authResult;
 
       const permissions = await permissionService.getUserPermissions(
         user.id,
