@@ -1,18 +1,24 @@
 # Active Tasks
 
 ## ⚠️ Quality Issues
-_Last check: 2026-01-08 16:15_
+_Last check: 2026-01-08 17:30 (Post-QA)_
 
 ### Preflight (Gate 1)
-- [ ] ESLint: Clean ✓
+- [x] ESLint: Clean ✓
 - [ ] TypeScript: 35 errors in test files
-- [ ] Security: Clean ✓
+- [x] Security: Clean ✓
+
+### Validation (Gate 2)
+- [x] Preflight: 1 advisory issue (TypeScript)
+- [x] Tests: 586 passed (stderr from intentional error logging)
+- [x] Build: Succeeds ✓
 
 **TypeScript Errors Summary:**
-- 5 test files affected: settings-agency.test.ts, settings-users-id.test.ts
+- 5 test files affected: settings-agency.test.ts, settings-users-id.test.ts, settings-users.test.ts, settings-store.test.ts, tickets-store.test.ts
 - Main issues: Mock object type mismatches with SupabaseClient interface
-- Error codes: TS2345 (argument type), TS2353 (object literal properties)
+- Error codes: TS2345 (argument type), TS2353 (object literal properties), TS2367 (enum mismatches)
 - **Status:** Advisory only (tests still pass, production code unaffected)
+- **Action Required:** Fix before merge to main for CI hygiene
 
 ---
 
