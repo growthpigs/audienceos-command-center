@@ -80,14 +80,14 @@ export function DisplayPreferencesSection() {
             disabled={isSaving}
             className={`flex items-center justify-center gap-3 px-4 py-3 rounded-lg border-2 transition-all cursor-pointer ${
               theme === "light"
-                ? "border-blue-500 bg-blue-50 text-blue-700"
-                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
+                : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-600"
             } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <Sun className="w-5 h-5" />
             <div className="text-left">
               <div className="font-medium">Light</div>
-              <div className="text-xs text-gray-600">Clean, bright interface</div>
+              <div className="text-xs text-gray-600 dark:text-slate-400">Clean, bright interface</div>
             </div>
           </button>
 
@@ -97,20 +97,20 @@ export function DisplayPreferencesSection() {
             disabled={isSaving}
             className={`flex items-center justify-center gap-3 px-4 py-3 rounded-lg border-2 transition-all cursor-pointer ${
               theme === "dark"
-                ? "border-blue-500 bg-blue-50 text-blue-700"
-                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
+                : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-600"
             } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <Moon className="w-5 h-5" />
             <div className="text-left">
               <div className="font-medium">Dark</div>
-              <div className="text-xs text-gray-600">Easy on the eyes</div>
+              <div className="text-xs text-gray-600 dark:text-slate-400">Easy on the eyes</div>
             </div>
           </button>
         </div>
 
         {isSaving && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+          <div className="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-slate-400">
             <Loader2 className="w-4 h-4 animate-spin" />
             Saving preference...
           </div>
