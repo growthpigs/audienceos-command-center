@@ -46,36 +46,54 @@
   7. PATCH /api/v1/settings/preferences returns 200 ✓
   8. No permission errors displayed ✓
 
-### Incomplete
+### Completed (Session Continuation 2 - UI Implementation)
 
-**Dark Mode Phase 2: Color System Implementation**
-- Blocked: Full color palette extraction from Mobbin
-- Current: Using default next-themes theme switching (light/dark only)
-- Next: Extract Linear design system colors from Mobbin for complete theme
+**Dark Mode UI Integration (2026-01-08)**
+- ✅ **CRITICAL FIX:** Found and fixed WRONG settings implementation
+  - Issue: Dark mode was only added to unused `/client/settings` page
+  - Actual Settings: Uses SettingsView + SettingsLayout component hierarchy
+  - Fix: Implemented DisplayPreferencesSection in correct settings structure
 
-### Next Steps
+- ✅ **Created DisplayPreferencesSection component**
+  - Location: `components/settings/sections/display-preferences-section.tsx`
+  - Light/Dark theme toggle with visual selection state
+  - Calls PATCH `/api/v1/settings/preferences` on toggle
+  - Displays "Saving preference..." loading indicator
+  - Uses next-themes useTheme() hook for instant UI updates
 
-**For Next Session:**
-1. If full color system needed, use Claude in Chrome to extract from Mobbin
-2. Otherwise, dark mode toggle is production-ready with current light/dark theming
-3. Pending: TASK-013 RLS migration application (separate from dark mode)
+- ✅ **Integrated into Settings Navigation**
+  - Added "Display" to "My Account" section in settings sidebar
+  - Added "display_preferences" case in SettingsContent switch
+  - Added type to SettingsSection union type
+  - Added read/write permissions for all users
 
-### Context
+- ✅ **USER TESTING COMPLETED**
+  - Location: Settings > My Account > Display
+  - Clicked Light theme button → Page turned light ✓
+  - Clicked Dark theme button → Page turned dark with dark background ✓
+  - Both selections show blue border highlight ✓
+  - Network logs show PATCH requests returning HTTP 200 ✓
+  - Theme toggle is FULLY FUNCTIONAL ✓
+
+- ✅ **All Original 8 Test Cases PASSING** (NOW IN REAL UI)
+
+### Status
 
 - Branch: `feature/dark-mode-toggle`
-- Latest commit: ef478a0
-- Status: Testing COMPLETE, core functionality VALIDATED
-- Risk: None identified - toggle works with next-themes defaults
-- Fallback colors: Using system light/dark modes (sufficient for MVP)
+- Latest commit: 1f7f39c
+- **Status: PRODUCTION READY - All features working with real settings UI**
+- Risk: NONE - Tested with actual user interaction
+- Theme: Using system light/dark modes (sufficient for MVP)
 
-### DU Accounting (Updated)
+### DU Accounting (Final)
 
-- Previous session planning + spec: 0.5 DU
+- Session 1 planning + spec: 0.5 DU
 - Feature Request Protocol: 1.0 DU
 - Testing + Red Team validation: 2.0 DU
-- Blocker fixes (2 middleware + 1 routing): 1.5 DU
-- **Total dark mode work: 5.0 DU**
-- **Status: Ready for production / PR review**
+- Blocker fixes (API middleware + routing): 1.5 DU
+- UI Implementation + integration: 1.5 DU
+- **Total dark mode work: 6.5 DU**
+- **Status: COMPLETE - Ready for PR and production**
 
 ---
 ## Session 2026-01-08 (RBAC - Holy Grail Chat session handover)
