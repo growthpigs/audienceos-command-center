@@ -72,6 +72,15 @@ export default function SettingsPage() {
     }
   }, [isLoading, isAuthenticated])
 
+  // Read URL query parameter for section
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const section = params.get('section')
+    if (section) {
+      setActiveSection(section)
+    }
+  }, [])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full bg-background">

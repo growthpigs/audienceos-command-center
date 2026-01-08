@@ -43,7 +43,7 @@ const MOCK_AGENCY = {
 // GET /api/v1/settings/agency
 // ============================================================================
 
-export const GET = withPermission({ resource: 'settings', action: 'manage' })(
+export const GET = withPermission({ resource: 'settings', action: 'read' })(
   async (request: AuthenticatedRequest) => {
     // Rate limit: 100 requests per minute
     const rateLimitResponse = withRateLimit(request)
