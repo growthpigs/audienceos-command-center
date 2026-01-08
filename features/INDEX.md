@@ -44,6 +44,7 @@
 
 | Feature | Status | Spec File | Notes |
 |---------|--------|-----------|-------|
+| dark-mode | 🚧 Building | [DARK-MODE.md](DARK-MODE.md) | Light/dark mode toggle. Branch: feature/dark-mode-toggle. Phase 1: Color extraction. 2026-01-08. |
 | user-invitations | ⏳ Deferred | - | Data model ready (USER_INVITATION), API exists |
 | multi-org-roles | 📝 Specced | [multi-org-roles.md](multi-org-roles.md) | RBAC with Owner/Admin/Manager/Member + custom roles. 60 tasks. US-042 to US-045. |
 | zoom-integration | ⏳ Deferred | - | Zoom v2+ for call recordings/transcripts |

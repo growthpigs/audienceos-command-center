@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, sanitizeString, sanitizeEmail, sanitizeSearchPattern, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import type { HealthStatus } from '@/types/database'
 
 // Valid values for enums
@@ -35,38 +36,35 @@ const MOCK_CLIENTS = [
 ]
 
 // GET /api/v1/clients - List all clients for the agency
-export async function GET(request: NextRequest) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'clients', action: 'read' })(
+  async (request: AuthenticatedRequest) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  // Mock mode - return demo data
-  if (isMockMode()) {
-    const { searchParams } = new URL(request.url)
-    const stage = searchParams.get('stage')
-    const healthStatus = searchParams.get('health_status')
-    const search = searchParams.get('search')?.toLowerCase()
+    // Mock mode - return demo data
+    if (isMockMode()) {
+      const { searchParams } = new URL(request.url)
+      const stage = searchParams.get('stage')
+      const healthStatus = searchParams.get('health_status')
+      const search = searchParams.get('search')?.toLowerCase()
 
-    let filtered = [...MOCK_CLIENTS]
-    if (stage) filtered = filtered.filter(c => c.stage === stage)
-    if (healthStatus) filtered = filtered.filter(c => c.health_status === healthStatus)
-    if (search) filtered = filtered.filter(c =>
-      c.name.toLowerCase().includes(search) ||
-      c.contact_name.toLowerCase().includes(search)
-    )
+      let filtered = [...MOCK_CLIENTS]
+      if (stage) filtered = filtered.filter(c => c.stage === stage)
+      if (healthStatus) filtered = filtered.filter(c => c.health_status === healthStatus)
+      if (search) filtered = filtered.filter(c =>
+        c.name.toLowerCase().includes(search) ||
+        c.contact_name.toLowerCase().includes(search)
+      )
 
-    return NextResponse.json({ data: filtered })
-  }
-
-  try {
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
+      return NextResponse.json({ data: filtered })
     }
+
+    try {
+      const supabase = await createRouteHandlerClient(cookies)
+
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     // Get query params for filtering (sanitize inputs)
     const { searchParams } = new URL(request.url)
@@ -117,31 +115,29 @@ export async function GET(request: NextRequest) {
       return createErrorResponse(500, 'Failed to fetch clients')
     }
 
-    return NextResponse.json({ data: clients })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: clients })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // POST /api/v1/clients - Create a new client
-export async function POST(request: NextRequest) {
-  // Rate limit: 30 creates per minute (stricter for writes)
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const POST = withPermission({ resource: 'clients', action: 'write' })(
+  async (request: AuthenticatedRequest) => {
+    // Rate limit: 30 creates per minute (stricter for writes)
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const supabase = await createRouteHandlerClient(cookies)
+    try {
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     let body: Record<string, unknown>
     try {
@@ -198,8 +194,9 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(500, 'Failed to create client')
     }
 
-    return NextResponse.json({ data: client }, { status: 201 })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: client }, { status: 201 })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)

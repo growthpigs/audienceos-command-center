@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, isValidUUID, sanitizeString, sanitizeEmail, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import { getMockClientDetail } from '@/lib/mock-data'
 import type { HealthStatus } from '@/types/database'
 
@@ -14,35 +15,19 @@ const VALID_STAGES = ['Lead', 'Onboarding', 'Installation', 'Audit', 'Live', 'Ne
 const VALID_HEALTH_STATUSES: HealthStatus[] = ['green', 'yellow', 'red']
 
 // GET /api/v1/clients/[id] - Get a single client
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'clients', action: 'read' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    // Demo mode: Return mock data for mock IDs (1-14) when not authenticated
-    if (!user) {
-      const mockClient = getMockClientDetail(id)
-      if (mockClient) {
-        return NextResponse.json({
-          data: mockClient,
-          demo: true,
-          ...(authError && { authError }),
-        })
-      }
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
-
-    if (!agencyId) {
-      return createErrorResponse(403, authError || 'No agency access')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     // Validate UUID format (only for authenticated requests with real data)
     if (!isValidUUID(id)) {
@@ -112,14 +97,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse(500, 'Failed to fetch client')
     }
 
-    return NextResponse.json({ data: client })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: client })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // PUT /api/v1/clients/[id] - Update a client
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export const PUT = withPermission({ resource: 'clients', action: 'write' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
   // Rate limit: 50 updates per minute
   const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
   if (rateLimitResponse) return rateLimitResponse
@@ -128,24 +115,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   const csrfError = withCsrfProtection(request)
   if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid client ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid client ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
-
-    let body: Record<string, unknown>
+      let body: Record<string, unknown>
     try {
       body = await request.json()
     } catch {
@@ -293,38 +276,36 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse(500, 'Failed to update client')
     }
 
-    return NextResponse.json({ data: client })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: client })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // DELETE /api/v1/clients/[id] - Soft delete a client (set is_active = false)
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withPermission({ resource: 'clients', action: 'manage' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
   // Rate limit: 20 deletes per minute (stricter for destructive ops)
   const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
   if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid client ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid client ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     // Soft delete - set is_active to false instead of hard delete
     const { data: client, error } = await supabase
@@ -342,11 +323,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return createErrorResponse(500, 'Failed to delete client')
     }
 
-    return NextResponse.json({
-      data: client,
-      message: 'Client deactivated successfully',
-    })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({
+        data: client,
+        message: 'Client deactivated successfully',
+      })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)

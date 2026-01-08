@@ -1,17 +1,22 @@
 /**
  * Action Types API
  * GET /api/v1/workflows/actions/types - Available action types with schemas
+ *
+ * RBAC: Requires automations:read permission
  */
 
 import { NextResponse } from 'next/server'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import { getActionTypes, AVAILABLE_VARIABLES, DELAY_PRESETS } from '@/lib/workflows'
 
-export async function GET() {
-  const actionTypes = getActionTypes()
+export const GET = withPermission({ resource: 'automations', action: 'read' })(
+  async (request: AuthenticatedRequest) => {
+    const actionTypes = getActionTypes()
 
-  return NextResponse.json({
-    types: actionTypes,
-    variables: AVAILABLE_VARIABLES,
-    delayPresets: DELAY_PRESETS,
-  })
-}
+    return NextResponse.json({
+      types: actionTypes,
+      variables: AVAILABLE_VARIABLES,
+      delayPresets: DELAY_PRESETS,
+    })
+  }
+)

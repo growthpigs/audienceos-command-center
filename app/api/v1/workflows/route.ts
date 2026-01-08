@@ -2,12 +2,15 @@
  * Workflows API - List and Create
  * GET /api/v1/workflows - List automations with filtering
  * POST /api/v1/workflows - Create new automation
+ *
+ * RBAC: Requires automations:read (GET) or automations:manage (POST)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, sanitizeString, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import {
   getWorkflows,
   createWorkflow,
@@ -21,92 +24,74 @@ import type { WorkflowTrigger, WorkflowAction } from '@/types/workflow'
 // GET /api/v1/workflows
 // ============================================================================
 
-export async function GET(request: NextRequest) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'automations', action: 'read' })(
+  async (request: AuthenticatedRequest) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  try {
-    const supabase = await createRouteHandlerClient(cookies)
+    try {
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Parse query params
-    const { searchParams } = new URL(request.url)
-    const includeRuns = searchParams.get('include_runs') === 'true'
-    const runsLimit = Math.min(Math.max(1, parseInt(searchParams.get('runs_limit') || '5', 10) || 5), 20)
+      // Parse query params
+      const { searchParams } = new URL(request.url)
+      const includeRuns = searchParams.get('include_runs') === 'true'
+      const runsLimit = Math.min(Math.max(1, parseInt(searchParams.get('runs_limit') || '5', 10) || 5), 20)
 
-    // Get authenticated user with agency_id from database (SEC-003, SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
-    // Demo mode fallback - return mock data when not authenticated or no agency
-    if (!user || !agencyId) {
-      const mockData = getMockWorkflowsWithRuns(includeRuns, runsLimit)
+      // Parse remaining query params with sanitization
+      const isActiveParam = searchParams.get('enabled')
+      const rawSearch = searchParams.get('q')
+      const search = rawSearch ? sanitizeString(rawSearch).slice(0, 100) : undefined
+      const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10) || 50), 100)
+
+      const filters = {
+        isActive: isActiveParam === 'true' ? true : isActiveParam === 'false' ? false : undefined,
+        search,
+        limit,
+      }
+
+      const { data, error, count } = await getWorkflows(supabase, agencyId, filters)
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to fetch workflows')
+      }
+
       return NextResponse.json({
-        workflows: mockData,
+        workflows: data,
         pagination: {
-          total: mockData.length,
-          has_more: false,
+          total: count,
+          has_more: (data?.length ?? 0) < count,
         },
-        demo: true,
-        ...(authError && { authError }),
       })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
     }
-
-    // Parse remaining query params with sanitization
-    const isActiveParam = searchParams.get('enabled')
-    const rawSearch = searchParams.get('q')
-    const search = rawSearch ? sanitizeString(rawSearch).slice(0, 100) : undefined
-    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10) || 50), 100)
-
-    const filters = {
-      isActive: isActiveParam === 'true' ? true : isActiveParam === 'false' ? false : undefined,
-      search,
-      limit,
-    }
-
-    const { data, error, count } = await getWorkflows(supabase, agencyId, filters)
-
-    if (error) {
-      return createErrorResponse(500, 'Failed to fetch workflows')
-    }
-
-    return NextResponse.json({
-      workflows: data,
-      pagination: {
-        total: count,
-        has_more: (data?.length ?? 0) < count,
-      },
-    })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)
 
 // ============================================================================
 // POST /api/v1/workflows
 // ============================================================================
 
-export async function POST(request: NextRequest) {
-  // Rate limit: 30 creates per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const POST = withPermission({ resource: 'automations', action: 'manage' })(
+  async (request: AuthenticatedRequest) => {
+    // Rate limit: 30 creates per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const supabase = await createRouteHandlerClient(cookies)
+    try {
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with agency_id from database (SEC-003, SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user) {
-      return createErrorResponse(401, 'Not authenticated')
-    }
-
-    if (!agencyId) {
-      return createErrorResponse(403, authError || 'No agency associated')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+      const user = request.user
 
     // Parse request body
     let body: Record<string, unknown>
@@ -235,8 +220,9 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(500, 'Failed to create workflow')
     }
 
-    return NextResponse.json(data, { status: 201 })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json(data, { status: 201 })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)

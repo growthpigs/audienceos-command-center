@@ -1,17 +1,22 @@
 /**
  * Trigger Types API
  * GET /api/v1/workflows/triggers/types - Available trigger types with schemas
+ *
+ * RBAC: Requires automations:read permission
  */
 
 import { NextResponse } from 'next/server'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import { getTriggerTypes, COMMON_SCHEDULES, AVAILABLE_TIMEZONES } from '@/lib/workflows'
 
-export async function GET() {
-  const triggerTypes = getTriggerTypes()
+export const GET = withPermission({ resource: 'automations', action: 'read' })(
+  async (request: AuthenticatedRequest) => {
+    const triggerTypes = getTriggerTypes()
 
-  return NextResponse.json({
-    types: triggerTypes,
-    schedules: COMMON_SCHEDULES,
-    timezones: AVAILABLE_TIMEZONES,
-  })
-}
+    return NextResponse.json({
+      types: triggerTypes,
+      schedules: COMMON_SCHEDULES,
+      timezones: AVAILABLE_TIMEZONES,
+    })
+  }
+)

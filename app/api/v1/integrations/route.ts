@@ -1,84 +1,87 @@
+/**
+ * Integrations API
+ * GET /api/v1/integrations - List all integrations
+ * POST /api/v1/integrations - Create new integration
+ *
+ * RBAC: Requires integrations:read (GET) or integrations:manage (POST)
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import { signOAuthState } from '@/lib/crypto'
 import type { IntegrationProvider } from '@/types/database'
 
 const VALID_PROVIDERS: IntegrationProvider[] = ['slack', 'gmail', 'google_ads', 'meta_ads']
 
 // GET /api/v1/integrations - List all integrations for the agency
-export async function GET(request: NextRequest) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'integrations', action: 'read' })(
+  async (request: AuthenticatedRequest) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  try {
-    const supabase = await createRouteHandlerClient(cookies)
+    try {
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
-    if (!user) {
-      return createErrorResponse(401, authError || 'Unauthorized')
+      // Fetch integrations - RLS will filter by agency_id
+      const { data: integrations, error } = await supabase
+        .from('integration')
+        .select('*')
+        .order('provider', { ascending: true })
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to fetch integrations')
+      }
+
+      // Return integrations without exposing tokens
+      const safeIntegrations = integrations.map(({ access_token: _at, refresh_token: _rt, ...rest }) => rest)
+
+      return NextResponse.json({ data: safeIntegrations })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
     }
-
-    // Fetch integrations - RLS will filter by agency_id
-    const { data: integrations, error } = await supabase
-      .from('integration')
-      .select('*')
-      .order('provider', { ascending: true })
-
-    if (error) {
-      return createErrorResponse(500, 'Failed to fetch integrations')
-    }
-
-    // Return integrations without exposing tokens
-    const safeIntegrations = integrations.map(({ access_token: _at, refresh_token: _rt, ...rest }) => rest)
-
-    return NextResponse.json({ data: safeIntegrations })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)
 
 // POST /api/v1/integrations - Initiate OAuth flow or create integration record
-export async function POST(request: NextRequest) {
-  // Rate limit: 30 creates per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const POST = withPermission({ resource: 'integrations', action: 'manage' })(
+  async (request: AuthenticatedRequest) => {
+    // Rate limit: 30 creates per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Note: Auth check and agencyId lookup done later via getAuthenticatedUser (SEC-006)
-    let body: Record<string, unknown>
     try {
-      body = await request.json()
-    } catch {
-      return createErrorResponse(400, 'Invalid JSON body')
-    }
+      const supabase = await createRouteHandlerClient(cookies)
 
-    const { provider } = body
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
-    // Validate provider
-    if (typeof provider !== 'string' || !VALID_PROVIDERS.includes(provider as IntegrationProvider)) {
-      return createErrorResponse(
-        400,
-        `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(', ')}`
-      )
-    }
+      let body: Record<string, unknown>
+      try {
+        body = await request.json()
+      } catch {
+        return createErrorResponse(400, 'Invalid JSON body')
+      }
 
-    // Get agency_id from database (SEC-003)
-    const { agencyId, error: agencyError } = await getAuthenticatedUser(supabase)
+      const { provider } = body
 
-    if (!agencyId) {
-      return createErrorResponse(400, agencyError || 'Agency not found')
-    }
+      // Validate provider
+      if (typeof provider !== 'string' || !VALID_PROVIDERS.includes(provider as IntegrationProvider)) {
+        return createErrorResponse(
+          400,
+          `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(', ')}`
+        )
+      }
 
     // Check if integration already exists for this provider
     const { data: existing } = await supabase
@@ -113,17 +116,18 @@ export async function POST(request: NextRequest) {
     // Generate OAuth URL based on provider
     const oauthUrl = generateOAuthUrl(provider as IntegrationProvider, integration.id)
 
-    return NextResponse.json({
-      data: {
-        id: integration.id,
-        provider: integration.provider,
-        oauthUrl,
-      },
-    })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({
+        data: {
+          id: integration.id,
+          provider: integration.provider,
+          oauthUrl,
+        },
+      })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // Generate OAuth authorization URL for each provider
 function generateOAuthUrl(provider: IntegrationProvider, integrationId: string): string {

@@ -1,7 +1,17 @@
+/**
+ * Single Integration API
+ * GET /api/v1/integrations/[id] - Get integration details
+ * PATCH /api/v1/integrations/[id] - Update integration config
+ * DELETE /api/v1/integrations/[id] - Disconnect and delete integration
+ *
+ * RBAC: Requires integrations:read (GET) or integrations:manage (PATCH/DELETE)
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, isValidUUID, createErrorResponse, withTimeout } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import { decryptToken, deserializeEncryptedToken } from '@/lib/crypto'
 import type { IntegrationProvider } from '@/types/database'
 
@@ -81,195 +91,189 @@ async function revokeProviderTokens(
 }
 
 // GET /api/v1/integrations/[id] - Get single integration details
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'integrations', action: 'read' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid integration ID format')
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid integration ID format')
+      }
+
+      const supabase = await createRouteHandlerClient(cookies)
+
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+
+      const { data: integration, error } = await supabase
+        .from('integration')
+        .select('*')
+        .eq('id', id)
+        .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
+        .single()
+
+      if (error || !integration) {
+        return createErrorResponse(404, 'Integration not found')
+      }
+
+      // Return without exposing tokens (destructure to omit)
+      const { access_token: _at, refresh_token: _rt, ...safeIntegration } = integration
+
+      return NextResponse.json({ data: safeIntegration })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
     }
-
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
-
-    const { data: integration, error } = await supabase
-      .from('integration')
-      .select('*')
-      .eq('id', id)
-      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
-      .single()
-
-    if (error || !integration) {
-      return createErrorResponse(404, 'Integration not found')
-    }
-
-    // Return without exposing tokens (destructure to omit)
-    const { access_token: _at, refresh_token: _rt, ...safeIntegration } = integration
-
-    return NextResponse.json({ data: safeIntegration })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)
 
 // PATCH /api/v1/integrations/[id] - Update integration config
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  // Rate limit: 50 updates per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const PATCH = withPermission({ resource: 'integrations', action: 'manage' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    // Rate limit: 50 updates per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
-
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid integration ID format')
-    }
-
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
-
-    let body: Record<string, unknown>
     try {
-      body = await request.json()
-    } catch {
-      return createErrorResponse(400, 'Invalid JSON body')
-    }
+      const { id } = await params
 
-    // Only allow updating specific fields
-    const allowedFields = ['config', 'is_connected']
-    const updates: Record<string, unknown> = {}
-
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        // Validate specific fields
-        if (field === 'is_connected' && typeof body[field] !== 'boolean') {
-          return createErrorResponse(400, 'is_connected must be a boolean')
-        }
-        if (field === 'config' && typeof body[field] !== 'object') {
-          return createErrorResponse(400, 'config must be an object')
-        }
-        updates[field] = body[field]
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid integration ID format')
       }
+
+      const supabase = await createRouteHandlerClient(cookies)
+
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+
+      let body: Record<string, unknown>
+      try {
+        body = await request.json()
+      } catch {
+        return createErrorResponse(400, 'Invalid JSON body')
+      }
+
+      // Only allow updating specific fields
+      const allowedFields = ['config', 'is_connected']
+      const updates: Record<string, unknown> = {}
+
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          // Validate specific fields
+          if (field === 'is_connected' && typeof body[field] !== 'boolean') {
+            return createErrorResponse(400, 'is_connected must be a boolean')
+          }
+          if (field === 'config' && typeof body[field] !== 'object') {
+            return createErrorResponse(400, 'config must be an object')
+          }
+          updates[field] = body[field]
+        }
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return createErrorResponse(400, 'No valid fields to update')
+      }
+
+      const { data: integration, error } = await supabase
+        .from('integration')
+        .update(updates)
+        .eq('id', id)
+        .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
+        .select()
+        .single()
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to update integration')
+      }
+
+      if (!integration) {
+        return createErrorResponse(404, 'Integration not found')
+      }
+
+      // Return without exposing tokens
+      const { access_token: _at, refresh_token: _rt, ...safeIntegration } = integration
+
+      return NextResponse.json({ data: safeIntegration })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
     }
-
-    if (Object.keys(updates).length === 0) {
-      return createErrorResponse(400, 'No valid fields to update')
-    }
-
-    const { data: integration, error } = await supabase
-      .from('integration')
-      .update(updates)
-      .eq('id', id)
-      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
-      .select()
-      .single()
-
-    if (error) {
-      return createErrorResponse(500, 'Failed to update integration')
-    }
-
-    if (!integration) {
-      return createErrorResponse(404, 'Integration not found')
-    }
-
-    // Return without exposing tokens
-    const { access_token: _at, refresh_token: _rt, ...safeIntegration } = integration
-
-    return NextResponse.json({ data: safeIntegration })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)
 
 // DELETE /api/v1/integrations/[id] - Disconnect and delete integration
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  // Rate limit: 20 deletes per minute (stricter for destructive ops)
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const DELETE = withPermission({ resource: 'integrations', action: 'manage' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    // Rate limit: 20 deletes per minute (stricter for destructive ops)
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid integration ID format')
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid integration ID format')
+      }
+
+      const supabase = await createRouteHandlerClient(cookies)
+
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+
+      // Get integration with tokens for revocation
+      const { data: existing } = await supabase
+        .from('integration')
+        .select('id, provider, access_token, refresh_token')
+        .eq('id', id)
+        .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
+        .single()
+
+      if (!existing) {
+        return createErrorResponse(404, 'Integration not found')
+      }
+
+      // Revoke OAuth tokens with provider before deletion (SEC-005)
+      const revocationResult = await revokeProviderTokens(
+        existing.provider as IntegrationProvider,
+        existing.access_token,
+        existing.refresh_token
+      )
+
+      // Log if revocation failed but continue with deletion
+      if (!revocationResult.success) {
+        console.warn(`[SEC-005] Token revocation warning for ${existing.provider}: ${revocationResult.error}`)
+      }
+
+      // Delete the integration
+      const { error } = await supabase
+        .from('integration')
+        .delete()
+        .eq('id', id)
+        .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to delete integration')
+      }
+
+      return NextResponse.json({
+        message: `${existing.provider} integration disconnected and deleted`,
+        tokenRevoked: revocationResult.success,
+      })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
     }
-
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
-
-    // Get integration with tokens for revocation
-    const { data: existing } = await supabase
-      .from('integration')
-      .select('id, provider, access_token, refresh_token')
-      .eq('id', id)
-      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
-      .single()
-
-    if (!existing) {
-      return createErrorResponse(404, 'Integration not found')
-    }
-
-    // Revoke OAuth tokens with provider before deletion (SEC-005)
-    const revocationResult = await revokeProviderTokens(
-      existing.provider as IntegrationProvider,
-      existing.access_token,
-      existing.refresh_token
-    )
-
-    // Log if revocation failed but continue with deletion
-    if (!revocationResult.success) {
-      console.warn(`[SEC-005] Token revocation warning for ${existing.provider}: ${revocationResult.error}`)
-    }
-
-    // Delete the integration
-    const { error } = await supabase
-      .from('integration')
-      .delete()
-      .eq('id', id)
-      .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
-
-    if (error) {
-      return createErrorResponse(500, 'Failed to delete integration')
-    }
-
-    return NextResponse.json({
-      message: `${existing.provider} integration disconnected and deleted`,
-      tokenRevoked: revocationResult.success,
-    })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)

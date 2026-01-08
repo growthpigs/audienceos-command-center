@@ -3,12 +3,15 @@
  * GET /api/v1/workflows/{id} - Get automation details
  * PATCH /api/v1/workflows/{id} - Update automation
  * DELETE /api/v1/workflows/{id} - Soft-delete automation
+ *
+ * RBAC: Requires automations:read (GET) or automations:manage (PATCH/DELETE)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import {
   getWorkflowWithStats,
   updateWorkflow,
@@ -24,81 +27,68 @@ type RouteContext = { params: Promise<{ id: string }> }
 // GET /api/v1/workflows/{id}
 // ============================================================================
 
-export async function GET(request: NextRequest, context: RouteContext) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'automations', action: 'read' })(
+  async (request: AuthenticatedRequest, context: RouteContext) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  try {
-    const { id } = await context.params
+    try {
+      const { id } = await context.params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid workflow ID format')
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid workflow ID format')
+      }
+
+      const supabase = await createRouteHandlerClient(cookies)
+
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+
+      const { data, error } = await getWorkflowWithStats(supabase, id, agencyId)
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to fetch workflow')
+      }
+
+      if (!data) {
+        return createErrorResponse(404, 'Workflow not found')
+      }
+
+      return NextResponse.json(data)
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
     }
-
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user with agency_id from database (SEC-003, SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user) {
-      return createErrorResponse(401, 'Not authenticated')
-    }
-
-    if (!agencyId) {
-      return createErrorResponse(403, authError || 'No agency associated')
-    }
-
-    const { data, error } = await getWorkflowWithStats(supabase, id, agencyId)
-
-    if (error) {
-      return createErrorResponse(500, 'Failed to fetch workflow')
-    }
-
-    if (!data) {
-      return createErrorResponse(404, 'Workflow not found')
-    }
-
-    return NextResponse.json(data)
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)
 
 // ============================================================================
 // PATCH /api/v1/workflows/{id}
 // ============================================================================
 
-export async function PATCH(request: NextRequest, context: RouteContext) {
-  // Rate limit: 50 updates per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const PATCH = withPermission({ resource: 'automations', action: 'manage' })(
+  async (request: AuthenticatedRequest, context: RouteContext) => {
+    // Rate limit: 50 updates per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await context.params
+    try {
+      const { id } = await context.params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid workflow ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid workflow ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with agency_id from database (SEC-003, SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user) {
-      return createErrorResponse(401, 'Not authenticated')
-    }
-
-    if (!agencyId) {
-      return createErrorResponse(403, authError || 'No agency associated')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     let body: Record<string, unknown>
     try {
@@ -219,54 +209,49 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return createErrorResponse(404, 'Workflow not found')
     }
 
-    return NextResponse.json(data)
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json(data)
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // ============================================================================
 // DELETE /api/v1/workflows/{id}
 // ============================================================================
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
-  // Rate limit: 20 deletes per minute (stricter for destructive ops)
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const DELETE = withPermission({ resource: 'automations', action: 'manage' })(
+  async (request: AuthenticatedRequest, context: RouteContext) => {
+    // Rate limit: 20 deletes per minute (stricter for destructive ops)
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await context.params
+    try {
+      const { id } = await context.params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid workflow ID format')
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid workflow ID format')
+      }
+
+      const supabase = await createRouteHandlerClient(cookies)
+
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+
+      const { error } = await deleteWorkflow(supabase, id, agencyId)
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to delete workflow')
+      }
+
+      return new NextResponse(null, { status: 204 })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
     }
-
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user with agency_id from database (SEC-003, SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user) {
-      return createErrorResponse(401, 'Not authenticated')
-    }
-
-    if (!agencyId) {
-      return createErrorResponse(403, authError || 'No agency associated')
-    }
-
-    const { error } = await deleteWorkflow(supabase, id, agencyId)
-
-    if (error) {
-      return createErrorResponse(500, 'Failed to delete workflow')
-    }
-
-    return new NextResponse(null, { status: 204 })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)

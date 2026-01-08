@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import type { Database } from '@/types/database'
 
 type Communication = Database['public']['Tables']['communication']['Row']
@@ -129,32 +130,29 @@ const MOCK_COMMUNICATIONS = [
  * GET /api/v1/communications
  * List all communications across all clients with filtering and pagination
  */
-export async function GET(request: NextRequest) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'communications', action: 'read' })(
+  async (request: AuthenticatedRequest) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  // Mock mode - return demo data without auth
-  if (isMockMode()) {
-    return NextResponse.json({
-      items: MOCK_COMMUNICATIONS,
-      pagination: {
-        cursor: null,
-        has_more: false,
-        total: MOCK_COMMUNICATIONS.length,
-      },
-    })
-  }
-
-  try {
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
+    // Mock mode - return demo data without auth
+    if (isMockMode()) {
+      return NextResponse.json({
+        items: MOCK_COMMUNICATIONS,
+        pagination: {
+          cursor: null,
+          has_more: false,
+          total: MOCK_COMMUNICATIONS.length,
+        },
+      })
     }
+
+    try {
+      const supabase = await createRouteHandlerClient(cookies)
+
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     const searchParams = request.nextUrl.searchParams
 
@@ -212,11 +210,12 @@ export async function GET(request: NextRequest) {
         has_more: hasMore,
         total: count || 0,
       },
-    })
-  } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Unexpected error:', error)
+      })
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Unexpected error:', error)
+      }
+      return createErrorResponse(500, 'Internal server error')
     }
-    return createErrorResponse(500, 'Internal server error')
   }
-}
+)

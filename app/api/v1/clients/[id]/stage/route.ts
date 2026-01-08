@@ -1,31 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withCsrfProtection } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
 
 // PUT /api/v1/clients/[id]/stage - Update client stage (for kanban drag-drop)
-export async function PUT(request: NextRequest, { params }: RouteParams) {
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+export const PUT = withPermission({ resource: 'clients', action: 'write' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
-    const supabase = await createRouteHandlerClient(cookies)
+    try {
+      const { id } = await params
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return NextResponse.json(
-        { error: authError || 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+      const userId = request.user.id
 
     const body = await request.json()
     const { stage } = body
@@ -82,7 +78,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         client_id: id,
         from_stage: previousStage,
         to_stage: stage,
-        moved_by: user.id,
+        moved_by: userId,
       })
 
     if (eventError) {
@@ -90,16 +86,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       // Don't fail the request, stage was updated successfully
     }
 
-    return NextResponse.json({
-      data: client,
-      previousStage,
-      message: `Client moved from ${previousStage} to ${stage}`
-    })
-  } catch (error) {
-    console.error('Client stage PUT error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+      return NextResponse.json({
+        data: client,
+        previousStage,
+        message: `Client moved from ${previousStage} to ${stage}`
+      })
+    } catch (error) {
+      console.error('Client stage PUT error:', error)
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      )
+    }
   }
-}
+)
