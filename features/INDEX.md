@@ -46,7 +46,7 @@
 |---------|--------|-----------|-------|
 | dark-mode | 🚧 Building | [DARK-MODE.md](DARK-MODE.md) | Light/dark mode toggle. Branch: feature/dark-mode-toggle. Phase 1: Color extraction. 2026-01-08. |
 | user-invitations | ⏳ Deferred | - | Data model ready (USER_INVITATION), API exists |
-| multi-org-roles | 🔄 Scoped | [VISION](../docs/01-product/VISION.md) / [SCOPE](../docs/01-product/SCOPE.md) | RBAC system: Owner/Admin/Manager/Member hierarchy. 8 resources × 3 actions. MVP: 22 DUs (~6 sessions). B-2 Scope approved 2026-01-08. |
+| multi-org-roles | 🔄 Planning | [VISION](../docs/01-product/VISION.md) / [SCOPE](../docs/01-product/SCOPE.md) / [RISKS](../docs/05-planning/RISK-REGISTER.md) | RBAC system: Owner/Admin/Manager/Member hierarchy. 8 resources × 3 actions. MVP: 22 DUs (~6 sessions). B-Phase complete 2026-01-08: Vision+Scope+Risks approved. Ready for D-1 SpecKit. |
 | zoom-integration | ⏳ Deferred | - | Zoom v2+ for call recordings/transcripts |
 
 ---
