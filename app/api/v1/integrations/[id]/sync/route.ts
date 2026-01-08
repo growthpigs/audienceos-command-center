@@ -1,28 +1,34 @@
+/**
+ * Integration Sync API
+ * POST /api/v1/integrations/[id]/sync - Trigger manual sync
+ * GET /api/v1/integrations/[id]/sync - Check sync status
+ *
+ * RBAC: Requires integrations:manage permission
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withCsrfProtection } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
 
 // POST /api/v1/integrations/[id]/sync - Trigger manual sync
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+export const POST = withPermission({ resource: 'integrations', action: 'manage' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
-    const supabase = await createRouteHandlerClient(cookies)
+    try {
+      const { id } = await params
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 })
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     // Fetch integration
     const { data: integration, error } = await supabase
@@ -79,25 +85,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         provider: integration.provider,
         message: `${integration.provider} sync completed successfully`,
       },
-    })
-  } catch (error) {
-    console.error('Sync trigger error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      })
+    } catch (error) {
+      console.error('Sync trigger error:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
   }
-}
+)
 
 // GET /api/v1/integrations/[id]/sync - Check sync status
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { id } = await params
-    const supabase = await createRouteHandlerClient(cookies)
+export const GET = withPermission({ resource: 'integrations', action: 'manage' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    try {
+      const { id } = await params
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 })
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     const { data: integration, error } = await supabase
       .from('integration')
@@ -117,9 +121,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         lastSyncAt: integration.last_sync_at,
         status: integration.is_connected ? 'idle' : 'disconnected',
       },
-    })
-  } catch (error) {
-    console.error('Sync status error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      })
+    } catch (error) {
+      console.error('Sync status error:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
   }
-}
+)

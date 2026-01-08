@@ -1,37 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 
 // POST /api/v1/tickets/[id]/resolve - Resolve a ticket with mandatory final note
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Rate limit: 30 resolves per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const POST = withPermission({ resource: 'tickets', action: 'write' })(
+  async (
+    request: AuthenticatedRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    // Rate limit: 30 resolves per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id: ticketId } = await params
+    try {
+      const { id: ticketId } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(ticketId)) {
-      return createErrorResponse(400, 'Invalid ticket ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(ticketId)) {
+        return createErrorResponse(400, 'Invalid ticket ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
+      const userId = request.user.id
 
     let body: Record<string, unknown>
     try {
@@ -93,7 +92,7 @@ export async function POST(
         status: 'resolved',
         resolution_notes: sanitizedNotes,
         time_spent_minutes: validatedTimeSpent,
-        resolved_by: user.id,
+        resolved_by: userId,
         resolved_at: new Date().toISOString(),
       })
       .eq('id', ticketId)
@@ -126,12 +125,13 @@ export async function POST(
       // Future: Send email via email integration
     }
 
-    return NextResponse.json({
-      data: ticket,
-      emailSent,
-      message: 'Ticket resolved successfully',
-    })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({
+        data: ticket,
+        emailSent,
+        message: 'Ticket resolved successfully',
+      })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)

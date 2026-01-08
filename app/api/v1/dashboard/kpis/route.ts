@@ -1,7 +1,15 @@
+/**
+ * Dashboard KPIs API
+ * GET /api/v1/dashboard/kpis - Get dashboard KPI metrics
+ *
+ * RBAC: Requires analytics:read permission
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
 import { withRateLimit, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import type { DashboardKPIs, TrendDirection } from '@/types/dashboard'
 
 // Mock mode detection

@@ -1,8 +1,9 @@
 // @ts-nocheck - Temporary: Generated Database types have Insert type mismatch after RBAC migration
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, isValidUUID, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import type { TicketStatus } from '@/types/database'
 
 const VALID_STATUSES: TicketStatus[] = ['new', 'in_progress', 'waiting_client', 'resolved']
@@ -16,34 +17,31 @@ const ALLOWED_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
 }
 
 // PATCH /api/v1/tickets/[id]/status - Change ticket status
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Rate limit: 50 status changes per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const PATCH = withPermission({ resource: 'tickets', action: 'write' })(
+  async (
+    request: AuthenticatedRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    // Rate limit: 50 status changes per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid ticket ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid ticket ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     let body: Record<string, unknown>
     try {
@@ -115,12 +113,13 @@ export async function PATCH(
       return createErrorResponse(500, 'Failed to update ticket status')
     }
 
-    return NextResponse.json({
-      data: ticket,
-      previousStatus: currentStatus,
-      newStatus,
-    })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({
+        data: ticket,
+        previousStatus: currentStatus,
+        newStatus,
+      })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)

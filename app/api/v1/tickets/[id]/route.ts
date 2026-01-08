@@ -1,8 +1,9 @@
 // @ts-nocheck - Temporary: Generated Database types have Insert type mismatch after RBAC migration
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import type { TicketCategory, TicketPriority } from '@/types/database'
 
 // Valid enum values
@@ -10,30 +11,27 @@ const VALID_PRIORITIES: TicketPriority[] = ['low', 'medium', 'high', 'critical']
 const VALID_CATEGORIES: TicketCategory[] = ['technical', 'billing', 'campaign', 'general', 'escalation']
 
 // GET /api/v1/tickets/[id] - Get single ticket with notes and history
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'tickets', action: 'read' })(
+  async (
+    request: AuthenticatedRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid ticket ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid ticket ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     // Fetch ticket with related data
     const { data: ticket, error } = await supabase
@@ -76,41 +74,39 @@ export async function GET(
       return createErrorResponse(500, 'Failed to fetch ticket')
     }
 
-    return NextResponse.json({ data: ticket })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: ticket })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // PATCH /api/v1/tickets/[id] - Update ticket fields
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Rate limit: 50 updates per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const PATCH = withPermission({ resource: 'tickets', action: 'write' })(
+  async (
+    request: AuthenticatedRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    // Rate limit: 50 updates per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid ticket ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid ticket ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     let body: Record<string, unknown>
     try {
@@ -204,41 +200,39 @@ export async function PATCH(
       return createErrorResponse(500, 'Failed to update ticket')
     }
 
-    return NextResponse.json({ data: ticket })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: ticket })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // DELETE /api/v1/tickets/[id] - Delete ticket (soft delete in future)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Rate limit: 20 deletes per minute (stricter for destructive ops)
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const DELETE = withPermission({ resource: 'tickets', action: 'manage' })(
+  async (
+    request: AuthenticatedRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    // Rate limit: 20 deletes per minute (stricter for destructive ops)
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 20, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
+    try {
+      const { id } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(id)) {
-      return createErrorResponse(400, 'Invalid ticket ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return createErrorResponse(400, 'Invalid ticket ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     // Delete ticket (notes will cascade due to FK)
     const { error } = await supabase
@@ -251,8 +245,9 @@ export async function DELETE(
       return createErrorResponse(500, 'Failed to delete ticket')
     }
 
-    return NextResponse.json({ success: true }, { status: 200 })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ success: true }, { status: 200 })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)

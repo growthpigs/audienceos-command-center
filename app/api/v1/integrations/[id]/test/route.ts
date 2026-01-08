@@ -1,7 +1,15 @@
+/**
+ * Integration Test API
+ * POST /api/v1/integrations/[id]/test - Test connection to provider
+ *
+ * RBAC: Requires integrations:manage permission
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withCsrfProtection } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import type { IntegrationProvider } from '@/types/database'
 
 interface RouteParams {
@@ -18,21 +26,18 @@ interface TestResult {
 }
 
 // POST /api/v1/integrations/[id]/test - Test connection to provider
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+export const POST = withPermission({ resource: 'integrations', action: 'manage' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id } = await params
-    const supabase = await createRouteHandlerClient(cookies)
+    try {
+      const { id } = await params
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, agencyId, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user || !agencyId) {
-      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 })
-    }
+      // User already authenticated and authorized by middleware
+      const agencyId = request.user.agencyId
 
     // Fetch integration with tokens
     const { data: integration, error } = await supabase
@@ -73,12 +78,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         .eq('agency_id', agencyId) // Multi-tenant isolation (SEC-007)
     }
 
-    return NextResponse.json({ data: result })
-  } catch (error) {
-    console.error('Test connection error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      return NextResponse.json({ data: result })
+    } catch (error) {
+      console.error('Test connection error:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
   }
-}
+)
 
 async function testProviderConnection(
   provider: IntegrationProvider,

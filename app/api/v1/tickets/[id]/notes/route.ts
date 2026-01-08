@@ -1,33 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, isValidUUID, sanitizeString, createErrorResponse } from '@/lib/security'
+import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 
 // GET /api/v1/tickets/[id]/notes - List notes for a ticket
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Rate limit: 100 requests per minute
-  const rateLimitResponse = withRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse
+export const GET = withPermission({ resource: 'tickets', action: 'read' })(
+  async (
+    request: AuthenticatedRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    // Rate limit: 100 requests per minute
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
 
-  try {
-    const { id: ticketId } = await params
+    try {
+      const { id: ticketId } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(ticketId)) {
-      return createErrorResponse(400, 'Invalid ticket ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(ticketId)) {
+        return createErrorResponse(400, 'Invalid ticket ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
-
-    // Get authenticated user with server verification (SEC-006)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      const supabase = await createRouteHandlerClient(cookies)
 
     // Get query params for filtering
     const { searchParams } = new URL(request.url)
@@ -58,41 +53,39 @@ export async function GET(
       return createErrorResponse(500, 'Failed to fetch notes')
     }
 
-    return NextResponse.json({ data: notes })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: notes })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
 
 // POST /api/v1/tickets/[id]/notes - Add a note to a ticket
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Rate limit: 50 creates per minute
-  const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
-  if (rateLimitResponse) return rateLimitResponse
+export const POST = withPermission({ resource: 'tickets', action: 'write' })(
+  async (
+    request: AuthenticatedRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    // Rate limit: 50 creates per minute
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 50, windowMs: 60000 })
+    if (rateLimitResponse) return rateLimitResponse
 
-  // CSRF protection (TD-005)
-  const csrfError = withCsrfProtection(request)
-  if (csrfError) return csrfError
+    // CSRF protection (TD-005)
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
 
-  try {
-    const { id: ticketId } = await params
+    try {
+      const { id: ticketId } = await params
 
-    // Validate UUID format
-    if (!isValidUUID(ticketId)) {
-      return createErrorResponse(400, 'Invalid ticket ID format')
-    }
+      // Validate UUID format
+      if (!isValidUUID(ticketId)) {
+        return createErrorResponse(400, 'Invalid ticket ID format')
+      }
 
-    const supabase = await createRouteHandlerClient(cookies)
+      const supabase = await createRouteHandlerClient(cookies)
 
-    // Get authenticated user with server verification (SEC-006)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (!user) {
-      return createErrorResponse(401, authError || 'Unauthorized')
-    }
+      // User already authenticated and authorized by middleware
+      const userId = request.user.id
 
     let body: Record<string, unknown>
     try {
@@ -135,7 +128,7 @@ export async function POST(
         agency_id: ticket.agency_id,
         content: sanitizedContent,
         is_internal: isInternalBool,
-        added_by: user.id,
+        added_by: userId,
       })
       .select(`
         *,
@@ -152,8 +145,9 @@ export async function POST(
       return createErrorResponse(500, 'Failed to create note')
     }
 
-    return NextResponse.json({ data: note }, { status: 201 })
-  } catch {
-    return createErrorResponse(500, 'Internal server error')
+      return NextResponse.json({ data: note }, { status: 201 })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
   }
-}
+)
