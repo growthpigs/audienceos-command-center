@@ -46,7 +46,7 @@
 |---------|--------|-----------|-------|
 | dark-mode | 🚧 Building | [DARK-MODE.md](DARK-MODE.md) | Light/dark mode toggle. Branch: feature/dark-mode-toggle. Phase 1: Color extraction. 2026-01-08. |
 | user-invitations | ⏳ Deferred | - | Data model ready (USER_INVITATION), API exists |
-| multi-org-roles | 🔄 Planning | [VISION](../docs/01-product/VISION.md) / [SCOPE](../docs/01-product/SCOPE.md) | RBAC system: Owner/Admin/Manager/Member hierarchy. 8 resources × 3 actions. MVP: 28 DUs (~8 sessions). **B-2 Scope approved 2026-01-08.** Next: B-3 Risks → D-1 SpecKit. |
+| multi-org-roles | ✅ Specced | [VISION](../docs/01-product/VISION.md) / [SCOPE](../docs/01-product/SCOPE.md) / [RISKS](../docs/05-planning/RISK-REGISTER.md) / [PRD](../docs/01-product/PRD-MULTI-ORG-ROLES.md) / [DATA MODEL](../docs/04-technical/DATA-MODEL-RBAC.md) / [API CONTRACTS](../docs/04-technical/API-CONTRACTS-RBAC.md) | **D-1 SpecKit COMPLETE (2026-01-08)**: RBAC system with Owner/Admin/Manager/Member hierarchy. 8 resources × 3 actions. Technical specs: PRD (18 user stories), Data Model (5 tables), API Contracts (15 endpoints), Tech Stack integration. All docs synced to Google Drive. Ready for implementation start. |
 | zoom-integration | ⏳ Deferred | - | Zoom v2+ for call recordings/transcripts |
 
 ---
