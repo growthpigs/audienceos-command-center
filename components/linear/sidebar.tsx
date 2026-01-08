@@ -91,6 +91,7 @@ export type LinearView =
   | "dashboard"
   | "pipeline"
   | "clients"
+  | "client"
   | "onboarding"
   | "intelligence"
   | "tickets"

@@ -139,7 +139,7 @@ function CommandCenterContent() {
   // Initialize activeView from URL param or default to dashboard
   const [activeView, setActiveView] = useState<LinearView>(() => {
     const viewParam = searchParams.get("view")
-    const validViews: LinearView[] = ["dashboard", "pipeline", "clients", "onboarding", "support", "intelligence", "knowledge-base", "automations", "integrations", "settings"]
+    const validViews: LinearView[] = ["dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings"]
     if (viewParam && validViews.includes(viewParam as LinearView)) {
       return viewParam as LinearView
     }
@@ -389,6 +389,7 @@ function CommandCenterContent() {
                         <ClientRow
                           key={client.id}
                           id={client.logo}
+                          clientId={client.id}
                           name={client.name}
                           stage={client.stage}
                           health={client.health}
@@ -400,6 +401,7 @@ function CommandCenterContent() {
                           daysInStage={client.daysInStage}
                           blocker={client.blocker}
                           onClick={() => setSelectedClient(client)}
+                          onOpenDetail={() => handleOpenClientDetail(client.id)}
                           selected={selectedClient?.id === client.id}
                         />
                       )

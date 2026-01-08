@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import {
   LinearKPICard,
@@ -23,6 +22,7 @@ import { Button } from "@/components/ui/button"
 interface DashboardViewProps {
   clients: MinimalClient[]
   onClientClick: (client: MinimalClient) => void
+  onOpenClientDetail?: (clientId: string) => void
   onSendToAI?: (prompt: string) => void
 }
 
@@ -609,14 +609,15 @@ function ClientDetailDrawer({
   client,
   onClose,
   onClientClick,
+  onOpenClientDetail,
   onSendToAI
 }: {
   client: MinimalClient
   onClose: () => void
   onClientClick?: (client: MinimalClient) => void
+  onOpenClientDetail?: (clientId: string) => void
   onSendToAI?: (prompt: string) => void
 }) {
-  const router = useRouter()
   const ownerData = getOwnerData(client.owner)
 
   return (
@@ -728,7 +729,7 @@ function ClientDetailDrawer({
           variant="outline"
           className="w-full"
           size="sm"
-          onClick={() => router.push(`/client/${client.id}`)}
+          onClick={() => onOpenClientDetail?.(client.id)}
         >
           <ExternalLink className="w-4 h-4 mr-2" />
           View Full Details
@@ -941,7 +942,7 @@ function PerformanceDetailDrawer({
   )
 }
 
-export function DashboardView({ clients, onClientClick, onSendToAI }: DashboardViewProps) {
+export function DashboardView({ clients, onClientClick, onOpenClientDetail, onSendToAI }: DashboardViewProps) {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview")
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
@@ -1276,6 +1277,7 @@ export function DashboardView({ clients, onClientClick, onSendToAI }: DashboardV
                     client={selectedClient}
                     onClose={() => setSelectedClientId(null)}
                     onClientClick={onClientClick}
+                    onOpenClientDetail={onOpenClientDetail}
                     onSendToAI={onSendToAI}
                   />
                 </motion.div>

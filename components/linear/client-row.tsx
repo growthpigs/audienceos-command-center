@@ -3,9 +3,12 @@
 import React from "react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { ExternalLink } from "lucide-react"
 
 interface ClientRowProps {
   id: string
+  clientId?: string
   name: string
   stage: string
   health: "Green" | "Yellow" | "Red" | "Blocked"
@@ -17,6 +20,7 @@ interface ClientRowProps {
   daysInStage: number
   blocker?: string | null
   onClick?: () => void
+  onOpenDetail?: () => void
   selected?: boolean
 }
 
@@ -52,6 +56,7 @@ function getStageColor(stage: string) {
 
 export function ClientRow({
   id,
+  clientId,
   name,
   stage,
   health,
@@ -59,13 +64,14 @@ export function ClientRow({
   daysInStage,
   blocker,
   onClick,
+  onOpenDetail,
   selected,
 }: ClientRowProps) {
   return (
     <div
       onClick={onClick}
       className={cn(
-        "flex items-center p-4 border-b border-border cursor-pointer transition-colors",
+        "group flex items-center p-4 border-b border-border cursor-pointer transition-colors",
         selected
           ? "bg-primary/10 border-l-2 border-l-primary"
           : "hover:bg-card/50"
@@ -100,8 +106,23 @@ export function ClientRow({
           </div>
         </div>
 
-        {/* Right side */}
+        {/* Right side - Open button and days indicator */}
         <div className="flex items-center gap-3 shrink-0">
+          {/* Open button - appears on hover */}
+          {onOpenDetail && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenDetail()
+              }}
+            >
+              <ExternalLink className="h-3.5 w-3.5 mr-1" />
+              <span className="text-xs">Open</span>
+            </Button>
+          )}
           {/* Days indicator */}
           <span
             className={cn(
