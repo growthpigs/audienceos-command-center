@@ -196,6 +196,16 @@ function CommandCenterContent() {
     fetchClients()
   }, [fetchClients])
 
+  // Sync activeView from URL param after hydration
+  // This handles direct URL navigation (e.g., ?view=settings)
+  useEffect(() => {
+    const viewParam = searchParams.get("view")
+    const validViews: LinearView[] = ["dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings"]
+    if (viewParam && validViews.includes(viewParam as LinearView)) {
+      setActiveView(viewParam as LinearView)
+    }
+  }, [searchParams])
+
   /**
    * Handle client stage change via drag-and-drop
    * Uses optimistic update with rollback on failure
