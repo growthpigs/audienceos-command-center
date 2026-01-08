@@ -46,7 +46,7 @@
 |---------|--------|-----------|-------|
 | dark-mode | 🚧 Building | [DARK-MODE.md](DARK-MODE.md) | Light/dark mode toggle. Branch: feature/dark-mode-toggle. Phase 1: Color extraction. 2026-01-08. |
 | user-invitations | ⏳ Deferred | - | Data model ready (USER_INVITATION), API exists |
-| multi-org-roles | 🔄 Planning | [VISION](../docs/01-product/VISION.md) / [SCOPE](../docs/01-product/SCOPE.md) / [RISKS](../docs/05-planning/RISK-REGISTER.md) | RBAC system: Owner/Admin/Manager/Member hierarchy. 8 resources × 3 actions. MVP: 22 DUs (~6 sessions). B-Phase complete 2026-01-08: Vision+Scope+Risks approved. Ready for D-1 SpecKit. |
+| multi-org-roles | 🔄 Planning | [VISION](../docs/01-product/VISION.md) / [SCOPE](../docs/01-product/SCOPE.md) | RBAC system: Owner/Admin/Manager/Member hierarchy. 8 resources × 3 actions. MVP: 28 DUs (~8 sessions). **B-2 Scope approved 2026-01-08.** Next: B-3 Risks → D-1 SpecKit. |
 | zoom-integration | ⏳ Deferred | - | Zoom v2+ for call recordings/transcripts |
 
 ---
@@ -91,7 +91,7 @@
 | **Third-party APIs** | ⏳ Pending | Gmail, Slack, Google Ads, Meta (OAuth handlers exist, need testing) |
 | **Testing** | ⏳ Pending | Unit tests (14), E2E tests (3), more tests in progress |
 | **Monitoring** | ⏳ Pending | Sentry integration needed |
-| **Multi-Org Roles** | 📝 Specced | [multi-org-roles.md](multi-org-roles.md) - 60 tasks, ready to implement |
+| **Multi-Org Roles** | 🔄 B-2 Complete | [SCOPE.md](../docs/01-product/SCOPE.md) - 28 DUs MVP. Next: B-3 Risks → D-1 SpecKit |
 
 ---
 
@@ -106,4 +106,4 @@
 
 ---
 
-*Living Document - Last verified: 2026-01-05 (All features functional after authentication fix)*
+*Living Document - Last verified: 2026-01-08 (Multi-Org Roles B-2 Scope approved)*

@@ -64,22 +64,25 @@ Explicitly NOT building now:
 
 ---
 
-## Resources Affected
+## Permission Matrix (8 Resources x 3 Actions)
 
-**API Resources (8 total):**
-1. clients
-2. settings
-3. users
-4. roles
-5. team_members
-6. documents
-7. workflows
-8. tickets
+| Resource | Owner | Admin | Manager | Member |
+|----------|-------|-------|---------|--------|
+| **clients** | RWD | RWD | RWD | RW (assigned only) |
+| **communications** | RWD | RWD | RWD | RW (assigned clients) |
+| **tickets** | RWD | RWD | RWD | RW (assigned clients) |
+| **documents** | RWD | RWD | RWD | R (assigned clients) |
+| **workflows** | RWD | RWD | R | - |
+| **integrations** | RWD | RWD | R | - |
+| **settings** | RWD | RW | R | - |
+| **billing** | RWD | - | - | - |
+
+*R = Read, W = Write, D = Delete*
 
 **Actions per Resource (3 total):**
-- read
-- write
-- manage
+- read (R)
+- write (W)
+- delete (D)
 
 ---
 
@@ -102,17 +105,17 @@ Explicitly NOT building now:
 
 | Phase | DUs | Trad. Weeks | AI Sessions | AI Calendar | Deliverable |
 |-------|-----|-------------|-------------|-------------|-------------|
-| **MVP** | 22 | 5.5 weeks | ~6 sessions | ~2-3 weeks | Complete RBAC system with UI |
-| **Phase 2** | 12 | 3 weeks | ~3 sessions | ~1-2 weeks | Custom roles + analytics |
-| **Phase 3** | 18 | 4.5 weeks | ~5 sessions | ~2-3 weeks | SSO + advanced features |
-| **TOTAL** | **52** | **13 weeks** | **~14 sessions** | **~5-8 weeks** | Full enterprise RBAC platform |
+| **MVP** | 28 | 8 weeks | ~8 sessions | ~3 weeks | Full RBAC system with middleware + RLS |
+| **Phase 2** | 14 | 4 weeks | ~4 sessions | ~1.5 weeks | Custom roles + notifications |
+| **TOTAL** | **42** | **12 weeks** | **~12 sessions** | **~4.5 weeks** | Enterprise RBAC platform |
 
 **MVP DU Breakdown:**
-- Database schema + migrations: 4 DUs
-- API middleware enhancements: 6 DUs
-- Permission matrix UI components: 8 DUs
+- Database schema + migrations: 5 DUs
+- API middleware enhancements: 8 DUs
+- RLS policy updates: 4 DUs
+- Permission matrix UI components: 6 DUs
 - Client assignment interface: 3 DUs
-- Testing + integration: 1 DU
+- Audit trail logging: 2 DUs
 
 ---
 
