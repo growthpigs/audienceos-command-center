@@ -12,28 +12,169 @@ type Ticket = Tables['ticket']['Row']
 type Integration = Tables['integration']['Row']
 
 // ============================================================================
-// AUTH STORE
+// RBAC Types (mapped from legacy user.role)
+// ============================================================================
+
+/**
+ * Role hierarchy for RBAC components
+ * Maps legacy 'admin'/'user' roles to hierarchy levels
+ */
+export interface UserRoleInfo {
+  id: string
+  role_id: string
+  hierarchy_level: number  // 1=Owner, 2=Admin, 3=Manager, 4=Member
+  role_name: 'owner' | 'admin' | 'manager' | 'member'
+}
+
+/**
+ * Permission structure for RBAC
+ */
+export interface Permission {
+  resource: string
+  action: 'read' | 'write' | 'delete' | 'admin'
+}
+
+/**
+ * Map legacy database role to RBAC hierarchy
+ * - 'admin' → hierarchy_level 2 (Admin)
+ * - 'user'  → hierarchy_level 4 (Member)
+ */
+function mapLegacyRoleToHierarchy(user: User | null): UserRoleInfo | null {
+  if (!user) return null
+
+  const legacyRole = user.role || 'user'
+
+  if (legacyRole === 'admin') {
+    return {
+      id: user.id,
+      role_id: 'legacy-admin',
+      hierarchy_level: 2,
+      role_name: 'admin',
+    }
+  }
+
+  // Default: 'user' maps to Member (level 4)
+  return {
+    id: user.id,
+    role_id: 'legacy-member',
+    hierarchy_level: 4,
+    role_name: 'member',
+  }
+}
+
+// ============================================================================
+// AUTH STORE (Unified: Legacy + RBAC)
 // ============================================================================
 interface AuthState {
+  // Legacy fields (backward compatible)
   user: User | null
   agency: Agency | null
   isLoading: boolean
+
+  // RBAC fields (derived from user.role)
+  userRole: UserRoleInfo | null
+  userPermissions: Permission[] | null
+  loading: boolean  // Alias for RBAC components
+
+  // Legacy actions
   setUser: (user: User | null) => void
   setAgency: (agency: Agency | null) => void
   setLoading: (loading: boolean) => void
   clear: () => void
+
+  // RBAC actions (for future use)
+  fetchUserRole: () => Promise<void>
+  fetchUserPermissions: () => Promise<void>
+  clearAuth: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
+      // Legacy state
       user: null,
       agency: null,
       isLoading: true,
-      setUser: (user) => set({ user }),
+
+      // RBAC state (derived)
+      userRole: null,
+      userPermissions: null,
+      loading: true,  // Alias
+
+      // Legacy actions
+      setUser: (user) => set({
+        user,
+        userRole: mapLegacyRoleToHierarchy(user),
+        // Grant all permissions to admin, limited to member
+        userPermissions: user?.role === 'admin'
+          ? [
+              { resource: 'clients', action: 'read' },
+              { resource: 'clients', action: 'write' },
+              { resource: 'clients', action: 'delete' },
+              { resource: 'settings', action: 'read' },
+              { resource: 'settings', action: 'write' },
+              { resource: 'users', action: 'read' },
+              { resource: 'users', action: 'write' },
+            ]
+          : [
+              { resource: 'clients', action: 'read' },
+              { resource: 'settings', action: 'read' },
+            ],
+      }),
       setAgency: (agency) => set({ agency }),
-      setLoading: (isLoading) => set({ isLoading }),
-      clear: () => set({ user: null, agency: null, isLoading: false }),
+      setLoading: (isLoading) => set({ isLoading, loading: isLoading }),
+      clear: () => set({
+        user: null,
+        agency: null,
+        isLoading: false,
+        userRole: null,
+        userPermissions: null,
+        loading: false,
+      }),
+
+      // RBAC actions (placeholder for Phase 3 migration)
+      fetchUserRole: async () => {
+        const { user } = get()
+        // For now, derive from legacy role
+        set({
+          userRole: mapLegacyRoleToHierarchy(user),
+          isLoading: false,
+          loading: false,
+        })
+      },
+
+      fetchUserPermissions: async () => {
+        const { user } = get()
+        // For now, derive from legacy role
+        const isAdmin = user?.role === 'admin'
+        set({
+          userPermissions: isAdmin
+            ? [
+                { resource: 'clients', action: 'read' },
+                { resource: 'clients', action: 'write' },
+                { resource: 'clients', action: 'delete' },
+                { resource: 'settings', action: 'read' },
+                { resource: 'settings', action: 'write' },
+                { resource: 'users', action: 'read' },
+                { resource: 'users', action: 'write' },
+              ]
+            : [
+                { resource: 'clients', action: 'read' },
+                { resource: 'settings', action: 'read' },
+              ],
+          isLoading: false,
+          loading: false,
+        })
+      },
+
+      clearAuth: () => set({
+        user: null,
+        agency: null,
+        userRole: null,
+        userPermissions: null,
+        isLoading: false,
+        loading: false,
+      }),
     }),
     { name: 'auth-store' }
   )

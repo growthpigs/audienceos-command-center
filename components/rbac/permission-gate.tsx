@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore } from '@/lib/store';
 import type { Resource, PermissionAction } from '@/types/rbac';
 
 interface PermissionGateProps {

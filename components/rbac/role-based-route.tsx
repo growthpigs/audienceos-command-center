@@ -16,7 +16,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore } from '@/lib/store';
 import type { RoleHierarchyLevel } from '@/types/rbac';
 
 interface RoleBasedRouteProps {
