@@ -335,6 +335,25 @@ gemini-3-flash-preview
 
 ---
 
+## Tracking
+
+**Project Type:** PARTNER
+**Stakeholders:** Chase (Agro Bros agency owner)
+**Sheet ID:** `15wGY-DlE1BV5VBLpU_Jghi3nGiPviaNZXXl9Wth68GI`
+**Sheet Link:** [AudienceOS Project Dashboard](https://docs.google.com/spreadsheets/d/15wGY-DlE1BV5VBLpU_Jghi3nGiPviaNZXXl9Wth68GI/edit)
+**Parent Folder:** AudienceOS (08-reports)
+
+**Session Logging Format:**
+```
+mcp__chi-gateway__sheets_append({
+  spreadsheetId: "15wGY-DlE1BV5VBLpU_Jghi3nGiPviaNZXXl9Wth68GI",
+  range: "Log!A:E",
+  values: [["YYYY-MM-DD", "Task description", "DUs", "Category", "✅ Done"]]
+})
+```
+
+---
+
 ## Current Sprint (2026-01-05)
 
 ### ✅ Completed This Sprint
