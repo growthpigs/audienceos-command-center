@@ -11,7 +11,11 @@ import { TriggerOnboardingModal } from "./trigger-onboarding-modal"
 import { Plus, Link, ExternalLink, Users, Settings, FileText } from "lucide-react"
 import { toast } from "sonner"
 
-export function OnboardingHub() {
+interface OnboardingHubProps {
+  onClientClick?: (clientId: string) => void
+}
+
+export function OnboardingHub({ onClientClick }: OnboardingHubProps) {
   const { activeTab, setActiveTab, selectedInstance } = useOnboardingStore()
   const [showTriggerModal, setShowTriggerModal] = useState(false)
 

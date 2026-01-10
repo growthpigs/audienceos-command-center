@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,7 +34,7 @@ interface OnboardingData {
   }>
 }
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const { toast } = useToast()
@@ -816,5 +816,28 @@ export default function OnboardingPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Loading fallback for Suspense
+function OnboardingLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+      <Card className="bg-slate-900/50 border-slate-800 backdrop-blur p-8 max-w-md">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
+          <p className="text-slate-300">Loading your onboarding...</p>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+// Default export with Suspense boundary for useSearchParams
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<OnboardingLoadingFallback />}>
+      <OnboardingPageContent />
+    </Suspense>
   )
 }
