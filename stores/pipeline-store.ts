@@ -177,11 +177,15 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
   setError: (error) => set({ error }),
 
   // Update stage via API with optimistic update
+  // RACE CONDITION FIX (2026-01-10): Only rollback if state hasn't changed
+  // since our optimistic update. This prevents stale rollbacks from overwriting
+  // successful concurrent mutations.
   updateClientStage: async (clientId, toStage) => {
     const client = get().clients.find((c) => c.id === clientId)
     if (!client) return false
 
     const previousStage = client.stage
+    const optimisticStage = toStage // Track what we set
 
     // Optimistic update
     get().moveClient(clientId, toStage)
@@ -199,8 +203,15 @@ export const usePipelineStore = create<PipelineState>((set, get) => ({
       return true
     } catch (error) {
       console.error('Error updating stage:', error)
-      // Rollback on failure
-      get().rollbackMove(clientId, previousStage)
+
+      // RACE CONDITION FIX: Only rollback if current stage still matches
+      // our optimistic update. If it changed, a newer mutation succeeded.
+      const currentClient = get().clients.find((c) => c.id === clientId)
+      if (currentClient && currentClient.stage === optimisticStage) {
+        get().rollbackMove(clientId, previousStage)
+      } else {
+        console.log(`[Pipeline] Skipping rollback: stage changed from ${optimisticStage} to ${currentClient?.stage}`)
+      }
       return false
     }
   },
