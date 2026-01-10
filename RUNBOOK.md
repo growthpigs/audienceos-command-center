@@ -67,10 +67,15 @@
 - ✅ **diiiploy-gateway** - Multi-tenant product infrastructure (AudienceOS, RevOS, etc.)
 - ❌ **chi-gateway** - Personal PAI infrastructure (NOT for products)
 
+**DataForSEO Bug Fix (EP-072):**
+- **Issue:** `dataforseo_ideas` sent `keyword` string, API expects `keywords` array
+- **Fixed:** 2026-01-10 - Changed to `keywords: [keyword]` in getKeywordIdeas function
+- **Cross-ref:** Same fix applied to chi-gateway by CC2
+
 **Verification:**
 ```bash
 curl -s https://diiiploy-gateway.roderic-andrews.workers.dev/health | jq .tools
-# Should return 64 (includes 7 DataForSEO tools)
+# Should return 64 (includes 7 DataForSEO tools with EP-072 fix)
 ```
 
 ---
