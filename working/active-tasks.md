@@ -1,7 +1,7 @@
 # Active Tasks
 
 ## ⚠️ Quality Issues
-_Last check: 2026-01-09 08:30 (Post RBAC Unification)_
+_Last check: 2026-01-10 18:39 (Post Test Coverage Addition)_
 
 ### Preflight (Gate 1)
 - [x] ESLint: Clean ✓
@@ -10,8 +10,13 @@ _Last check: 2026-01-09 08:30 (Post RBAC Unification)_
 
 ### Validation (Gate 2)
 - [x] Preflight: 1 advisory issue (TypeScript)
-- [x] Tests: 586 passed ✓
+- [x] Tests: 634 passed ✓ (+48 new comprehensive onboarding tests)
 - [x] Build: Succeeds ✓
+
+**Test Coverage Status:**
+- Total Tests: 634 (was 586, +48 comprehensive onboarding tests)
+- New Coverage: Onboarding store, API endpoints, accordion UI component
+- Protection: tier→stage fix, accordion UI interactions verified
 
 **TypeScript Errors Summary:**
 - 5 test files affected: settings-agency.test.ts, settings-users-id.test.ts, settings-users.test.ts, settings-store.test.ts, tickets-store.test.ts

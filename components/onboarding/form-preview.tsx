@@ -28,18 +28,19 @@ export function FormPreview({ fields }: FormPreviewProps) {
           <Textarea
             placeholder={field.placeholder || ""}
             disabled
-            rows={4}
+            rows={2}
+            className="text-xs h-14 resize-none"
           />
         )
       case "select":
         return (
           <Select disabled>
-            <SelectTrigger>
+            <SelectTrigger className="h-7 text-xs">
               <SelectValue placeholder={field.placeholder || "Select an option"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="option1">Option 1</SelectItem>
-              <SelectItem value="option2">Option 2</SelectItem>
+              <SelectItem value="option1" className="text-xs">Option 1</SelectItem>
+              <SelectItem value="option2" className="text-xs">Option 2</SelectItem>
             </SelectContent>
           </Select>
         )
@@ -49,6 +50,7 @@ export function FormPreview({ fields }: FormPreviewProps) {
             type="email"
             placeholder={field.placeholder || ""}
             disabled
+            className="h-7 text-xs"
           />
         )
       case "url":
@@ -57,6 +59,7 @@ export function FormPreview({ fields }: FormPreviewProps) {
             type="url"
             placeholder={field.placeholder || ""}
             disabled
+            className="h-7 text-xs"
           />
         )
       case "number":
@@ -65,6 +68,7 @@ export function FormPreview({ fields }: FormPreviewProps) {
             type="number"
             placeholder={field.placeholder || ""}
             disabled
+            className="h-7 text-xs"
           />
         )
       default:
@@ -73,6 +77,7 @@ export function FormPreview({ fields }: FormPreviewProps) {
             type="text"
             placeholder={field.placeholder || ""}
             disabled
+            className="h-7 text-xs"
           />
         )
     }
@@ -87,10 +92,10 @@ export function FormPreview({ fields }: FormPreviewProps) {
   }
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+    <div className="space-y-2.5 p-3 border rounded-lg bg-muted/30">
       {sortedFields.map((field) => (
-        <div key={field.id} className="space-y-2">
-          <Label className="flex items-center gap-1">
+        <div key={field.id} className="space-y-1">
+          <Label className="flex items-center gap-1 text-xs">
             {field.field_label}
             {field.is_required && (
               <span className="text-destructive">*</span>

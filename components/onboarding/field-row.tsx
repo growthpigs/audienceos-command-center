@@ -34,63 +34,64 @@ export function FieldRow({ field, onUpdate, onDelete, isUpdating }: FieldRowProp
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card group">
+    <div className="flex items-center gap-2 p-2 rounded-lg border bg-card group">
       {/* Drag Handle */}
       <div className="cursor-grab text-muted-foreground hover:text-foreground">
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-3.5 w-3.5" />
       </div>
 
       {/* Field Label */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <Input
           value={field.field_label}
           onChange={(e) => onUpdate(field.id, { field_label: e.target.value })}
           placeholder="Field Label"
-          className="h-8"
+          className="h-7 text-xs"
           disabled={isUpdating}
         />
       </div>
 
       {/* Field Type */}
-      <div className="w-32">
+      <div className="w-24">
         <Select
           value={field.field_type}
           onValueChange={(value: FieldType) => onUpdate(field.id, { field_type: value })}
           disabled={isUpdating}
         >
-          <SelectTrigger className="h-8">
+          <SelectTrigger className="h-7 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="text">Text</SelectItem>
-            <SelectItem value="email">Email</SelectItem>
-            <SelectItem value="url">URL</SelectItem>
-            <SelectItem value="number">Number</SelectItem>
-            <SelectItem value="textarea">Textarea</SelectItem>
-            <SelectItem value="select">Select</SelectItem>
+            <SelectItem value="text" className="text-xs">Text</SelectItem>
+            <SelectItem value="email" className="text-xs">Email</SelectItem>
+            <SelectItem value="url" className="text-xs">URL</SelectItem>
+            <SelectItem value="number" className="text-xs">Number</SelectItem>
+            <SelectItem value="textarea" className="text-xs">Textarea</SelectItem>
+            <SelectItem value="select" className="text-xs">Select</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Placeholder */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <Input
           value={field.placeholder || ""}
           onChange={(e) => onUpdate(field.id, { placeholder: e.target.value })}
-          placeholder="Placeholder text"
-          className="h-8 text-muted-foreground"
+          placeholder="Placeholder"
+          className="h-7 text-xs text-muted-foreground"
           disabled={isUpdating}
         />
       </div>
 
       {/* Required Toggle */}
-      <div className="flex items-center gap-2 min-w-[80px]">
+      <div className="flex items-center gap-1.5 min-w-[70px]">
         <Switch
           checked={field.is_required}
           onCheckedChange={(checked) => onUpdate(field.id, { is_required: checked })}
           disabled={isUpdating}
+          className="scale-90"
         />
-        <span className="text-xs text-muted-foreground">Required</span>
+        <span className="text-[10px] text-muted-foreground">Required</span>
       </div>
 
       {/* Delete Button */}

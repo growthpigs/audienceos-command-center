@@ -43,19 +43,19 @@ export function FormBuilder() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left: Field List */}
-      <Card>
-        <CardHeader>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pb-28">
+      {/* Left: Field List (2/3 width) */}
+      <Card className="lg:col-span-2">
+        <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-muted-foreground" />
-            <CardTitle className="text-lg">Intake Form Fields</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base">Intake Form Fields</CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Customize the fields clients fill out during onboarding
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2 pt-0">
           {fields.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No fields configured</p>
@@ -77,29 +77,30 @@ export function FormBuilder() {
 
           <Button
             variant="outline"
-            className="w-full"
+            size="sm"
+            className="w-full text-xs"
             onClick={handleAddField}
             disabled={isSavingField}
           >
             {isSavingField ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
             )}
             Add Field
           </Button>
         </CardContent>
       </Card>
 
-      {/* Right: Form Preview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Form Preview</CardTitle>
-          <CardDescription>
+      {/* Right: Form Preview (1/3 width) */}
+      <Card className="lg:col-span-1">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Form Preview</CardTitle>
+          <CardDescription className="text-xs">
             Preview how the intake form will appear to clients
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <FormPreview fields={fields} />
         </CardContent>
       </Card>
