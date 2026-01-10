@@ -37,8 +37,8 @@ export const GET = withPermission({ resource: 'clients', action: 'read' })(
             name,
             contact_email,
             contact_name,
-            tier,
-            tags
+            stage,
+            health_status
           ),
           journey:journey_id (
             id,
