@@ -3,7 +3,7 @@
 **What:** OAuth connection management for Slack, Gmail, Google Ads, and Meta Ads with sync monitoring and health checks
 **Who:** Agency Admins and Account Managers managing external service connections
 **Why:** Centralized control over critical integrations that power communications and ad performance tracking
-**Status:** 📝 Specced
+**Status:** ✅ Complete (UI wired to backend 2026-01-10)
 
 ---
 
@@ -13,20 +13,20 @@
 As an Admin, I want to see all integrations and their connection status, so that I know what's working.
 
 Acceptance Criteria:
-- [ ] Integration cards for: Slack, Gmail, Google Ads, Meta Ads
-- [ ] Each card shows: connected/disconnected, last sync time, health
-- [ ] "Settings" button opens configuration modal
-- [ ] "Test Connection" validates current tokens
+- [x] Integration cards for: Slack, Gmail, Google Ads, Meta Ads
+- [x] Each card shows: connected/disconnected, last sync time, health
+- [x] "Settings" button opens configuration modal
+- [x] "Test Connection" validates current tokens
 
 **US-010: Connect Slack Integration**
 As an Admin, I want to connect Slack via OAuth, so that client messages sync to the platform.
 
 Acceptance Criteria:
-- [ ] OAuth 2.0 flow with workspace selection
-- [ ] Tokens encrypted via Supabase Vault
-- [ ] Configure default channel for notifications
-- [ ] Option to sync past 30 days on connect
-- [ ] Success confirmation with initial sync trigger
+- [x] OAuth 2.0 flow with workspace selection
+- [x] Tokens encrypted via AES-GCM (lib/crypto.ts)
+- [ ] Configure default channel for notifications (future)
+- [ ] Option to sync past 30 days on connect (future)
+- [x] Success confirmation with initial sync trigger
 
 **US-011: Connect Gmail Integration**
 As a User, I want to connect Gmail via OAuth, so that email threads appear in client timelines.
@@ -611,6 +611,7 @@ integration_disconnects:
 
 | Date | Change |
 |------|--------|
+| 2026-01-10 | **UI WIRED TO BACKEND** - Replaced mock data with useIntegrations hook, created IntegrationSettingsModal, added Connect buttons with OAuth flow, verified E2E on production |
 | 2025-12-31 | Enhanced spec with complete implementation details, corrected user story numbers |
 | 2025-12-31 | Created initial spec from PRD integrations section |
 
