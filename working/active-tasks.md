@@ -27,7 +27,92 @@ _Last check: 2026-01-10 18:39 (Post Test Coverage Addition)_
 
 ---
 
-## 📊 Session Summary (2026-01-10)
+## 📊 Session Summary (2026-01-10 19:40) - UI Bug Fixes Session
+
+### CONTEXT: Onboarding Hub UI Improvements - COMPLETE ✅
+
+**Background:** User reported multiple UI issues and performance problems in the Onboarding Hub:
+1. Journey Progress checkboxes not clickable
+2. Copy Portal Link button not working
+3. View as Client button not working
+4. Clicking super slow (performance issue)
+5. Form Builder layout 50/50 instead of 2/3-1/3
+6. Text too large in Form Builder inputs
+7. Chat overlay blocking bottom content
+
+**Session Focus:** Systematic bug fixes with browser-based verification throughout.
+
+### COMPLETED THIS SESSION ✅
+
+#### Bug Fix 1: Journey Progress Checkboxes Not Clickable
+- **Root Cause:** Missing onClick handlers in journey progress items
+- **Fix Applied:** Added onClick handlers that call `updateStageStatus` from store
+- **Files:** `components/onboarding/active-onboardings.tsx`
+- **Commit:** 9b86063
+
+#### Bug Fix 2: Portal Buttons Not Working (Copy Link, View as Client)
+- **Root Cause:** `ActiveOnboardings` used local state while buttons checked store's `selectedInstance`
+- **Fix Applied:** Changed `handleSelectInstance` to use store's `setSelectedInstanceId`
+- **Files:** `components/onboarding/active-onboardings.tsx`
+- **Result:** Portal buttons now work correctly when instance selected
+- **Commit:** 9b86063
+
+#### Bug Fix 3: Super Slow Clicking Performance
+- **Root Cause:** `updateStageStatus` made 3 sequential API calls on every click
+- **Fix Applied:** Implemented optimistic updates - instant UI feedback with background API sync
+- **Files:** `stores/onboarding-store.ts`
+- **Performance:** Click feedback now instant, API calls happen in background
+- **Commit:** b69c081
+
+#### Bug Fix 4: Form Builder Layout & Sizing
+- **Layout Issue:** 50/50 split instead of requested 2/3-1/3
+- **Text Issue:** All inputs too large (not compact enough)
+- **Chat Overlay:** Bottom content cut off by floating chat
+- **Fix Applied:**
+  - Changed CSS grid from `grid-cols-2` to `grid-cols-3` with `col-span-2` and `col-span-1`
+  - Made all text smaller: `h-8` → `h-7`, added `text-xs` throughout
+  - Added `pb-[150px]` bottom padding (user-modified from `pb-28`)
+- **Files Modified:**
+  - `components/onboarding/form-builder.tsx` - Layout and padding
+  - `components/onboarding/field-row.tsx` - Compact field rows
+  - `components/onboarding/form-preview.tsx` - Smaller preview
+  - `components/onboarding/onboarding-hub.tsx` - Chat padding
+- **Commit:** 834c662
+
+#### Browser-Based Verification
+- **Tool Used:** Claude in Chrome browser automation
+- **Verified:** All fixes deployed to production at audienceos-agro-bros.vercel.app
+- **Confirmed:** Form Builder now has proper 2/3-1/3 layout with compact inputs
+
+### TECHNICAL INSIGHTS ✅
+
+**★ Insight ─────────────────────────────────────**
+- **Optimistic Updates Pattern**: Update UI immediately before API response, revert on error - provides instant feedback
+- **State Sync Issues**: Local component state vs shared store state causes button failures when components expect different sources
+- **CSS Grid 2/3-1/3 Split**: `grid-cols-3` with `col-span-2` and `col-span-1` for asymmetric layouts
+**─────────────────────────────────────────────────**
+
+### FILES MODIFIED (7 total)
+- `stores/onboarding-store.ts` - Optimistic updates
+- `components/onboarding/active-onboardings.tsx` - Clickable checkboxes + button sync
+- `components/onboarding/form-builder.tsx` - 2/3-1/3 layout + padding
+- `components/onboarding/field-row.tsx` - Compact sizing
+- `components/onboarding/form-preview.tsx` - Compact preview
+- `components/onboarding/onboarding-hub.tsx` - Chat padding
+- `RUNBOOK.md` - Added UI-002 Chat Overlay requirement
+
+### STATUS: All UI Issues Resolved ✅
+- ✅ Journey Progress items clickable with instant feedback
+- ✅ Portal buttons work when instance selected
+- ✅ Performance optimized (optimistic updates)
+- ✅ Form Builder proper 2/3-1/3 layout
+- ✅ Compact text sizing throughout
+- ✅ Chat overlay padding prevents content cutoff
+- ✅ Deployed and verified on production
+
+---
+
+## 📊 Session Summary (2026-01-10) - Earlier
 
 ### FEATURE: Onboarding Hub - COMPLETE ✅
 
