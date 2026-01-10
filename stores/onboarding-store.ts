@@ -19,8 +19,8 @@ export interface OnboardingInstanceWithRelations extends OnboardingInstance {
     name: string
     contact_email: string | null
     contact_name: string | null
-    tier?: string | null
-    tags?: string[] | null
+    stage?: string | null
+    health_status?: string | null
   } | null
   journey?: {
     id: string

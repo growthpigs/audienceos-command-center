@@ -231,7 +231,7 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
             id,
             name,
             contact_email,
-            tier
+            stage
           ),
           journey:journey_id (
             id,
