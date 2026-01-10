@@ -331,6 +331,19 @@ export const useOnboardingStore = create<OnboardingState>()(
       },
 
       updateStageStatus: async (instanceId, stageId, status, platformStatuses) => {
+        // Optimistic update - instant UI feedback
+        const currentInstance = get().selectedInstance
+        if (currentInstance && currentInstance.id === instanceId) {
+          const updatedStageStatuses = currentInstance.stage_statuses?.map(s =>
+            s.stage_id === stageId
+              ? { ...s, status: status as 'pending' | 'in_progress' | 'completed' | 'blocked' }
+              : s
+          )
+          set({
+            selectedInstance: { ...currentInstance, stage_statuses: updatedStageStatuses }
+          })
+        }
+
         try {
           const response = await fetchWithCsrf(`/api/v1/onboarding/instances/${instanceId}/stage`, {
             method: 'PATCH',
@@ -338,13 +351,14 @@ export const useOnboardingStore = create<OnboardingState>()(
             body: JSON.stringify({ stage_id: stageId, status, platform_statuses: platformStatuses }),
           })
 
-          if (!response.ok) throw new Error('Failed to update stage status')
-
-          // Refresh the instances list and selected instance
-          await get().fetchInstances()
-          if (get().selectedInstanceId === instanceId) {
+          if (!response.ok) {
+            // Revert on error - refetch to get correct state
             await get().fetchInstance(instanceId)
+            throw new Error('Failed to update stage status')
           }
+
+          // Background refresh - don't await, just fire
+          get().fetchInstances()
         } catch (error) {
           console.error('Failed to update stage status:', error)
         }
