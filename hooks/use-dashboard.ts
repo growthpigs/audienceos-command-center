@@ -15,103 +15,11 @@ import {
 } from "@/lib/services/dashboard-queries"
 import { createClient, getAuthenticatedUser } from "@/lib/supabase"
 import type { TimePeriod, DashboardKPIs, DashboardTrends, RefreshState } from "@/types/dashboard"
-
-// Mock data fallback - converts mock data to database format
-import { mockClients, mockTickets } from "@/lib/mock-data"
 import type { Database } from "@/types/database"
 
 type Client = Database['public']['Tables']['client']['Row']
 type Ticket = Database['public']['Tables']['ticket']['Row']
 type StageEvent = Database['public']['Tables']['stage_event']['Row']
-
-// Convert mock clients to database format (fallback for demo mode)
-function adaptMockClients(): Client[] {
-  return mockClients.map((c) => ({
-    id: c.id,
-    agency_id: "mock-agency",
-    name: c.name,
-    contact_email: c.onboardingData?.contactEmail || null,
-    contact_name: null,
-    stage: c.stage,
-    health_status: c.health.toLowerCase() as "green" | "yellow" | "red",
-    days_in_stage: c.daysInStage,
-    install_date: c.stage === "Live" ? new Date().toISOString() : null,
-    total_spend: null,
-    lifetime_value: null,
-    notes: c.statusNote || null,
-    tags: null,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    seo_data: null,
-    seo_last_refreshed: null,
-    website_url: null,
-  }))
-}
-
-// Convert mock tickets to database format (fallback for demo mode)
-function adaptMockTickets(): Ticket[] {
-  return mockTickets.map((t) => ({
-    id: t.id,
-    agency_id: "mock-agency",
-    client_id: t.clientId,
-    number: parseInt(t.id.replace("T", ""), 10),
-    title: t.title,
-    description: t.description,
-    category: "technical" as const,
-    priority: t.priority.toLowerCase() as "low" | "medium" | "high",
-    status: t.status.toLowerCase().replace(/ /g, "_") as "new" | "in_progress" | "waiting_client" | "resolved",
-    assignee_id: null,
-    resolution_notes: null,
-    time_spent_minutes: Math.floor(Math.random() * 120) + 30,
-    due_date: null,
-    created_by: "mock-user",
-    resolved_by: null,
-    resolved_at: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }))
-}
-
-// Generate mock stage events for chart data (fallback for demo mode)
-function generateMockStageEvents(): StageEvent[] {
-  const events: StageEvent[] = []
-  const now = new Date()
-
-  for (let i = 0; i < 90; i++) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-
-    const newClients = Math.floor(Math.random() * 4)
-    for (let j = 0; j < newClients; j++) {
-      events.push({
-        id: `event-new-${i}-${j}`,
-        agency_id: "mock-agency",
-        client_id: `client-${i}-${j}`,
-        from_stage: null,
-        to_stage: "Onboarding",
-        moved_by: "mock-user",
-        moved_at: date.toISOString(),
-        notes: null,
-      })
-    }
-
-    const completedInstalls = Math.floor(Math.random() * 3)
-    for (let j = 0; j < completedInstalls; j++) {
-      events.push({
-        id: `event-live-${i}-${j}`,
-        agency_id: "mock-agency",
-        client_id: `client-live-${i}-${j}`,
-        from_stage: "Audit",
-        to_stage: "Live",
-        moved_by: "mock-user",
-        moved_at: date.toISOString(),
-        notes: null,
-      })
-    }
-  }
-
-  return events
-}
 
 interface UseDashboardReturn {
   // State
@@ -186,23 +94,13 @@ export function useDashboard(): UseDashboardReturn {
         clients = dashboardData.clients
         tickets = dashboardData.tickets
         stageEvents = dashboardData.stageEvents
-
-        // Only use real data if we have some
-        if (clients.length > 0) {
-          usingReal = true
-          setIsUsingRealData(true)
-        } else {
-          // Fall back to mock if no real data
-          clients = adaptMockClients()
-          tickets = adaptMockTickets()
-          stageEvents = generateMockStageEvents()
-          setIsUsingRealData(false)
-        }
+        usingReal = clients.length > 0
+        setIsUsingRealData(usingReal)
       } else {
-        // Not authenticated - use mock data
-        clients = adaptMockClients()
-        tickets = adaptMockTickets()
-        stageEvents = generateMockStageEvents()
+        // Not authenticated - use empty data
+        clients = []
+        tickets = []
+        stageEvents = []
         setIsUsingRealData(false)
       }
 
@@ -248,25 +146,8 @@ export function useDashboard(): UseDashboardReturn {
     } catch (error) {
       console.error('[use-dashboard] loadKPIs error:', error)
       setKPIsError(error instanceof Error ? error.message : "Failed to load KPIs")
+      setIsUsingRealData(false)
       // Note: setKPIsError already sets kpisLoading: false in the store
-
-      // Fallback to mock data on error
-      try {
-        const clients = adaptMockClients()
-        const tickets = adaptMockTickets()
-        const stageEvents = generateMockStageEvents()
-        const kpisData = await calculateAllKPIs(
-          "mock-agency",
-          clients,
-          tickets,
-          stageEvents,
-          false
-        )
-        setKPIs(kpisData)
-        setIsUsingRealData(false)
-      } catch {
-        // Complete failure - don't try to recover
-      }
     }
   }, [supabase, setKPIs, setKPIsLoading, setKPIsError])
 
@@ -283,22 +164,18 @@ export function useDashboard(): UseDashboardReturn {
         const authResult = await Promise.race([authPromise, timeoutPromise])
         agencyId = authResult.agencyId
       } catch {
-        // Auth failed or timed out - continue with mock data
+        // Auth failed or timed out - use empty data
       }
 
-      let stageEvents: StageEvent[]
+      let stageEvents: StageEvent[] = []
 
       if (agencyId) {
         const dashboardData = await fetchDashboardData(supabase, agencyId, 90)
-        stageEvents = dashboardData.stageEvents.length > 0
-          ? dashboardData.stageEvents
-          : generateMockStageEvents()
-      } else {
-        stageEvents = generateMockStageEvents()
+        stageEvents = dashboardData.stageEvents
       }
 
       const trendsData = await fetchTrends(
-        agencyId || "mock-agency",
+        agencyId || "no-agency",
         stageEvents,
         period,
         forceRefresh
@@ -309,15 +186,6 @@ export function useDashboard(): UseDashboardReturn {
       console.error('[use-dashboard] loadTrends error:', error)
       setTrendsError(error instanceof Error ? error.message : "Failed to load trends")
       // Note: setTrendsError already sets trendsLoading: false in the store
-
-      // Fallback to mock data
-      try {
-        const stageEvents = generateMockStageEvents()
-        const trendsData = await fetchTrends("mock-agency", stageEvents, period, false)
-        setTrends(trendsData)
-      } catch {
-        // Complete failure
-      }
     }
   }, [supabase, setTrends, setTrendsLoading, setTrendsError])
 

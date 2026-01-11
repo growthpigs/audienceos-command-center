@@ -46,7 +46,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { KnowledgeBaseDocument, DocumentSortField } from "@/types/knowledge-base"
 import type { DocumentCategory, IndexStatus } from "@/types/database"
-import { quickLinks } from "@/lib/mock-knowledge-base"
+import { quickLinks } from "@/lib/constants/knowledge-base"
 import {
   formatFileSize,
   FILE_TYPE_INFO,

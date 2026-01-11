@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { X, Search, User, AlertTriangle, Ban, Filter } from "lucide-react"
-import { type Stage, type HealthStatus, type Owner, stages, owners } from "@/lib/mock-data"
+import { type Stage, type HealthStatus, type Owner } from "@/types/pipeline"
+import { stages, owners } from "@/lib/constants/pipeline"
 import { cn } from "@/lib/utils"
 
 export interface PipelineFilters {

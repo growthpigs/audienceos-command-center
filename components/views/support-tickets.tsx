@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { useSlideTransition } from "@/hooks/use-slide-transition"
 import { cn } from "@/lib/utils"
@@ -10,7 +10,7 @@ import {
   ListHeader,
   type Ticket,
 } from "@/components/linear"
-import { mockClients } from "@/lib/mock-data"
+import { useTicketStore, type Ticket as StoreTicket } from "@/stores/ticket-store"
 import {
   Inbox,
   Clock,
@@ -18,202 +18,42 @@ import {
   AlertCircle,
 } from "lucide-react"
 
-// Mock tickets data
-const mockTickets: Ticket[] = [
-  {
-    id: "TKT-001",
-    title: "Google Ads conversion tracking not working",
-    description:
-      "The conversion tracking pixel seems to be firing incorrectly. We're seeing duplicate conversions in the dashboard that don't match our CRM data.",
+// Map store status to UI status
+function mapStatus(storeStatus: string): "open" | "in_progress" | "waiting" | "resolved" {
+  switch (storeStatus) {
+    case "new": return "open"
+    case "in_progress": return "in_progress"
+    case "waiting_client": return "waiting"
+    case "resolved": return "resolved"
+    default: return "open"
+  }
+}
+
+// Transform store tickets to component format
+function transformStoreTicket(storeTicket: StoreTicket): Ticket {
+  return {
+    id: storeTicket.id,
+    title: storeTicket.title,
+    description: storeTicket.description || "",
     client: {
-      name: mockClients[0]?.name || "Acme Corp",
-      initials: mockClients[0]?.logo || "AC",
+      name: storeTicket.client?.name || "Unknown Client",
+      initials: storeTicket.client?.name?.substring(0, 2).toUpperCase() || "UC",
       color: "bg-blue-600",
     },
-    priority: "high",
-    status: "in_progress",
-    assignee: {
-      name: "Trevor",
-      initials: "T",
-      color: "bg-amber-500",
-    },
-    createdAt: "Dec 28, 2024",
-    updatedAt: "2 hours ago",
-    dueDate: "Jan 3, 2025",
-    tags: ["google-ads", "tracking", "urgent"],
-    activities: [
-      {
-        id: "act-1",
-        type: "created",
-        actor: { name: "Client Contact", initials: "CC", color: "bg-slate-600" },
-        timestamp: "Dec 28, 2024 at 10:30 AM",
-      },
-      {
-        id: "act-2",
-        type: "assignment",
-        actor: { name: "Brent", initials: "B", color: "bg-emerald-500" },
-        timestamp: "Dec 28, 2024 at 10:45 AM",
-        metadata: { to: "Trevor" },
-      },
-      {
-        id: "act-3",
-        type: "status_change",
-        actor: { name: "Trevor", initials: "T", color: "bg-amber-500" },
-        timestamp: "Dec 28, 2024 at 2:00 PM",
-        metadata: { from: "Open", to: "In Progress" },
-      },
-      {
-        id: "act-4",
-        type: "comment",
-        actor: { name: "Trevor", initials: "T", color: "bg-amber-500" },
-        timestamp: "2 hours ago",
-        content:
-          "I've identified the issue - there's a duplicate GTM container on the checkout page. Working on removing it now.",
-      },
-    ],
-  },
-  {
-    id: "TKT-002",
-    title: "Need access to Meta Business Manager",
-    description:
-      "Client hasn't provided admin access to their Meta Business Manager yet. Blocking campaign setup.",
-    client: {
-      name: mockClients[1]?.name || "TechStart Inc",
-      initials: mockClients[1]?.logo || "TS",
-      color: "bg-emerald-600",
-    },
-    priority: "urgent",
-    status: "waiting",
-    createdAt: "Dec 29, 2024",
-    updatedAt: "1 hour ago",
-    tags: ["access", "meta", "blocking"],
-    activities: [
-      {
-        id: "act-5",
-        type: "created",
-        actor: { name: "Roderic", initials: "R", color: "bg-blue-500" },
-        timestamp: "Dec 29, 2024 at 9:00 AM",
-      },
-      {
-        id: "act-6",
-        type: "priority_change",
-        actor: { name: "Brent", initials: "B", color: "bg-emerald-500" },
-        timestamp: "1 hour ago",
-        metadata: { from: "High", to: "Urgent" },
-      },
-    ],
-  },
-  {
-    id: "TKT-003",
-    title: "Monthly performance report request",
-    description:
-      "Client requested a detailed breakdown of Q4 performance with YoY comparison.",
-    client: {
-      name: mockClients[2]?.name || "Global Retail",
-      initials: mockClients[2]?.logo || "GR",
-      color: "bg-orange-600",
-    },
-    priority: "medium",
-    status: "open",
-    assignee: {
-      name: "Chase",
-      initials: "C",
-      color: "bg-purple-500",
-    },
-    createdAt: "Dec 30, 2024",
-    updatedAt: "30 min ago",
-    dueDate: "Jan 5, 2025",
-    tags: ["reporting", "q4"],
-    activities: [
-      {
-        id: "act-7",
-        type: "created",
-        actor: { name: "Client Portal", initials: "CP", color: "bg-slate-600" },
-        timestamp: "Dec 30, 2024 at 11:00 AM",
-      },
-      {
-        id: "act-8",
-        type: "assignment",
-        actor: { name: "Brent", initials: "B", color: "bg-emerald-500" },
-        timestamp: "30 min ago",
-        metadata: { to: "Chase" },
-      },
-    ],
-  },
-  {
-    id: "TKT-004",
-    title: "Landing page load time optimization",
-    description:
-      "The new landing page is loading slowly (5+ seconds). Need to optimize before campaign launch.",
-    client: {
-      name: mockClients[3]?.name || "Fashion Forward",
-      initials: mockClients[3]?.logo || "FF",
-      color: "bg-pink-600",
-    },
-    priority: "high",
-    status: "in_progress",
-    assignee: {
-      name: "Trevor",
-      initials: "T",
-      color: "bg-amber-500",
-    },
-    createdAt: "Dec 27, 2024",
-    updatedAt: "4 hours ago",
-    dueDate: "Jan 2, 2025",
-    tags: ["performance", "landing-page"],
-    activities: [
-      {
-        id: "act-9",
-        type: "created",
-        actor: { name: "Client Contact", initials: "CC", color: "bg-slate-600" },
-        timestamp: "Dec 27, 2024 at 3:00 PM",
-      },
-      {
-        id: "act-10",
-        type: "comment",
-        actor: { name: "Trevor", initials: "T", color: "bg-amber-500" },
-        timestamp: "4 hours ago",
-        content:
-          "Compressed images and enabled lazy loading. Page now loads in 2.1 seconds. Testing on mobile next.",
-      },
-    ],
-  },
-  {
-    id: "TKT-005",
-    title: "Budget increase approval needed",
-    description:
-      "Client wants to increase monthly ad spend from $10k to $25k. Need internal approval.",
-    client: {
-      name: mockClients[0]?.name || "Acme Corp",
-      initials: mockClients[0]?.logo || "AC",
-      color: "bg-blue-600",
-    },
-    priority: "medium",
-    status: "resolved",
-    assignee: {
-      name: "Brent",
-      initials: "B",
+    priority: storeTicket.priority as "low" | "medium" | "high" | "urgent",
+    status: mapStatus(storeTicket.status),
+    assignee: storeTicket.assignee ? {
+      name: `${storeTicket.assignee.first_name || ""} ${storeTicket.assignee.last_name || ""}`.trim() || "Unassigned",
+      initials: `${storeTicket.assignee.first_name?.[0] || ""}${storeTicket.assignee.last_name?.[0] || ""}`.toUpperCase() || "U",
       color: "bg-emerald-500",
-    },
-    createdAt: "Dec 26, 2024",
-    updatedAt: "Yesterday",
-    tags: ["budget", "approval"],
-    activities: [
-      {
-        id: "act-11",
-        type: "created",
-        actor: { name: "Roderic", initials: "R", color: "bg-blue-500" },
-        timestamp: "Dec 26, 2024 at 10:00 AM",
-      },
-      {
-        id: "act-12",
-        type: "resolved",
-        actor: { name: "Brent", initials: "B", color: "bg-emerald-500" },
-        timestamp: "Yesterday",
-      },
-    ],
-  },
-]
+    } : undefined,
+    createdAt: new Date(storeTicket.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    updatedAt: new Date(storeTicket.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    dueDate: storeTicket.due_date ? new Date(storeTicket.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined,
+    tags: [],
+    activities: [],
+  }
+}
 
 type FilterTab = "all" | "open" | "in_progress" | "waiting" | "resolved"
 
@@ -231,16 +71,29 @@ export function SupportTickets() {
 
   const slideTransition = useSlideTransition()
 
+  // Get tickets from store
+  const { tickets: storeTickets, fetchTickets, isLoading } = useTicketStore()
+
+  // Fetch tickets on mount
+  useEffect(() => {
+    fetchTickets()
+  }, [fetchTickets])
+
+  // Transform store tickets to display format
+  const displayTickets = useMemo(() => {
+    return storeTickets.map(transformStoreTicket)
+  }, [storeTickets])
+
   // Calculate counts
   const counts = useMemo(() => {
     return {
-      all: mockTickets.length,
-      open: mockTickets.filter((t) => t.status === "open").length,
-      in_progress: mockTickets.filter((t) => t.status === "in_progress").length,
-      waiting: mockTickets.filter((t) => t.status === "waiting").length,
-      resolved: mockTickets.filter((t) => t.status === "resolved").length,
+      all: displayTickets.length,
+      open: displayTickets.filter((t) => t.status === "open").length,
+      in_progress: displayTickets.filter((t) => t.status === "in_progress").length,
+      waiting: displayTickets.filter((t) => t.status === "waiting").length,
+      resolved: displayTickets.filter((t) => t.status === "resolved").length,
     }
-  }, [])
+  }, [displayTickets])
 
   const filterTabs: FilterTabConfig[] = [
     { id: "all", label: "All", icon: <Inbox className="w-4 h-4" />, count: counts.all },
@@ -252,11 +105,14 @@ export function SupportTickets() {
 
   // Filter tickets
   const filteredTickets = useMemo(() => {
-    let tickets = mockTickets
+    let tickets = displayTickets
 
     // Apply status filter
     if (activeFilter !== "all") {
-      tickets = tickets.filter((t) => t.status === activeFilter)
+      tickets = tickets.filter((t) => {
+        const status = t.status.replace(" ", "_")
+        return status === activeFilter
+      })
     }
 
     // Apply search
@@ -271,7 +127,7 @@ export function SupportTickets() {
     }
 
     return tickets
-  }, [activeFilter, searchQuery])
+  }, [activeFilter, searchQuery, displayTickets])
 
   const handleComment = (_content: string) => {
     // TODO: Implement comment creation API call

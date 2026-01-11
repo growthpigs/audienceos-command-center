@@ -8,7 +8,7 @@ import { create } from 'zustand'
 import { fetchWithCsrf } from '@/lib/csrf'
 import type { KnowledgeBaseDocument, DocumentSortField, SortDirection, CategoryWithCount } from '@/types/knowledge-base'
 import type { DocumentCategory, IndexStatus } from '@/types/database'
-import { getCategoryCounts, filterDocuments, sortDocuments } from '@/lib/mock-knowledge-base'
+import { getCategoryCounts, filterDocuments, sortDocuments } from '@/lib/constants/knowledge-base'
 
 interface DocumentFilters {
   query: string

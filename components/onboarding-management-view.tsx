@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { mockClients, type Client } from "@/lib/mock-data"
+import { useState, useEffect } from "react"
+import { type Client } from "@/types/pipeline"
+import { usePipelineStore, type Client as StoreClient } from "@/stores/pipeline-store"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,13 +18,47 @@ interface OnboardingManagementViewProps {
   onClientClick?: (client: Client) => void
 }
 
+// Transform store client to display client format
+// Note: onboardingData would come from a separate onboarding submissions API
+function transformStoreClient(storeClient: StoreClient): Client {
+  return {
+    id: storeClient.id,
+    name: storeClient.name,
+    logo: storeClient.name.charAt(0),
+    stage: storeClient.stage,
+    health: storeClient.health_status,
+    owner: (storeClient.owner as Client["owner"]) || "Brent",
+    daysInStage: storeClient.days_in_stage,
+    supportTickets: 0,
+    installTime: 0,
+    tier: "Core",
+    tasks: [],
+    comms: [],
+    // onboardingData would be populated from onboarding submissions API
+    // For now, clients fetched from pipeline don't have onboarding data
+    onboardingData: undefined,
+  }
+}
+
 export function OnboardingManagementView({ onClientClick }: OnboardingManagementViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const { toast } = useToast()
 
+  // Get clients from store
+  const { clients: storeClients, fetchClients, isLoading } = usePipelineStore()
+
+  // Fetch clients on mount
+  useEffect(() => {
+    fetchClients()
+  }, [fetchClients])
+
+  // Transform store clients to display format
+  const displayClients = storeClients.map(transformStoreClient)
+
   // Filter clients that have onboarding data
-  const onboardingClients = mockClients.filter((client) => client.onboardingData)
+  // Note: Until onboarding submissions API exists, this will be empty
+  const onboardingClients = displayClients.filter((client) => client.onboardingData)
 
   const filteredClients = onboardingClients.filter((client) => {
     const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase())

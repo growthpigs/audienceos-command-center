@@ -22,7 +22,7 @@ import {
   Check,
   Share2,
 } from "lucide-react"
-import { owners } from "@/lib/mock-data"
+import { owners } from "@/lib/constants/pipeline"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"

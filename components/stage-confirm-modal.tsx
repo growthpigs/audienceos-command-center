@@ -14,7 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { AlertTriangle, UserX } from "lucide-react"
-import type { Stage } from "@/lib/mock-data"
+import type { Stage } from "@/types/pipeline"
 
 interface StageConfirmModalProps {
   open: boolean

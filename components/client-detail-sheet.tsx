@@ -24,7 +24,8 @@ import {
   Video,
   Check,
 } from "lucide-react"
-import { type Client, type ZoomRecording, owners, mockRecordings } from "@/lib/mock-data"
+import { type Client, type ZoomRecording } from "@/types/pipeline"
+import { owners } from "@/lib/constants/pipeline"
 import { cn } from "@/lib/utils"
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
@@ -130,7 +131,8 @@ export function ClientDetailSheet({ client, open, onOpenChange, defaultTab = "ov
   }, [client, defaultTab])
 
   const owner = owners.find((o) => o.name === client?.owner)
-  const recordings: ZoomRecording[] = client?.id ? mockRecordings[client.id] || [] : []
+  // TODO: Replace with real recordings API when available
+  const recordings: ZoomRecording[] = []
 
   const handleVerifyAccess = (platform: "meta" | "gtm" | "shopify") => {
     setAccessStatus((prev) => ({ ...prev, [platform]: true }))
