@@ -1,4 +1,39 @@
 ---
+## Session 2026-01-11 - Auth Cookie Collision Fix
+
+### Completed
+**Critical Bug Fix: Sidebar Profile 401 Error (AUTH-002)**
+- ✅ **Root cause identified:** Supabase cookie collision
+  - Two auth cookies existed: `sb-qzkirjjrcblkqvhvalue-auth-token` (OLD) and `sb-ebxshdqfaqupnvpghodi-auth-token` (CURRENT)
+  - `getSessionFromCookie()` used `cookies.find()` which returned first match alphabetically = OLD cookie
+  - JWT from old project couldn't validate against new project → 401 error
+
+- ✅ **Fix applied:** `hooks/use-auth.ts:18-48`
+  - Added `getSupabaseProjectRef()` to extract project ID from `NEXT_PUBLIC_SUPABASE_URL`
+  - Modified `getSessionFromCookie()` to specifically look for `sb-{projectRef}-auth-token`
+  - Falls back to generic search only if project ref unavailable
+  - Commit: 69c4881
+
+- ✅ **Verified working:**
+  - Sidebar now shows "Roderic Andrews / admin"
+  - Console shows no 401 errors
+  - Edge case tested: Added stale cookie back → app still works (fix prevents collision)
+
+### Documentation Updated
+- ✅ CLAUDE.md - Added to "Known Issues & Fixes" section
+- ✅ CLAUDE.md - Added to "Current Sprint" completed items
+- ✅ RUNBOOK.md - Added troubleshooting entry (AUTH-002)
+- ✅ handover.md - This entry
+
+### DU Accounting
+- Investigation + fix: 0.5 DU
+- Documentation: 0.25 DU
+- **Total: 0.75 DU**
+
+### Key Learning (IMPORTANT - DO NOT REGRESS)
+**Supabase auth cookies are project-specific.** When switching projects, old cookies persist. The auth code MUST be project-aware to avoid using stale tokens. The fix in `hooks/use-auth.ts` extracts the project ref from the URL and specifically looks for that cookie.
+
+---
 ## Session 2026-01-08 09:00
 
 ### Completed

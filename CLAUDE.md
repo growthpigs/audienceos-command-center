@@ -343,6 +343,29 @@ Some components have been specifically requested by Chase and must be preserved:
 
 ---
 
+### Supabase Cookie Collision (Fixed 2026-01-11)
+
+**Issue:** Sidebar showing "Loading... Member" instead of user profile, console error `[AUTH] Profile fetch failed: 401`
+
+**Root Cause:** When switching between Supabase projects, old auth cookies persist in browser. The `getSessionFromCookie()` function in `hooks/use-auth.ts` used `cookies.find()` which returned the **first** matching `sb-*-auth-token` cookie alphabetically. If a stale cookie from an old project exists, it gets used instead of the current project's cookie, causing 401 errors because the JWT was signed by a different project.
+
+**Cookies involved:**
+- `sb-qzkirjjrcblkqvhvalue-auth-token` (OLD - from deleted project)
+- `sb-ebxshdqfaqupnvpghodi-auth-token` (CURRENT - valid)
+
+**Fixed in Commit:** 69c4881
+
+**Fix Applied:**
+1. Added `getSupabaseProjectRef()` function to extract project ID from `NEXT_PUBLIC_SUPABASE_URL`
+2. Modified `getSessionFromCookie()` to look for specific cookie `sb-{projectRef}-auth-token`
+3. Falls back to generic search only if project ref unavailable
+
+**File Changed:** `hooks/use-auth.ts:18-48`
+
+**Prevention:** This fix ensures the auth hook always uses the cookie matching the current Supabase project, even if stale cookies from other projects exist in the browser.
+
+---
+
 ## Deployment
 
 **Production URL:** [audienceos-agro-bros.vercel.app](https://audienceos-agro-bros.vercel.app)
@@ -386,7 +409,13 @@ mcp__chi-gateway__sheets_append({
    - Affects: pipeline, dashboard, tickets, settings, knowledge base, automations
    - Commit: 59cd1e6
 
-2. **Settings Features Wire-up** (Previous sprint)
+2. **Supabase Cookie Collision Fix** - Fixed sidebar profile showing "Loading..." (2026-01-11)
+   - Root cause: Stale cookie from old Supabase project being used instead of current
+   - Fix: `getSessionFromCookie()` now specifically looks for `sb-{projectRef}-auth-token`
+   - File: `hooks/use-auth.ts:18-48`
+   - Commit: 69c4881
+
+3. **Settings Features Wire-up** (Previous sprint)
    - SET-006: UserEdit - Connected profile form to PATCH /users/[id]
    - SET-007: UserDelete - Added confirmation dialog + DELETE /users/[id]
    - SET-008: AgencyProfile - Connected agency settings form to real API

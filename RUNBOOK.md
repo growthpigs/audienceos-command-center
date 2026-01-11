@@ -574,6 +574,29 @@ npm run dev
 npx tsc --noEmit
 ```
 
+---
+
+**Sidebar shows "Loading... Member" instead of user profile (AUTH-002, Fixed 2026-01-11):**
+
+*Symptoms:* User profile in sidebar footer shows "Loading... Member" and never loads the actual user name. Console shows `[AUTH] Profile fetch failed: 401`.
+
+*Root cause:* Supabase cookie collision. When switching between Supabase projects (e.g., during migration), old auth cookies persist in browser. The `getSessionFromCookie()` function in `hooks/use-auth.ts` was using `cookies.find()` which returned the **first** matching `sb-*-auth-token` cookie alphabetically. If a stale cookie from an old project exists, it gets used instead of the current project's cookie.
+
+*Resolution:*
+```bash
+# Option 1: Clear browser cookies for the site
+# In Chrome DevTools > Application > Cookies > Clear all
+
+# Option 2: Delete specific stale cookie via console
+document.cookie = 'sb-OLD_PROJECT_REF-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+```
+
+*Prevention:* Fixed in commit `69c4881`. The auth hook now extracts the project ref from `NEXT_PUBLIC_SUPABASE_URL` and specifically looks for `sb-{projectRef}-auth-token` cookie, ignoring stale cookies from other projects.
+
+*File:* `hooks/use-auth.ts:18-48`
+
+---
+
 ### Getting Help
 
 - **GitHub Issues**: [Report bugs and request features](https://github.com/growthpigs/audienceos-command-center/issues)
