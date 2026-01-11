@@ -1,19 +1,28 @@
 /**
- * REGRESSION TEST: Mock Mode Detection Protection
+ * REGRESSION TEST: Mock Mode Removal Verification
  *
- * Ensures mock mode ONLY activates with explicit NEXT_PUBLIC_MOCK_MODE=true.
- * Previously, URL patterns could accidentally trigger mock mode.
+ * Ensures NO mock mode code exists in API routes.
+ * All routes must query Supabase directly with no mock fallback.
  *
- * VULNERABILITY FIXED: 2026-01-10
- * This test will FAIL if the vulnerability is reintroduced.
+ * VULNERABILITY FIXED: 2026-01-10 (explicit flag only)
+ * MOCK CODE REMOVED: 2026-01-11 (complete removal)
+ * This test will FAIL if mock code is reintroduced.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'fs'
 
 describe('Mock Mode Detection Security', () => {
-  it('MUST only use explicit NEXT_PUBLIC_MOCK_MODE flag', () => {
+  it('MUST NOT contain any mock mode code in API routes', () => {
     const clientsRoute = fs.readFileSync('./app/api/v1/clients/route.ts', 'utf8')
+
+    // MUST NOT contain isMockMode function
+    const hasMockModeFunction = clientsRoute.includes('isMockMode')
+    expect(hasMockModeFunction).toBe(false)
+
+    // MUST NOT have any MOCK_ constants
+    const hasMockConstants = clientsRoute.includes('MOCK_')
+    expect(hasMockConstants).toBe(false)
 
     // MUST NOT use URL-based detection (was the vulnerability)
     const usesUrlDetection = clientsRoute.includes("url.includes('placeholder')")
@@ -22,13 +31,9 @@ describe('Mock Mode Detection Security', () => {
     const usesEmptyUrlCheck = clientsRoute.includes("url === ''")
     expect(usesEmptyUrlCheck).toBe(false)
 
-    // MUST only check explicit flag
-    const usesExplicitFlag = clientsRoute.includes("NEXT_PUBLIC_MOCK_MODE === 'true'")
-    expect(usesExplicitFlag).toBe(true)
-
     console.log('╔═══════════════════════════════════════════════════════════╗')
-    console.log('║ SECURITY CHECK PASSED: Mock mode requires explicit flag   ║')
-    console.log('║ NEXT_PUBLIC_MOCK_MODE=true is the only trigger.           ║')
+    console.log('║ SECURITY CHECK PASSED: No mock code in API routes         ║')
+    console.log('║ All routes query Supabase directly with no mock fallback. ║')
     console.log('╚═══════════════════════════════════════════════════════════╝')
   })
 
