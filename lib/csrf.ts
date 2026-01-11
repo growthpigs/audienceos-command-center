@@ -66,6 +66,7 @@ export async function fetchWithCsrf(
   return fetch(url, {
     ...options,
     headers,
+    credentials: 'include',
   })
 }
 

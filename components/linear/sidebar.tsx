@@ -116,13 +116,15 @@ export function LinearSidebar({
   activeView,
   onViewChange,
   onQuickCreate,
-  user = {
-    name: "Brent",
-    role: "CEO",
-    initials: "B",
-    color: "bg-emerald-500",
-  },
+  user,
 }: LinearSidebarProps) {
+  // Fallback user when profile hasn't loaded
+  const displayUser = user ?? {
+    name: "Loading...",
+    role: "Member",
+    initials: "...",
+    color: "bg-gray-400",
+  }
   const [collapsed, setCollapsed] = useState(false)
   const prefersReducedMotion = useReducedMotion()
 
@@ -307,9 +309,9 @@ export function LinearSidebar({
             onClick={() => onViewChange("settings")}
             className="w-full flex justify-center p-2 hover:bg-secondary rounded transition-colors cursor-pointer"
           >
-            <Avatar className={cn("h-8 w-8", user.color)}>
-              <AvatarFallback className={cn(user.color, "text-sm font-medium text-white")}>
-                {user.initials}
+            <Avatar className={cn("h-8 w-8", displayUser.color)}>
+              <AvatarFallback className={cn(displayUser.color, "text-sm font-medium text-white")}>
+                {displayUser.initials}
               </AvatarFallback>
             </Avatar>
           </button>
@@ -318,14 +320,14 @@ export function LinearSidebar({
             onClick={() => onViewChange("settings")}
             className="flex items-center gap-3 w-full hover:bg-secondary rounded-md p-2 -m-2 transition-colors cursor-pointer"
           >
-            <Avatar className={cn("h-8 w-8", user.color)}>
-              <AvatarFallback className={cn(user.color, "text-sm font-medium text-white")}>
-                {user.initials}
+            <Avatar className={cn("h-8 w-8", displayUser.color)}>
+              <AvatarFallback className={cn(displayUser.color, "text-sm font-medium text-white")}>
+                {displayUser.initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.role}</p>
+              <p className="text-sm font-medium text-foreground truncate">{displayUser.name}</p>
+              <p className="text-xs text-muted-foreground truncate">{displayUser.role}</p>
             </div>
           </button>
         )}

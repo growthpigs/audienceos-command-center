@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -20,36 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useOnboardingStore } from "@/stores/onboarding-store"
-import { SEOPreviewCard } from "./seo-preview-card"
 import { Mail, Info, Loader2, Globe } from "lucide-react"
 import { toast } from "sonner"
 
 interface TriggerOnboardingModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-}
-
-interface SEOSummary {
-  total_keywords: number
-  traffic_value: number
-  top_10_keywords: number
-  competitors_count: number
-  domain_rank: number | null
-  backlinks: number | null
-}
-
-interface Competitor {
-  domain: string
-  intersecting_keywords: number
-}
-
-interface SEOEnrichmentResult {
-  success: boolean
-  domain: string
-  summary: SEOSummary | null
-  competitors: Competitor[]
-  fetched_at: string
-  error?: string
 }
 
 export function TriggerOnboardingModal({ open, onOpenChange }: TriggerOnboardingModalProps) {
@@ -60,60 +36,6 @@ export function TriggerOnboardingModal({ open, onOpenChange }: TriggerOnboarding
   const [clientWebsite, setClientWebsite] = useState("")
   const [clientTier, setClientTier] = useState<"Core" | "Enterprise">("Core")
 
-  // SEO enrichment state
-  const [seoLoading, setSeoLoading] = useState(false)
-  const [seoData, setSeoData] = useState<SEOEnrichmentResult | null>(null)
-  const [debouncedWebsite, setDebouncedWebsite] = useState("")
-
-  // Debounce website input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedWebsite(clientWebsite)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [clientWebsite])
-
-  // Fetch SEO data when debounced website changes
-  const fetchSeoData = useCallback(async (website: string) => {
-    if (!website || website.trim().length < 4) {
-      setSeoData(null)
-      return
-    }
-
-    setSeoLoading(true)
-    try {
-      const response = await fetch("/api/v1/seo/enrich", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ domain: website }),
-      })
-
-      const data: SEOEnrichmentResult = await response.json()
-      setSeoData(data)
-    } catch (error) {
-      console.error("SEO fetch error:", error)
-      setSeoData({
-        success: false,
-        domain: website,
-        summary: null,
-        competitors: [],
-        fetched_at: new Date().toISOString(),
-        error: "Failed to fetch SEO data",
-      })
-    } finally {
-      setSeoLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (debouncedWebsite) {
-      fetchSeoData(debouncedWebsite)
-    } else {
-      setSeoData(null)
-    }
-  }, [debouncedWebsite, fetchSeoData])
-
   // Reset form when modal closes
   useEffect(() => {
     if (!open) {
@@ -121,7 +43,6 @@ export function TriggerOnboardingModal({ open, onOpenChange }: TriggerOnboarding
       setClientEmail("")
       setClientWebsite("")
       setClientTier("Core")
-      setSeoData(null)
     }
   }, [open])
 
@@ -138,11 +59,6 @@ export function TriggerOnboardingModal({ open, onOpenChange }: TriggerOnboarding
       client_email: clientEmail,
       client_tier: clientTier,
       website_url: clientWebsite || undefined,
-      seo_data: seoData?.success ? {
-        summary: seoData.summary,
-        competitors: seoData.competitors,
-        fetched_at: seoData.fetched_at,
-      } : undefined,
     })
 
     if (instance) {
@@ -208,21 +124,7 @@ export function TriggerOnboardingModal({ open, onOpenChange }: TriggerOnboarding
                 onChange={(e) => setClientWebsite(e.target.value)}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              We'll automatically fetch SEO intelligence for this domain
-            </p>
           </div>
-
-          {/* SEO Preview Card */}
-          {(seoLoading || seoData) && (
-            <SEOPreviewCard
-              loading={seoLoading}
-              domain={seoData?.domain || clientWebsite}
-              summary={seoData?.summary || null}
-              competitors={seoData?.competitors || []}
-              error={seoData?.success === false ? seoData.error : undefined}
-            />
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="clientTier">Client Tier</Label>
