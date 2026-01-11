@@ -12,17 +12,38 @@ const isMockMode = () => {
 }
 
 /**
+ * Extract Supabase project reference from URL
+ * URL format: https://{projectRef}.supabase.co
+ */
+function getSupabaseProjectRef(): string | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const match = url.match(/https:\/\/([^.]+)\.supabase\.co/)
+  return match ? match[1] : null
+}
+
+/**
  * Parse session from Supabase auth cookie
  * Cookie format: sb-{projectRef}-auth-token = base64-{base64EncodedJSON}
  *
  * NOTE: This bypasses the hanging getSession() issue in @supabase/ssr
  * discovered 2026-01-05. Direct cookie reading is reliable.
+ *
+ * IMPORTANT: We specifically look for the cookie matching the current project
+ * to avoid using stale cookies from old/different Supabase projects.
+ * Fixed 2026-01-11 after cookie collision caused 401 errors.
  */
 function getSessionFromCookie(): { access_token: string; refresh_token: string; user: User } | null {
   if (typeof document === 'undefined') return null
 
+  const projectRef = getSupabaseProjectRef()
   const cookies = document.cookie.split(';').map(c => c.trim())
-  const authCookie = cookies.find(c => c.startsWith('sb-') && c.includes('-auth-token='))
+
+  // Look for the specific cookie matching current project
+  // This prevents using stale cookies from other Supabase projects
+  const expectedCookieName = projectRef ? `sb-${projectRef}-auth-token=` : null
+  const authCookie = expectedCookieName
+    ? cookies.find(c => c.startsWith(expectedCookieName))
+    : cookies.find(c => c.startsWith('sb-') && c.includes('-auth-token='))
 
   if (!authCookie) return null
 
