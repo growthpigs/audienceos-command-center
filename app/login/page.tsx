@@ -2,10 +2,31 @@
 
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+
+// AudienceOS Logo with gradient (matches website)
+function AudienceOSLogo({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex items-center justify-center gap-0.5 ${className}`}>
+      <span className="text-3xl font-bold tracking-tight text-white">audience</span>
+      <span
+        className="text-3xl font-bold tracking-tight"
+        style={{
+          background: "linear-gradient(90deg, #a855f7 0%, #ec4899 50%, #06b6d4 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        OS
+      </span>
+    </div>
+  )
+}
 
 function LoginForm() {
   const [email, setEmail] = useState("")
@@ -72,16 +93,16 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-start justify-center bg-slate-950 pt-24">
       <div className="w-full max-w-sm space-y-6 p-8">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">AudienceOS</h1>
-          <p className="text-muted-foreground">Sign in to Command Center</p>
+        <div className="space-y-1 text-center">
+          <AudienceOSLogo />
+          <p className="text-sm text-slate-400">Sign in to Command Center</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-slate-300">Email</Label>
             <Input
               id="email"
               data-testid="login-email"
@@ -91,11 +112,20 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              className="bg-slate-900 border-slate-700 text-slate-100"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-slate-300">Password</Label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-slate-400 hover:text-white transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Input
               id="password"
               data-testid="login-password"
@@ -104,16 +134,17 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
+              className="bg-slate-900 border-slate-700 text-slate-100"
             />
           </div>
 
           {error && (
-            <div data-testid="login-error" className="text-sm text-red-500 bg-red-50 p-3 rounded-md">
+            <div data-testid="login-error" className="text-sm text-red-400 bg-red-950/50 border border-red-900 p-3 rounded-md">
               {error}
             </div>
           )}
 
-          <Button type="submit" data-testid="login-submit" className="w-full" disabled={loading || googleLoading}>
+          <Button type="submit" data-testid="login-submit" className="w-full bg-white text-slate-900 hover:bg-slate-100" disabled={loading || googleLoading}>
             {loading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
@@ -121,10 +152,10 @@ function LoginForm() {
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+            <span className="w-full border-t border-slate-700" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            <span className="bg-slate-950 px-2 text-slate-500">Or continue with</span>
           </div>
         </div>
 
@@ -132,7 +163,7 @@ function LoginForm() {
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          className="w-full border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white"
           onClick={handleGoogleSignIn}
           disabled={loading || googleLoading}
         >
@@ -156,6 +187,14 @@ function LoginForm() {
           </svg>
           {googleLoading ? "Redirecting to Google..." : "Sign in with Google"}
         </Button>
+
+        {/* Create Account Link */}
+        <p className="text-center text-sm text-slate-400">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="text-white hover:underline">
+            Create account
+          </Link>
+        </p>
       </div>
     </div>
   )
@@ -165,10 +204,10 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-start justify-center bg-slate-950 pt-24">
         <div className="w-full max-w-sm space-y-6 p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+          <p className="text-slate-400">Loading...</p>
         </div>
       </div>
     }>
