@@ -30,6 +30,17 @@
 // Services
 export { permissionService, PermissionService } from './permission-service';
 export { roleService, RoleService } from './role-service';
+export { auditService, AuditService } from './audit-service';
+
+// Audit types
+export type {
+  AuditActionType,
+  AuditResult,
+  PermissionCheckLog,
+  RoleChangeLog,
+  ClientAccessLog,
+  PermissionChangeLog,
+} from './audit-service';
 
 // Types
 export type {

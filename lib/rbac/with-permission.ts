@@ -13,7 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createRouteHandlerClient, getAuthenticatedUser } from '@/lib/supabase';
 import { permissionService } from './permission-service';
-import { enforceClientAccess, logClientAccessAttempt } from './client-access';
+import { auditService } from './audit-service';
+import { enforceClientAccess } from './client-access';
 import type { ResourceType, PermissionAction } from './types';
 
 export interface PermissionRequirement {
@@ -158,19 +159,22 @@ export function withPermission(requirement: PermissionRequirement) {
         );
 
         if (!hasPermission) {
-          // Log permission denial for audit
-          console.warn('[withPermission] Permission denied:', {
-            userId: user.id,
-            email: user.email,
+          // Log permission denial to audit_log table (US-015)
+          auditService.logPermissionCheck({
             agencyId,
-            roleId: appUser.role_id,
-            isOwner: appUser.is_owner,
-            required: `${requirement.resource}:${requirement.action}`,
-            clientId,
-            path: req.nextUrl.pathname,
-            method: req.method,
-            timestamp: new Date().toISOString(),
-          });
+            userId: user.id,
+            resource: requirement.resource,
+            action: requirement.action,
+            resourceId: clientId,
+            result: 'denied',
+            reason: `Missing permission: ${requirement.resource}:${requirement.action}`,
+            metadata: {
+              path: req.nextUrl.pathname,
+              method: req.method,
+              roleId: appUser.role_id,
+              isOwner: appUser.is_owner,
+            },
+          }, supabase);
 
           return NextResponse.json(
             {
@@ -194,20 +198,19 @@ export function withPermission(requirement: PermissionRequirement) {
           );
 
           if (!hasClientAccess) {
-            // Log client access denial for audit
-            logClientAccessAttempt(user.id, clientId, requirement.action, false, {
-              path: req.nextUrl.pathname,
-              method: req.method,
-              roleId: appUser.role_id,
-            });
-
-            console.warn('[withPermission] Client access denied for member:', {
+            // Log client access denial to audit_log table (US-015)
+            auditService.logClientAccess({
+              agencyId,
               userId: user.id,
               clientId,
               action: requirement.action,
-              path: req.nextUrl.pathname,
-              method: req.method,
-            });
+              result: 'denied',
+              metadata: {
+                path: req.nextUrl.pathname,
+                method: req.method,
+                roleId: appUser.role_id,
+              },
+            }, supabase);
 
             return NextResponse.json(
               {
@@ -219,8 +222,18 @@ export function withPermission(requirement: PermissionRequirement) {
             );
           }
 
-          // Log successful access for audit
-          logClientAccessAttempt(user.id, clientId, requirement.action, true);
+          // Log successful client access to audit_log table (US-015)
+          auditService.logClientAccess({
+            agencyId,
+            userId: user.id,
+            clientId,
+            action: requirement.action,
+            result: 'allowed',
+            metadata: {
+              path: req.nextUrl.pathname,
+              method: req.method,
+            },
+          }, supabase);
         }
 
         // 5. Permission granted - attach user to request and call handler

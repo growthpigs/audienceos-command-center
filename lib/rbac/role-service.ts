@@ -12,6 +12,7 @@
 
 import { createClient as createBrowserClient } from '@/lib/supabase';
 import { permissionService } from './permission-service';
+import { auditService } from './audit-service';
 import type {
   Role,
   ResourceType,
@@ -326,10 +327,17 @@ class RoleService {
   ): Promise<void> {
     const client = supabase || createBrowserClient();
 
-    // Get current user
+    // Get current user with role name for audit logging
     const { data: user, error: userError } = await client
       .from('user')
-      .select('id, is_owner, role_id')
+      .select(`
+        id,
+        is_owner,
+        role_id,
+        role:role_id (
+          name
+        )
+      `)
       .eq('id', userId)
       .eq('agency_id', agencyId)
       .single();
@@ -337,6 +345,11 @@ class RoleService {
     if (userError || !user) {
       throw new Error('User not found');
     }
+
+    // Capture old role name for audit log (US-016)
+    const oldRoleName = user.role && !Array.isArray(user.role)
+      ? (user.role as any).name
+      : null;
 
     // Cannot change Owner role if they're the only owner
     if (user.is_owner) {
@@ -405,6 +418,19 @@ class RoleService {
 
     // Invalidate user's permission cache
     permissionService.invalidateCache(userId, agencyId);
+
+    // Log role change to audit_log table (US-016)
+    auditService.logRoleChange({
+      agencyId,
+      userId: changedBy,
+      targetUserId: userId,
+      oldRole: oldRoleName,
+      newRole: newRole.name,
+      metadata: {
+        newRoleId: newRoleId,
+        oldRoleId: user.role_id,
+      },
+    }, client);
   }
 
   /**
@@ -428,7 +454,7 @@ class RoleService {
     // Check role exists and is not system
     const { data: role, error: roleError } = await client
       .from('role')
-      .select('is_system')
+      .select('is_system, name')
       .eq('id', roleId)
       .eq('agency_id', agencyId)
       .single();
@@ -440,6 +466,29 @@ class RoleService {
     if (role.is_system) {
       throw new Error('Cannot modify system role permissions');
     }
+
+    // Get existing permissions for audit comparison (US-016)
+    const { data: existingPerms } = await client
+      .from('role_permission')
+      .select(`
+        permission:permission_id (
+          resource,
+          action
+        )
+      `)
+      .eq('role_id', roleId);
+
+    const existingPermSet = new Set(
+      existingPerms?.map(p =>
+        p.permission && !Array.isArray(p.permission)
+          ? `${(p.permission as any).resource}:${(p.permission as any).action}`
+          : null
+      ).filter(Boolean) || []
+    );
+
+    const newPermSet = new Set(
+      permissions.map(p => `${p.resource}:${p.action}`)
+    );
 
     // Delete existing permissions
     await client.from('role_permission').delete().eq('role_id', roleId);
@@ -492,6 +541,39 @@ class RoleService {
     if (users) {
       for (const user of users) {
         permissionService.invalidateCache(user.id, agencyId);
+      }
+    }
+
+    // Log permission changes to audit_log table (US-016)
+    // Log revoked permissions
+    for (const permKey of existingPermSet) {
+      if (!newPermSet.has(permKey as string)) {
+        const [resource, action] = (permKey as string).split(':');
+        auditService.logPermissionChange({
+          agencyId,
+          userId: grantedBy,
+          roleId,
+          resource,
+          action,
+          granted: false,
+          metadata: { roleName: role.name },
+        }, client);
+      }
+    }
+
+    // Log granted permissions
+    for (const permKey of newPermSet) {
+      if (!existingPermSet.has(permKey)) {
+        const [resource, action] = permKey.split(':');
+        auditService.logPermissionChange({
+          agencyId,
+          userId: grantedBy,
+          roleId,
+          resource,
+          action,
+          granted: true,
+          metadata: { roleName: role.name },
+        }, client);
       }
     }
   }
