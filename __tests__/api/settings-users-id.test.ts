@@ -72,13 +72,13 @@ describe('API: /api/v1/settings/users/[id]', () => {
       const { getAuthenticatedUser } = await import('@/lib/supabase')
       const { createErrorResponse } = await import('@/lib/security')
 
-      vi.mocked(getAuthenticatedUser).mockReturnValueOnce({
+      vi.mocked(getAuthenticatedUser).mockResolvedValueOnce({
         user: null,
         agencyId: null,
         error: 'Not authenticated',
       })
 
-      const result = await getAuthenticatedUser(mockSupabaseClient)
+      const result = await getAuthenticatedUser(mockSupabaseClient as any)
       expect(result.user).toBeNull()
 
       const errorResponse = createErrorResponse(401, 'Unauthorized')
@@ -89,7 +89,7 @@ describe('API: /api/v1/settings/users/[id]', () => {
       const { withCsrfProtection } = await import('@/lib/security')
 
       expect(withCsrfProtection).toBeDefined()
-      expect(vi.mocked(withCsrfProtection)()).toBeNull()
+      expect(vi.mocked(withCsrfProtection)(null as any)).toBeNull()
     })
 
     it('should require admin role to modify users', async () => {
@@ -235,7 +235,7 @@ describe('API: /api/v1/settings/users/[id]', () => {
         return null
       }
 
-      const { user } = await getAuthenticatedUser(mockSupabaseClient)
+      const { user } = await getAuthenticatedUser(mockSupabaseClient as any)
       expect(checkSelfDeletion('admin-123', user!.id)?.status).toBe(400)
       expect(checkSelfDeletion('other-user', user!.id)).toBeNull()
     })

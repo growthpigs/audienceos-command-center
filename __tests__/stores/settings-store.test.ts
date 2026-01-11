@@ -95,14 +95,14 @@ describe('Settings Store', () => {
       expect(useSettingsStore.getState().activeSection).toBe('team_members')
     })
 
-    it('should handle invitations section', async () => {
+    it('should handle security section', async () => {
       const { useSettingsStore } = await import('@/stores/settings-store')
 
       act(() => {
-        useSettingsStore.getState().setActiveSection('invitations')
+        useSettingsStore.getState().setActiveSection('security')
       })
 
-      expect(useSettingsStore.getState().activeSection).toBe('invitations')
+      expect(useSettingsStore.getState().activeSection).toBe('security')
     })
 
     it('should handle integrations section', async () => {
@@ -123,14 +123,13 @@ describe('Settings Store', () => {
       const mockAgency = {
         id: 'agency-123',
         name: 'Test Agency',
+        slug: 'test-agency',
         logo_url: null,
+        domain: null,
         timezone: 'America/Los_Angeles',
         business_hours: { start: '09:00', end: '17:00' },
         pipeline_stages: ['Lead', 'Live'],
-        health_thresholds: { yellow: 7, red: 14 },
-        ai_config: null,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        health_thresholds: { yellow_days: 7, red_days: 14 },
       }
 
       act(() => {
@@ -148,14 +147,13 @@ describe('Settings Store', () => {
         useSettingsStore.getState().setAgencySettings({
           id: 'agency-123',
           name: 'Original Name',
+          slug: 'original-name',
           logo_url: null,
+          domain: null,
           timezone: 'UTC',
           business_hours: null,
           pipeline_stages: [],
-          health_thresholds: null,
-          ai_config: null,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
+          health_thresholds: { yellow_days: 7, red_days: 14 },
         })
       })
 
@@ -203,6 +201,7 @@ describe('Settings Store', () => {
       const mockMembers = [
         {
           id: 'user-1',
+          agency_id: 'agency-123',
           email: 'test1@test.com',
           first_name: 'Test',
           last_name: 'User',
@@ -231,6 +230,7 @@ describe('Settings Store', () => {
 
       const newMember = {
         id: 'user-2',
+        agency_id: 'agency-123',
         email: 'new@test.com',
         first_name: 'New',
         last_name: 'Member',
@@ -256,6 +256,7 @@ describe('Settings Store', () => {
         useSettingsStore.getState().setTeamMembers([
           {
             id: 'user-1',
+            agency_id: 'agency-123',
             email: 'test@test.com',
             first_name: 'Original',
             last_name: 'Name',
@@ -284,6 +285,7 @@ describe('Settings Store', () => {
         useSettingsStore.getState().setTeamMembers([
           {
             id: 'user-1',
+            agency_id: 'agency-123',
             email: 'test1@test.com',
             first_name: 'Test1',
             last_name: 'User',
@@ -295,6 +297,7 @@ describe('Settings Store', () => {
           },
           {
             id: 'user-2',
+            agency_id: 'agency-123',
             email: 'test2@test.com',
             first_name: 'Test2',
             last_name: 'User',
@@ -322,6 +325,7 @@ describe('Settings Store', () => {
         useSettingsStore.getState().setTeamMembers([
           {
             id: 'user-1',
+            agency_id: 'agency-123',
             email: 'test@test.com',
             first_name: 'Test',
             last_name: 'User',
@@ -435,6 +439,7 @@ describe('Settings Store', () => {
         useSettingsStore.getState().setTeamMembers([
           {
             id: 'user-1',
+            agency_id: 'agency-123',
             email: 'test@test.com',
             first_name: 'Test',
             last_name: 'User',
@@ -487,14 +492,13 @@ describe('Settings Store', () => {
         useSettingsStore.getState().setAgencySettings({
           id: 'agency-1',
           name: 'Test',
+          slug: 'test',
           logo_url: null,
+          domain: null,
           timezone: 'UTC',
           business_hours: null,
           pipeline_stages: [],
-          health_thresholds: null,
-          ai_config: null,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z',
+          health_thresholds: { yellow_days: 7, red_days: 14 },
         })
       })
 
@@ -517,6 +521,7 @@ describe('Settings Store', () => {
           email_alerts: true,
           email_tickets: false,
           email_mentions: true,
+          digest_mode: false,
           muted_clients: [],
         },
         ai: {
@@ -548,6 +553,7 @@ describe('Settings Store', () => {
             email_alerts: true,
             email_tickets: true,
             email_mentions: true,
+            digest_mode: false,
             muted_clients: [],
           },
           ai: {

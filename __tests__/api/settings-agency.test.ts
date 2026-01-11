@@ -67,8 +67,8 @@ describe('API: /api/v1/settings/agency', () => {
     it('should return agency settings for authenticated user', async () => {
       const { getAuthenticatedUser } = await import('@/lib/supabase')
 
-      // Verify mock is set up
-      const result = await getAuthenticatedUser(mockSupabaseClient)
+      // Verify mock is set up (cast to any for test mocking)
+      const result = await getAuthenticatedUser(mockSupabaseClient as any)
       expect(result.agencyId).toBe('agency-123')
       expect(result.user?.id).toBe('user-123')
     })
@@ -77,14 +77,14 @@ describe('API: /api/v1/settings/agency', () => {
       const { getAuthenticatedUser } = await import('@/lib/supabase')
       const { createErrorResponse } = await import('@/lib/security')
 
-      // Simulate unauthenticated
-      vi.mocked(getAuthenticatedUser).mockReturnValueOnce({
+      // Simulate unauthenticated (use mockResolvedValueOnce for async function)
+      vi.mocked(getAuthenticatedUser).mockResolvedValueOnce({
         user: null,
         agencyId: null,
         error: 'Not authenticated',
       })
 
-      const result = await getAuthenticatedUser(mockSupabaseClient)
+      const result = await getAuthenticatedUser(mockSupabaseClient as any)
       expect(result.user).toBeNull()
 
       // Verify error response would be created

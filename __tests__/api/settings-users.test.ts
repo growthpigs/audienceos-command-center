@@ -52,14 +52,14 @@ describe('API: /api/v1/settings/users', () => {
       const { getAuthenticatedUser } = await import('@/lib/supabase')
       const { createErrorResponse } = await import('@/lib/security')
 
-      // Simulate unauthenticated
-      vi.mocked(getAuthenticatedUser).mockReturnValueOnce({
+      // Simulate unauthenticated (use mockResolvedValueOnce for async)
+      vi.mocked(getAuthenticatedUser).mockResolvedValueOnce({
         user: null,
         agencyId: null,
         error: 'Not authenticated',
       })
 
-      const result = await getAuthenticatedUser(mockSupabaseClient)
+      const result = await getAuthenticatedUser(mockSupabaseClient as any)
       expect(result.user).toBeNull()
 
       const errorResponse = createErrorResponse(401, 'Unauthorized')
@@ -85,7 +85,7 @@ describe('API: /api/v1/settings/users', () => {
 
       expect(withRateLimit).toBeDefined()
       // Mock returns null = not rate limited
-      expect(vi.mocked(withRateLimit)()).toBeNull()
+      expect(vi.mocked(withRateLimit)(null as any)).toBeNull()
     })
 
     it('should validate pagination parameters', () => {
@@ -132,7 +132,7 @@ describe('API: /api/v1/settings/users', () => {
     it('should return users scoped to agency', async () => {
       const { getAuthenticatedUser } = await import('@/lib/supabase')
 
-      const result = await getAuthenticatedUser(mockSupabaseClient)
+      const result = await getAuthenticatedUser(mockSupabaseClient as any)
       expect(result.agencyId).toBe('agency-123')
       // In real implementation, query uses eq('agency_id', agencyId)
     })
@@ -198,7 +198,7 @@ describe('API: /api/v1/settings/users', () => {
       const { withCsrfProtection } = await import('@/lib/security')
 
       expect(withCsrfProtection).toBeDefined()
-      expect(vi.mocked(withCsrfProtection)()).toBeNull()
+      expect(vi.mocked(withCsrfProtection)(null as any)).toBeNull()
     })
 
     it('should require admin role to invite users', async () => {
