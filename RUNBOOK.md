@@ -193,6 +193,45 @@ Before saying "this is fixed" or "this should work":
 
 **Current Work:** All development uses the `main` branch in `/Users/rodericandrews/_PAI/projects/command_center_audience_OS`.
 
+## Database & Project Naming Convention
+
+**Best Practice:** Use `{project}-{environment}` pattern consistently.
+
+| Pattern | Example | Use When |
+|---------|---------|----------|
+| `{project}-prod` | `audienceos-prod` | Production database |
+| `{project}-staging` | `audienceos-staging` | Staging/preview |
+| `{project}-dev` | `audienceos-dev` | Shared development |
+| `{project}-local` | `audienceos-local` | Local dev (optional) |
+
+### ❌ Anti-Patterns (Never Use)
+
+| Bad Name | Why It's Bad |
+|----------|--------------|
+| `audienceos-fresh` | What's next? `fresher`? `freshest`? |
+| `audienceos-new` | Implies old one exists but doesn't indicate purpose |
+| `audienceos-v2` | Version numbers belong in code, not infra names |
+| `audienceos-test` | Ambiguous - staging? QA? unit tests? |
+| `audienceos-2026` | Dates become stale, confusing after time passes |
+
+### Current Supabase Projects
+
+| Project | Environment | URL |
+|---------|-------------|-----|
+| `command_center` | Development | `https://qzkirjjrcblkqvhvalue.supabase.co` |
+
+**Note:** This project was set up by Trevor during OAuth implementation (2026-01-09). The naming should eventually follow `audienceos-{env}` pattern when we consolidate.
+
+### Migration Plan
+
+When consolidating databases:
+1. Create new `audienceos-prod` project
+2. Migrate schema with `supabase db dump` / `push`
+3. Update all env vars in Vercel
+4. Deprecate old project names
+
+---
+
 ## Environment Variables
 
 Copy `.env.example` to `.env.local` and configure:
@@ -554,11 +593,16 @@ npx tsc --noEmit
   - Team members list cleanup (8 test accounts deleted)
   - Database integrity verified (FK constraints handled)
 
+### ✅ Complete (Trevor + Roderic collaboration - 2026-01-11)
+- [x] Google OAuth login integration (Trevor: backend, Roderic: UI)
+- [x] OAuth callback handler (`app/auth/callback/route.ts`)
+- [x] "Sign in with Google" button on login page
+- [x] Supabase provider configured with Google Cloud Console credentials
+- [x] All env vars updated in Vercel (5 credentials across all environments)
+
 ### ⏳ In Progress (Trevor)
 - [ ] Signup page implementation
-- [ ] Google OAuth login integration
-- [ ] OAuth callback handler
-- [ ] Google SSO toggle functionality
+- [ ] Google SSO toggle functionality in settings
 
 ### 🎯 In Progress (Roderic)
 - [ ] Chat interface refinements
@@ -575,6 +619,6 @@ npx tsc --noEmit
 
 ---
 
-*Last updated: 2026-01-09*
+*Last updated: 2026-01-11*
 *Project Phase: Production (Vercel) | Active Development*
-*Current Focus: Authentication (Trevor) + Core Features (Roderic)*
+*Current Focus: OAuth Complete | Signup (Trevor) + Core Features (Roderic)*
