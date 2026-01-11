@@ -1,6 +1,41 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 
+// Use vi.hoisted to ensure these are available before vi.mock runs
+const {
+  mockStoreState,
+  mockSetIntegrations,
+  mockSetLoading,
+  mockAddIntegration,
+  mockUpdateIntegration,
+  mockRemoveIntegration,
+} = vi.hoisted(() => {
+  const mockSetIntegrations = vi.fn()
+  const mockSetLoading = vi.fn()
+  const mockAddIntegration = vi.fn()
+  const mockUpdateIntegration = vi.fn()
+  const mockRemoveIntegration = vi.fn()
+
+  const mockStoreState = {
+    integrations: [] as any[],
+    isLoading: false,
+    setIntegrations: mockSetIntegrations,
+    setLoading: mockSetLoading,
+    addIntegration: mockAddIntegration,
+    updateIntegration: mockUpdateIntegration,
+    removeIntegration: mockRemoveIntegration,
+  }
+
+  return {
+    mockStoreState,
+    mockSetIntegrations,
+    mockSetLoading,
+    mockAddIntegration,
+    mockUpdateIntegration,
+    mockRemoveIntegration,
+  }
+})
+
 // Mock Supabase client
 vi.mock('@/lib/supabase', () => ({
   createClient: vi.fn(() => ({
@@ -12,39 +47,40 @@ vi.mock('@/lib/supabase', () => ({
   })),
 }))
 
-// Mock the store
+// Mock the store with getState() support (Zustand pattern)
 vi.mock('@/lib/store', () => ({
-  useIntegrationsStore: vi.fn((selector) => {
-    const state = {
-      integrations: mockStoreIntegrations,
-      isLoading: mockIsLoading,
-      setIntegrations: vi.fn(),
-      setLoading: vi.fn(),
-      addIntegration: vi.fn(),
-      updateIntegration: vi.fn(),
-      removeIntegration: vi.fn(),
+  useIntegrationsStore: Object.assign(
+    vi.fn((selector?: (state: any) => any) => {
+      return selector ? selector(mockStoreState) : mockStoreState
+    }),
+    {
+      getState: () => mockStoreState,
     }
-    return selector ? selector(state) : state
-  }),
+  ),
 }))
 
 // Mock fetch globally
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// Store mock state
-let mockStoreIntegrations: any[] = []
-let mockIsLoading = false
-
 import { useIntegrations } from '@/hooks/use-integrations'
 import { useIntegrationsStore } from '@/lib/store'
 
 describe('useIntegrations', () => {
   beforeEach(() => {
-    mockStoreIntegrations = []
-    mockIsLoading = false
+    mockStoreState.integrations = []
+    mockStoreState.isLoading = false
     vi.clearAllMocks()
     mockFetch.mockReset()
+    // Default mock for fetch to prevent undefined errors
+    mockFetch.mockResolvedValue({
+      json: () => Promise.resolve({ data: [] }),
+    })
+    mockSetIntegrations.mockReset()
+    mockSetLoading.mockReset()
+    mockAddIntegration.mockReset()
+    mockUpdateIntegration.mockReset()
+    mockRemoveIntegration.mockReset()
   })
 
   afterEach(() => {
@@ -53,18 +89,18 @@ describe('useIntegrations', () => {
 
   describe('initial state', () => {
     it('should return integrations from store', () => {
-      mockStoreIntegrations = [
+      mockStoreState.integrations = [
         { id: 'int-1', provider: 'slack', is_connected: true },
         { id: 'int-2', provider: 'gmail', is_connected: false },
       ]
 
       const { result } = renderHook(() => useIntegrations())
 
-      expect(result.current.integrations).toEqual(mockStoreIntegrations)
+      expect(result.current.integrations).toEqual(mockStoreState.integrations)
     })
 
     it('should return isLoading state from store', () => {
-      mockIsLoading = true
+      mockStoreState.isLoading = true
 
       const { result } = renderHook(() => useIntegrations())
 
@@ -102,24 +138,11 @@ describe('useIntegrations', () => {
         json: () => Promise.resolve({ data: mockData }),
       })
 
-      const mockSetIntegrations = vi.fn()
-      vi.mocked(useIntegrationsStore).mockImplementation((selector) => {
-        const state = {
-          integrations: [],
-          isLoading: false,
-          setIntegrations: mockSetIntegrations,
-          setLoading: vi.fn(),
-          addIntegration: vi.fn(),
-          updateIntegration: vi.fn(),
-          removeIntegration: vi.fn(),
-        }
-        return selector ? selector(state) : state
-      })
-
       renderHook(() => useIntegrations())
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalled()
+        expect(mockSetIntegrations).toHaveBeenCalledWith(mockData)
       })
     })
 
@@ -128,26 +151,11 @@ describe('useIntegrations', () => {
         json: () => Promise.resolve({ data: null }),
       })
 
-      const mockSetIntegrations = vi.fn()
-      const mockSetLoading = vi.fn()
-      vi.mocked(useIntegrationsStore).mockImplementation((selector) => {
-        const state = {
-          integrations: [],
-          isLoading: false,
-          setIntegrations: mockSetIntegrations,
-          setLoading: mockSetLoading,
-          addIntegration: vi.fn(),
-          updateIntegration: vi.fn(),
-          removeIntegration: vi.fn(),
-        }
-        if (selector) return selector(state)
-        return { ...state, getState: () => state }
-      })
-
       renderHook(() => useIntegrations())
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalled()
+        expect(mockSetIntegrations).toHaveBeenCalledWith([])
       })
     })
 
@@ -171,22 +179,6 @@ describe('useIntegrations', () => {
         json: () => Promise.resolve({ data: [] }),
       })
 
-      const mockSetIntegrations = vi.fn()
-      const mockSetLoading = vi.fn()
-      vi.mocked(useIntegrationsStore).mockImplementation((selector) => {
-        const state = {
-          integrations: [],
-          isLoading: false,
-          setIntegrations: mockSetIntegrations,
-          setLoading: mockSetLoading,
-          addIntegration: vi.fn(),
-          updateIntegration: vi.fn(),
-          removeIntegration: vi.fn(),
-        }
-        if (selector) return selector(state)
-        return { ...state, getState: () => state }
-      })
-
       const { result } = renderHook(() => useIntegrations())
 
       // Call refetch
@@ -205,22 +197,16 @@ describe('useIntegrations', () => {
 
   describe('Supabase realtime subscription', () => {
     it('should set up realtime channel on mount', async () => {
-      const mockChannel = vi.fn().mockReturnValue({
-        on: vi.fn().mockReturnThis(),
-        subscribe: vi.fn(),
-      })
-      const mockRemoveChannel = vi.fn()
-
-      vi.mocked(await import('@/lib/supabase')).createClient = vi.fn(() => ({
-        channel: mockChannel,
-        removeChannel: mockRemoveChannel,
-      })) as any
-
       mockFetch.mockResolvedValueOnce({
         json: () => Promise.resolve({ data: [] }),
       })
 
       const { unmount } = renderHook(() => useIntegrations())
+
+      // The hook should initialize and fetch
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalled()
+      })
 
       // Unmount should cleanup
       unmount()
