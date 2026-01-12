@@ -136,13 +136,23 @@ function CommandCenterContent() {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Initialize activeView from URL param or default to dashboard
+  // Initialize activeView from URL pathname or default to dashboard
+  // Supports both /dashboard style paths and legacy ?view= params
   const [activeView, setActiveView] = useState<LinearView>(() => {
-    const viewParam = searchParams.get("view")
     const validViews: LinearView[] = ["dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings"]
+
+    // First check pathname (new style: /onboarding)
+    const pathView = pathname.split('/')[1] // Get first segment after /
+    if (pathView && validViews.includes(pathView as LinearView)) {
+      return pathView as LinearView
+    }
+
+    // Fallback to query param (legacy style: ?view=onboarding)
+    const viewParam = searchParams.get("view")
     if (viewParam && validViews.includes(viewParam as LinearView)) {
       return viewParam as LinearView
     }
+
     return "dashboard"
   })
   const [selectedClient, setSelectedClient] = useState<MinimalClient | null>(null)
@@ -196,15 +206,30 @@ function CommandCenterContent() {
     fetchClients()
   }, [fetchClients])
 
-  // Sync activeView from URL param after hydration
-  // This handles direct URL navigation (e.g., ?view=settings)
+  // Sync activeView from URL pathname or query param after hydration
+  // This handles direct URL navigation (e.g., /settings or ?view=settings)
   useEffect(() => {
-    const viewParam = searchParams.get("view")
     const validViews: LinearView[] = ["dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings"]
+
+    // First check pathname (new style: /onboarding)
+    const pathView = pathname.split('/')[1]
+    if (pathView && validViews.includes(pathView as LinearView)) {
+      setActiveView(pathView as LinearView)
+      return
+    }
+
+    // Fallback to query param (legacy style: ?view=onboarding)
+    const viewParam = searchParams.get("view")
     if (viewParam && validViews.includes(viewParam as LinearView)) {
       setActiveView(viewParam as LinearView)
+      return
     }
-  }, [searchParams])
+
+    // Default to dashboard if on root path
+    if (pathname === '/') {
+      setActiveView('dashboard')
+    }
+  }, [pathname, searchParams])
 
   /**
    * Handle client stage change via drag-and-drop
@@ -538,15 +563,10 @@ function CommandCenterContent() {
           // Clear intelligence initial props when navigating normally
           setIntelligenceInitialSection(undefined)
           setIntelligenceInitialCartridgeTab(undefined)
-          // Sync view to URL for shareable links and browser history
-          const params = new URLSearchParams(searchParams.toString())
-          if (view === 'dashboard') {
-            params.delete('view') // Dashboard is default, keep URL clean
-          } else {
-            params.set('view', view)
-          }
-          const newUrl = params.toString() ? `/?${params.toString()}` : '/'
-          router.replace(newUrl, { scroll: false })
+          // Navigate to path-based URL (e.g., /onboarding, /settings)
+          // Dashboard uses root path for clean URLs
+          const newPath = view === 'dashboard' ? '/' : `/${view}`
+          router.push(newPath, { scroll: false })
         }}
         onQuickCreate={() => setCommandPaletteOpen(true)}
         user={sidebarUser}
