@@ -22,6 +22,36 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
 /**
+ * Type guards for Supabase relation objects
+ * Supabase returns foreign key relations as unknown objects - these help type them safely
+ */
+interface RoleRelation {
+  name?: string;
+  hierarchy_level?: number | null;
+}
+
+interface PermissionRelation {
+  resource?: string;
+  action?: string;
+}
+
+function isRoleRelation(obj: unknown): obj is RoleRelation {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    !Array.isArray(obj)
+  );
+}
+
+function isPermissionRelation(obj: unknown): obj is PermissionRelation {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    !Array.isArray(obj)
+  );
+}
+
+/**
  * Input for creating a new custom role
  */
 export interface CreateRoleInput {
@@ -347,8 +377,8 @@ class RoleService {
     }
 
     // Capture old role name for audit log (US-016)
-    const oldRoleName = user.role && !Array.isArray(user.role)
-      ? (user.role as any).name
+    const oldRoleName = isRoleRelation(user.role)
+      ? user.role.name ?? null
       : null;
 
     // Cannot change Owner role if they're the only owner
@@ -393,11 +423,11 @@ class RoleService {
 
     // Hierarchy check: can only assign roles at or below own level
     if (
-      newRole.hierarchy_level &&
-      changer?.role?.hierarchy_level &&
-      !Array.isArray(changer.role)
+      newRole.hierarchy_level != null &&
+      isRoleRelation(changer?.role) &&
+      changer.role.hierarchy_level != null
     ) {
-      const changerLevel = (changer.role as any).hierarchy_level;
+      const changerLevel = changer.role.hierarchy_level;
       if (newRole.hierarchy_level < changerLevel) {
         throw new Error('Cannot assign a role higher than your own');
       }
@@ -480,8 +510,8 @@ class RoleService {
 
     const existingPermSet = new Set(
       existingPerms?.map(p =>
-        p.permission && !Array.isArray(p.permission)
-          ? `${(p.permission as any).resource}:${(p.permission as any).action}`
+        isPermissionRelation(p.permission)
+          ? `${p.permission.resource}:${p.permission.action}`
           : null
       ).filter(Boolean) || []
     );

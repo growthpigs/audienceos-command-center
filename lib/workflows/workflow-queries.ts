@@ -1,8 +1,10 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck - Temporary: Generated Database types have Insert type mismatch after RBAC migration
 /**
  * Workflow Database Queries
  * Server-side database operations for workflows
+ *
+ * NOTE: JSON columns (triggers, actions, trigger_data) require `as unknown as` casts
+ * because Supabase generates Json type (unknown) but we use typed interfaces.
+ * This is the correct pattern - NOT a type safety gap.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -221,8 +223,15 @@ export async function getWorkflowRuns(
     .order('started_at', { ascending: false })
 
   if (filters?.status?.length) {
-    // Cast to WorkflowStatus[] since DB only has running/completed/failed
-    query = query.in('status', filters.status as WorkflowStatus[])
+    // DB status column only has 'running' | 'completed' | 'failed'
+    // Filter out any statuses that don't exist in DB schema
+    const validStatuses = filters.status.filter(
+      (s): s is 'running' | 'completed' | 'failed' =>
+        s === 'running' || s === 'completed' || s === 'failed'
+    )
+    if (validStatuses.length > 0) {
+      query = query.in('status', validStatuses)
+    }
   }
 
   if (filters?.startDate) {
@@ -332,7 +341,9 @@ export async function completeWorkflowRun(
   if (runError) return { error: runError }
 
   // Use raw SQL for increment (Supabase doesn't have built-in increment)
-  const { error: statsError } = await supabase.rpc('increment_workflow_stats', {
+  // NOTE: This RPC function may not exist in generated types - that's expected
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: statsError } = await (supabase.rpc as any)('increment_workflow_stats', {
     workflow_id: workflowId,
     increment_run: 1,
     increment_success: success ? 1 : 0,
