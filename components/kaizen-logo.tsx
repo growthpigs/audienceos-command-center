@@ -4,9 +4,9 @@
 export function KaizenLogo({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
-      {/* Kaizen Symbol */}
+      {/* Kaizen Symbol - 20% bigger */}
       <svg
-        height={32}
+        height={38}
         viewBox="0 0 60 40"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -17,7 +17,7 @@ export function KaizenLogo({ className = "" }: { className?: string }) {
         <polygon points="50,8 60,20 50,32 50,24 42,20 50,16" fill="#B91C1C" />
       </svg>
       <span
-        className="text-2xl font-medium tracking-tight"
+        className="text-3xl font-medium tracking-tight"
         style={{ color: '#B91C1C' }}
       >
         kaizen
