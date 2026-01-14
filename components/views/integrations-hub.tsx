@@ -12,6 +12,7 @@ import { integrationIcons } from "@/components/linear/integration-card"
 import { IntegrationSettingsModal } from "@/components/linear/integration-settings-modal"
 import { IntegrationConnectModal } from "@/components/linear/integration-connect-modal"
 import { useIntegrations } from "@/hooks/use-integrations"
+import { fetchWithCsrf } from "@/lib/csrf"
 import { toast } from "sonner"
 import type { Database } from "@/types/database"
 
@@ -349,10 +350,8 @@ export function IntegrationsHub() {
 
     // For OAuth-based providers (gmail), redirect to OAuth flow
     try {
-      const res = await fetch('/api/v1/integrations', {
+      const res = await fetchWithCsrf('/api/v1/integrations', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider }),
       })
 
