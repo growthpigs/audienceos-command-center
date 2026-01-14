@@ -22,6 +22,8 @@ interface ReplyComposerProps {
   onSend: (content: string) => Promise<void>
   onGenerateDraft: (tone: 'professional' | 'casual') => Promise<string>
   onClose: () => void
+  isSending?: boolean
+  isGeneratingDraft?: boolean
   className?: string
 }
 
@@ -32,16 +34,22 @@ export function ReplyComposer({
   onSend,
   onGenerateDraft,
   onClose,
+  isSending,
+  isGeneratingDraft,
   className,
 }: ReplyComposerProps) {
   const [content, setContent] = useState('')
   const [tone, setTone] = useState<DraftTone>('professional')
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isSending, setIsSending] = useState(false)
+  const [localIsGenerating, setLocalIsGenerating] = useState(false)
+  const [localIsSending, setLocalIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Use props if provided, otherwise fall back to local state
+  const isGeneratingDraftState = isGeneratingDraft !== undefined ? isGeneratingDraft : localIsGenerating
+  const isSendingState = isSending !== undefined ? isSending : localIsSending
+
   const handleGenerateDraft = useCallback(async () => {
-    setIsGenerating(true)
+    setLocalIsGenerating(true)
     setError(null)
 
     try {
@@ -50,14 +58,14 @@ export function ReplyComposer({
     } catch (_err) {
       setError('Failed to generate draft. Please try again.')
     } finally {
-      setIsGenerating(false)
+      setLocalIsGenerating(false)
     }
   }, [tone, onGenerateDraft])
 
   const handleSend = useCallback(async () => {
     if (!content.trim()) return
 
-    setIsSending(true)
+    setLocalIsSending(true)
     setError(null)
 
     try {
@@ -67,7 +75,7 @@ export function ReplyComposer({
     } catch (_err) {
       setError('Failed to send reply. Please try again.')
     } finally {
-      setIsSending(false)
+      setLocalIsSending(false)
     }
   }, [content, onSend, onClose])
 
@@ -114,7 +122,7 @@ export function ReplyComposer({
         onKeyDown={handleKeyDown}
         placeholder="Type your reply..."
         className="min-h-[120px] resize-none mb-3"
-        disabled={isSending}
+        disabled={isSendingState}
       />
 
       {/* Error message */}
@@ -143,10 +151,10 @@ export function ReplyComposer({
             variant="outline"
             size="sm"
             onClick={handleGenerateDraft}
-            disabled={isGenerating || isSending}
+            disabled={isGeneratingDraftState || isSendingState}
             className="h-8"
           >
-            {isGenerating ? (
+            {isGeneratingDraftState ? (
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
             ) : (
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
@@ -159,10 +167,10 @@ export function ReplyComposer({
         <Button
           size="sm"
           onClick={handleSend}
-          disabled={!content.trim() || isSending}
+          disabled={!content.trim() || isSendingState}
           className="h-8"
         >
-          {isSending ? (
+          {isSendingState ? (
             <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
           ) : (
             <Send className="h-3.5 w-3.5 mr-1.5" />

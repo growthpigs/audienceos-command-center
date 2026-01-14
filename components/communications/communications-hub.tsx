@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { fetchWithCsrf } from '@/lib/csrf'
 import { Button } from '@/components/ui/button'
 import { CommunicationsTimeline } from './communications-timeline'
 import { SourceFilter } from './source-filter'
@@ -52,6 +54,9 @@ export function CommunicationsHub({ clientId: _clientId, className }: Communicat
 
   // Local state for reply composer
   const [replyingToId, setReplyingToId] = useState<string | null>(null)
+  const [isSendingReply, setIsSendingReply] = useState(false)
+  const [isGeneratingDraft, setIsGeneratingDraft] = useState(false)
+  const { toast } = useToast()
 
   // Get the message being replied to
   const replyingToMessage = useMemo(() => {
@@ -154,54 +159,108 @@ export function CommunicationsHub({ clientId: _clientId, className }: Communicat
     async (content: string) => {
       if (!replyingToMessage) return
 
-      // TODO: Call API to send reply
-      // For now, just mark as replied
-      markAsReplied(replyingToMessage.id, 'current-user-id')
+      setIsSendingReply(true)
+      try {
+        // Call API to send reply
+        const response = await fetchWithCsrf(
+          `/api/v1/communications/${replyingToMessage.id}/reply`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ content }),
+          }
+        )
 
-      // Optimistic update - add the sent message
-      const newMessage: CommunicationWithMeta = {
-        id: `temp-${Date.now()}`,
-        agency_id: replyingToMessage.agency_id,
-        client_id: replyingToMessage.client_id,
-        platform: replyingToMessage.platform,
-        thread_id: replyingToMessage.thread_id || replyingToMessage.id,
-        message_id: `sent-${Date.now()}`,
-        sender_email: null, // Current user
-        sender_name: 'You',
-        subject: replyingToMessage.subject
-          ? `Re: ${replyingToMessage.subject}`
-          : null,
-        content,
-        is_inbound: false,
-        needs_reply: false,
-        replied_at: null,
-        replied_by: null,
-        received_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        is_read: true,
-        reply_to_id: replyingToMessage.id,
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to send reply')
+        }
+
+        // Mark as replied in store
+        markAsReplied(replyingToMessage.id, 'current-user-id')
+
+        // Optimistic update - add the sent message
+        const newMessage: CommunicationWithMeta = {
+          id: `temp-${Date.now()}`,
+          agency_id: replyingToMessage.agency_id,
+          client_id: replyingToMessage.client_id,
+          platform: replyingToMessage.platform,
+          thread_id: replyingToMessage.thread_id || replyingToMessage.id,
+          message_id: `sent-${Date.now()}`,
+          sender_email: null, // Current user
+          sender_name: 'You',
+          subject: replyingToMessage.subject
+            ? `Re: ${replyingToMessage.subject}`
+            : null,
+          content,
+          is_inbound: false,
+          needs_reply: false,
+          replied_at: new Date().toISOString(),
+          replied_by: 'current-user-id',
+          received_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          is_read: true,
+          reply_to_id: replyingToMessage.id,
+        }
+
+        addCommunication(newMessage)
+
+        toast({
+          title: 'Reply sent',
+          description: 'Your reply has been sent successfully',
+        })
+
+        // Close reply composer
+        setReplyingToId(null)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to send reply'
+        toast({
+          title: 'Error sending reply',
+          description: errorMessage,
+          variant: 'destructive',
+        })
+      } finally {
+        setIsSendingReply(false)
       }
-
-      addCommunication(newMessage)
     },
-    [replyingToMessage, markAsReplied, addCommunication]
+    [replyingToMessage, markAsReplied, addCommunication, toast]
   )
 
   const handleGenerateDraft = useCallback(
     async (tone: 'professional' | 'casual'): Promise<string> => {
       if (!replyingToMessage) return ''
 
-      // TODO: Call AI API to generate draft
-      // For now, return a placeholder
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setIsGeneratingDraft(true)
+      try {
+        // Call API to generate AI draft reply
+        const response = await fetchWithCsrf('/api/v1/chat/generate-reply', {
+          method: 'POST',
+          body: JSON.stringify({
+            original_message: replyingToMessage.content,
+            subject: replyingToMessage.subject,
+            tone,
+          }),
+        })
 
-      if (tone === 'professional') {
-        return `Thank you for reaching out. I've reviewed your message and wanted to follow up.\n\nI'll look into this and get back to you with more details shortly.\n\nBest regards`
-      } else {
-        return `Hey! Thanks for the message.\n\nLet me check on this and I'll get back to you soon.\n\nCheers`
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to generate draft')
+        }
+
+        const { data } = await response.json()
+        return data.draft || ''
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to generate draft'
+        toast({
+          title: 'Error generating draft',
+          description: errorMessage,
+          variant: 'destructive',
+        })
+        return ''
+      } finally {
+        setIsGeneratingDraft(false)
       }
     },
-    [replyingToMessage]
+    [replyingToMessage, toast]
   )
 
   const handleMarkNeedsReply = useCallback(
@@ -211,16 +270,103 @@ export function CommunicationsHub({ clientId: _clientId, className }: Communicat
     [updateCommunication]
   )
 
-  const handleLoadMore = useCallback(() => {
-    // TODO: Implement pagination with cursor
-  }, [])
+  const handleLoadMore = useCallback(async () => {
+    try {
+      // Build query params with current filters and cursor
+      const params = new URLSearchParams()
+      if (filters.source !== 'all') {
+        params.set('source', filters.source)
+      }
+      if (filters.needsReply) {
+        params.set('needs_reply', 'true')
+      }
+
+      // Get the last received_at timestamp for pagination
+      if (communications.length > 0) {
+        const lastMessage = communications[communications.length - 1]
+        params.set('cursor', lastMessage.received_at)
+      }
+
+      const response = await fetch(
+        `/api/v1/communications?${params.toString()}`,
+        { credentials: 'include' }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to load more communications')
+      }
+
+      const { items, pagination } = await response.json()
+
+      // Add new items to communications
+      items.forEach((item: CommunicationWithMeta) => {
+        addCommunication(item)
+      })
+
+      // Update pagination state if available
+      if (!pagination.has_more) {
+        toast({
+          title: 'No more messages',
+          description: 'You have reached the end of the list.',
+        })
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load more'
+      toast({
+        title: 'Error loading more',
+        description: errorMessage,
+        variant: 'destructive',
+      })
+    }
+  }, [communications, filters, addCommunication, toast])
 
   const handleRefresh = useCallback(async () => {
     setLoading(true)
-    // TODO: Fetch fresh data from API
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setLoading(false)
-  }, [setLoading])
+    try {
+      // Build query params with current filters
+      const params = new URLSearchParams()
+      if (filters.source !== 'all') {
+        params.set('source', filters.source)
+      }
+      if (filters.needsReply) {
+        params.set('needs_reply', 'true')
+      }
+      // Set a reasonable limit for fresh data
+      params.set('limit', '50')
+
+      // Fetch fresh data from API
+      const response = await fetch(
+        `/api/v1/communications?${params.toString()}`,
+        { credentials: 'include' }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh communications')
+      }
+
+      const { items } = await response.json()
+
+      // Replace communications with fresh data
+      // Note: _setCommunications is available in the destructured store methods
+      if (typeof _setCommunications === 'function') {
+        _setCommunications(items as CommunicationWithMeta[])
+      }
+
+      toast({
+        title: 'Refreshed',
+        description: `Loaded ${items.length} messages`,
+      })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to refresh'
+      toast({
+        title: 'Error refreshing',
+        description: errorMessage,
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [filters, toast, setLoading, _setCommunications])
 
   // Filtered threads
   const filteredCommunications = useMemo(
@@ -308,6 +454,8 @@ export function CommunicationsHub({ clientId: _clientId, className }: Communicat
             onSend={handleSendReply}
             onGenerateDraft={handleGenerateDraft}
             onClose={handleCloseReply}
+            isSending={isSendingReply}
+            isGeneratingDraft={isGeneratingDraft}
           />
         </div>
       )}
