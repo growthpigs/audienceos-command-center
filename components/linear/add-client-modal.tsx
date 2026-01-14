@@ -40,10 +40,13 @@ const STAGES: Stage[] = [
   "Off-boarding",
 ]
 
-const HEALTH_STATUSES: { label: string; value: HealthStatus }[] = [
-  { label: "Green", value: "Green" },
-  { label: "Yellow", value: "Yellow" },
-  { label: "Red", value: "Red" },
+// API expects lowercase health status values
+type ApiHealthStatus = "green" | "yellow" | "red"
+
+const HEALTH_STATUSES: { label: string; value: ApiHealthStatus }[] = [
+  { label: "Green", value: "green" },
+  { label: "Yellow", value: "yellow" },
+  { label: "Red", value: "red" },
 ]
 
 export function AddClientModal({
@@ -61,8 +64,19 @@ export function AddClientModal({
   const [contactEmail, setContactEmail] = useState("")
   const [contactName, setContactName] = useState("")
   const [stage, setStage] = useState<Stage>("Onboarding")
-  const [healthStatus, setHealthStatus] = useState<string>("green")
+  const [healthStatus, setHealthStatus] = useState<ApiHealthStatus>("green")
   const [notes, setNotes] = useState("")
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setName("")
+    setContactEmail("")
+    setContactName("")
+    setStage("Onboarding")
+    setHealthStatus("green")
+    setNotes("")
+    setError(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,8 +104,15 @@ export function AddClientModal({
       })
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || `Failed to create client (${response.status})`)
+        // Safely parse error response
+        let errorMsg = `Failed to create client (${response.status})`
+        try {
+          const data = await response.json()
+          if (data.error) errorMsg = data.error
+        } catch {
+          // Response wasn't JSON, use default error message
+        }
+        throw new Error(errorMsg)
       }
 
       toast({
@@ -100,14 +121,8 @@ export function AddClientModal({
         variant: "default",
       })
 
-      // Reset form
-      setName("")
-      setContactEmail("")
-      setContactName("")
-      setStage("Onboarding")
-      setHealthStatus("green")
-      setNotes("")
-      setError(null)
+      // Reset form and close
+      resetForm()
 
       // Refresh client list
       await fetchClients()
@@ -132,13 +147,7 @@ export function AddClientModal({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setName("")
-      setContactEmail("")
-      setContactName("")
-      setStage("Onboarding")
-      setHealthStatus("green")
-      setNotes("")
-      setError(null)
+      resetForm()
       onClose()
     }
   }
@@ -235,7 +244,7 @@ export function AddClientModal({
               </Label>
               <Select
                 value={healthStatus}
-                onValueChange={setHealthStatus}
+                onValueChange={(value) => setHealthStatus(value as ApiHealthStatus)}
                 disabled={isSubmitting}
               >
                 <SelectTrigger id="health" className="h-9">
@@ -243,7 +252,7 @@ export function AddClientModal({
                 </SelectTrigger>
                 <SelectContent>
                   {HEALTH_STATUSES.map((h) => (
-                    <SelectItem key={h.value} value={h.value.toLowerCase()}>
+                    <SelectItem key={h.value} value={h.value}>
                       {h.label}
                     </SelectItem>
                   ))}
