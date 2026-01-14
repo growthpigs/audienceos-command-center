@@ -124,6 +124,64 @@ mcp__chi-gateway__sheets_append({
 
 ---
 
+## ✅ Verification Commands (Runtime-First Checks)
+
+**CRITICAL RULE:** Never rely on file existence checks alone. Always execute runtime verification.
+
+### Build & Test Verification
+```bash
+# Verify build passes (REQUIRED before claiming fix)
+npm run build
+
+# Run specific test suite
+npm run test -- --run __tests__/api/
+
+# Check for TypeScript errors
+npx tsc --noEmit
+```
+
+### API Endpoint Verification
+```bash
+# Health check for production
+curl -s https://audienceos-agro-bros.vercel.app/api/v1/health | jq .status
+
+# Test client API (requires auth cookie)
+# Use Claude in Chrome to verify authenticated endpoints
+```
+
+### UI Component Verification (Claude in Chrome Required)
+```
+# For Add Client Modal:
+1. Navigate to Pipeline view
+2. Click "Add Client" button
+3. Verify modal opens with form fields
+4. Check Console for errors
+5. Take screenshot as evidence
+
+# For Command Palette:
+1. Press Cmd+K (Mac) or Ctrl+K (Windows)
+2. Verify navigation items appear (Go to Dashboard, Go to Pipeline, etc.)
+3. Test "New Client" quick action opens modal
+4. Verify actual navigation works (not just UI display)
+```
+
+### Data Contract Verification
+```bash
+# Check API response shape matches frontend expectations
+# Example: Verify stage enum values match
+grep -r "VALID_STAGES" app/api/v1/clients/
+
+# Frontend stage values must match backend EXACTLY
+# Known issue (fixed): "Off-Boarding" vs "Off-boarding" case mismatch
+```
+
+### Session Verification Commands Added: 2026-01-14
+- **Issue Found:** Frontend used `Off-boarding`, API validated against `Off-Boarding`
+- **Impact:** Clients silently got wrong stage on creation
+- **Verification:** Always grep both frontend and backend for enum values
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Build Fails After Changes
