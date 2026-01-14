@@ -1,27 +1,19 @@
 // TEMPORARY: Kaizen logo for demo (2026-01-14)
 // REVERT TO AudienceOS LOGO AFTER DEMO - see RUNBOOK.md
+// Also delete public/kaizen-logo.png when reverting
+
+import Image from "next/image"
 
 export function KaizenLogo({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex items-center justify-center gap-2 ${className}`}>
-      {/* Kaizen Symbol - 20% bigger */}
-      <svg
-        height={38}
-        viewBox="0 0 60 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect x="0" y="0" width="8" height="40" fill="#B91C1C" />
-        <rect x="0" y="0" width="35" height="8" fill="#B91C1C" />
-        <rect x="27" y="0" width="8" height="24" fill="#B91C1C" />
-        <polygon points="50,8 60,20 50,32 50,24 42,20 50,16" fill="#B91C1C" />
-      </svg>
-      <span
-        className="text-3xl font-medium tracking-tight"
-        style={{ color: '#B91C1C' }}
-      >
-        kaizen
-      </span>
+    <div className={`flex items-center justify-center ${className}`}>
+      <Image
+        src="/kaizen-logo.png"
+        alt="Kaizen"
+        width={160}
+        height={40}
+        priority
+      />
     </div>
   );
 }
