@@ -38,8 +38,15 @@ export async function sendOnboardingEmail({
   const resendApiKey = process.env.RESEND_API_KEY
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@audienceos.com'
 
+  console.log('📧 Sending onboarding email:', {
+    to,
+    from: fromEmail,
+    hasApiKey: !!resendApiKey,
+    environment: process.env.NODE_ENV,
+  })
+
   if (!resendApiKey) {
-    console.warn('RESEND_API_KEY not configured - onboarding email not sent')
+    console.error('❌ RESEND_API_KEY not configured - onboarding email not sent')
     return { success: false, error: 'Email service not configured' }
   }
 
@@ -171,32 +178,51 @@ Questions? Just reply to this email!
   `
 
   try {
+    const requestBody = {
+      from: fromEmail,
+      to,
+      subject: `Welcome to ${agencyName} - Let's Get Started!`,
+      html: htmlContent,
+      text: textContent,
+    }
+
+    console.log('📤 Making Resend API request:', {
+      url: 'https://api.resend.com/emails',
+      from: fromEmail,
+      to,
+      hasAuth: !!resendApiKey,
+    })
+
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${resendApiKey}`,
       },
-      body: JSON.stringify({
-        from: fromEmail,
-        to,
-        subject: `Welcome to ${agencyName} - Let's Get Started!`,
-        html: htmlContent,
-        text: textContent,
-      }),
+      body: JSON.stringify(requestBody),
     })
 
+    const responseData = await response.json()
+
     if (!response.ok) {
-      const error = await response.json()
-      console.error('Resend API error:', error)
-      return { success: false, error: error.message || 'Email delivery failed' }
+      console.error('❌ Resend API error (status ' + response.status + '):', {
+        error: responseData,
+        statusCode: response.status,
+        statusText: response.statusText,
+      })
+      return { success: false, error: responseData.message || 'Email delivery failed' }
     }
 
-    const result = await response.json()
-    console.log(`Onboarding email sent to ${to}:`, result.id)
-    return { success: true, messageId: result.id }
+    console.log(`✅ Onboarding email sent to ${to}:`, {
+      messageId: responseData.id,
+      timestamp: new Date().toISOString(),
+    })
+    return { success: true, messageId: responseData.id }
   } catch (error) {
-    console.error('Failed to send onboarding email:', error)
+    console.error('❌ Failed to send onboarding email:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Email service error'

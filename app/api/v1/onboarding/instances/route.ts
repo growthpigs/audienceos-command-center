@@ -286,6 +286,13 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
         : null
 
       // Send welcome email (non-blocking - don't fail onboarding if email fails)
+      console.log('📬 Triggering onboarding email send for:', {
+        client: sanitizedName,
+        email: sanitizedEmail,
+        agency: agencyName,
+        hasSeoDa: !!seoSummary,
+      })
+
       const emailResult = await sendOnboardingEmail({
         to: sanitizedEmail,
         clientName: sanitizedName,
@@ -295,7 +302,14 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
       })
 
       if (!emailResult.success) {
-        console.warn(`Onboarding email failed for ${sanitizedEmail}:`, emailResult.error)
+        console.warn(`⚠️  Onboarding email failed for ${sanitizedEmail}:`, {
+          error: emailResult.error,
+          messageId: emailResult.messageId,
+        })
+      } else {
+        console.log(`✅ Onboarding email queued for ${sanitizedEmail}:`, {
+          messageId: emailResult.messageId,
+        })
       }
 
       return NextResponse.json({

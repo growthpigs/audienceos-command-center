@@ -161,9 +161,20 @@ export function TriggerOnboardingModal({ open, onOpenChange }: TriggerOnboarding
     const instance = await triggerOnboarding(onboardingData)
 
     if (instance) {
-      toast.success("Onboarding link sent!", {
-        description: `An onboarding email has been sent to ${clientEmail}${seoData?.summary ? " with SEO data" : ""}`,
-      })
+      // Check if email was actually sent (instance includes email_sent flag)
+      const emailSent = (instance as any)?.email_sent !== false
+
+      if (emailSent) {
+        toast.success("Onboarding link sent!", {
+          description: `An onboarding email has been sent to ${clientEmail}${seoData?.summary ? " with SEO data" : ""}`,
+        })
+      } else {
+        // Email failed to send, but instance was created
+        toast.warning("Onboarding created, but email failed", {
+          description: `The onboarding link was created successfully, but we couldn't send an email to ${clientEmail}. You can copy the link manually from the Active Onboardings tab.`,
+          duration: 5000,
+        })
+      }
       onOpenChange(false)
     } else {
       toast.error("Failed to trigger onboarding")
