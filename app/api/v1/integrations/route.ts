@@ -86,13 +86,14 @@ export const POST = withPermission({ resource: 'integrations', action: 'manage' 
     // Check if integration already exists for this provider
     const { data: existing } = await supabase
       .from('integration')
-      .select('id')
+      .select('id, is_connected')
       .eq('provider', provider as IntegrationProvider)
-      .single()
+      .maybeSingle()
 
-    if (existing) {
+    // If already connected, return 409
+    if (existing?.is_connected) {
       return NextResponse.json(
-        { error: 'Integration already exists for this provider' },
+        { error: 'Integration already exists and is connected for this provider' },
         { status: 409 }
       )
     }
@@ -145,29 +146,37 @@ export const POST = withPermission({ resource: 'integrations', action: 'manage' 
     }
 
     // OAuth-based providers (Gmail/Google Workspace)
-    // Create integration record (disconnected state initially)
-    const { data: integration, error } = await supabase
-      .from('integration')
-      .insert({
-        agency_id: agencyId,
-        provider: provider as IntegrationProvider,
-        is_connected: false,
-        config: {},
-      })
-      .select()
-      .single()
+    let integrationId: string
 
-    if (error) {
-      return createErrorResponse(500, 'Failed to create integration')
+    if (existing) {
+      // Reuse existing disconnected integration
+      integrationId = existing.id
+    } else {
+      // Create new integration record (disconnected state initially)
+      const { data: integration, error } = await supabase
+        .from('integration')
+        .insert({
+          agency_id: agencyId,
+          provider: provider as IntegrationProvider,
+          is_connected: false,
+          config: {},
+        })
+        .select()
+        .single()
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to create integration')
+      }
+      integrationId = integration.id
     }
 
     // Generate OAuth URL based on provider
-    const oauthUrl = generateOAuthUrl(provider as IntegrationProvider, integration.id)
+    const oauthUrl = generateOAuthUrl(provider as IntegrationProvider, integrationId)
 
       return NextResponse.json({
         data: {
-          id: integration.id,
-          provider: integration.provider,
+          id: integrationId,
+          provider,
           oauthUrl,
         },
       })
