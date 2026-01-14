@@ -48,6 +48,8 @@ export interface OnboardingInstanceWithRelations extends OnboardingInstance {
     } | null
   }>
   portal_url?: string
+  email_sent?: boolean
+  email_message_id?: string
 }
 
 export interface Stage {

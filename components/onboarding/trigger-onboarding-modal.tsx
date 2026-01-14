@@ -162,7 +162,7 @@ export function TriggerOnboardingModal({ open, onOpenChange }: TriggerOnboarding
 
     if (instance) {
       // Check if email was actually sent (instance includes email_sent flag)
-      const emailSent = (instance as any)?.email_sent !== false
+      const emailSent = instance?.email_sent === true
 
       if (emailSent) {
         toast.success("Onboarding link sent!", {
