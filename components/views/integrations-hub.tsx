@@ -51,11 +51,11 @@ const integrationMetadata: Record<IntegrationProvider, IntegrationMetadata> = {
     category: "communication",
   },
   gmail: {
-    name: "Gmail",
-    description: "Sync client communications and track email threads",
+    name: "Google Workspace",
+    description: "Gmail, Calendar, Drive, Sheets & Docs - full workspace access",
     icon: integrationIcons.gmail,
     color: "bg-[#EA4335]",
-    category: "communication",
+    category: "productivity",
   },
   google_ads: {
     name: "Google Ads",

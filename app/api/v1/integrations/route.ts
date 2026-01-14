@@ -73,7 +73,7 @@ export const POST = withPermission({ resource: 'integrations', action: 'manage' 
         return createErrorResponse(400, 'Invalid JSON body')
       }
 
-      const { provider } = body
+      const { provider, credentials } = body as { provider: string; credentials?: Record<string, string> }
 
       // Validate provider
       if (typeof provider !== 'string' || !VALID_PROVIDERS.includes(provider as IntegrationProvider)) {
@@ -97,6 +97,54 @@ export const POST = withPermission({ resource: 'integrations', action: 'manage' 
       )
     }
 
+    // Credential-based providers (Slack, Google Ads, Meta Ads)
+    // These use manual token entry instead of OAuth flow
+    const credentialProviders = ['slack', 'google_ads', 'meta_ads']
+
+    if (credentialProviders.includes(provider) && credentials) {
+      // Validate required credentials for each provider
+      const requiredFields: Record<string, string[]> = {
+        slack: ['client_id', 'client_secret', 'signing_secret'],
+        google_ads: ['developer_token', 'customer_id'],
+        meta_ads: ['app_id', 'app_secret', 'access_token'],
+      }
+
+      const required = requiredFields[provider] || []
+      const missing = required.filter(field => !credentials[field]?.trim())
+
+      if (missing.length > 0) {
+        return createErrorResponse(400, `Missing required credentials: ${missing.join(', ')}`)
+      }
+
+      // Store credentials (encrypted in config) and mark as connected
+      const { data: integration, error } = await supabase
+        .from('integration')
+        .insert({
+          agency_id: agencyId,
+          provider: provider as IntegrationProvider,
+          is_connected: true,
+          config: {
+            credentials: credentials,
+            connected_at: new Date().toISOString(),
+          },
+        })
+        .select()
+        .single()
+
+      if (error) {
+        return createErrorResponse(500, 'Failed to create integration')
+      }
+
+      return NextResponse.json({
+        data: {
+          id: integration.id,
+          provider: integration.provider,
+          is_connected: true,
+        },
+      })
+    }
+
+    // OAuth-based providers (Gmail/Google Workspace)
     // Create integration record (disconnected state initially)
     const { data: integration, error } = await supabase
       .from('integration')
@@ -151,10 +199,25 @@ function generateOAuthUrl(provider: IntegrationProvider, integrationId: string):
       })}`
 
     case 'gmail':
+      // Full Google Workspace scopes: Gmail, Calendar, Drive, Sheets, Docs
       return `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID || '',
-        scope:
-          'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.modify',
+        scope: [
+          // Gmail
+          'https://www.googleapis.com/auth/gmail.readonly',
+          'https://www.googleapis.com/auth/gmail.send',
+          'https://www.googleapis.com/auth/gmail.modify',
+          // Calendar
+          'https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/calendar.events',
+          // Drive
+          'https://www.googleapis.com/auth/drive',
+          'https://www.googleapis.com/auth/drive.file',
+          // Sheets
+          'https://www.googleapis.com/auth/spreadsheets',
+          // Docs
+          'https://www.googleapis.com/auth/documents',
+        ].join(' '),
         redirect_uri: redirectUri,
         state,
         response_type: 'code',

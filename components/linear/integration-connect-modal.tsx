@@ -67,11 +67,11 @@ const providerCredentials: Record<IntegrationProvider, {
     ],
   },
   gmail: {
-    title: 'Connect Gmail',
-    description: 'Gmail uses Google OAuth. Click below to authorize access.',
+    title: 'Connect Google Workspace',
+    description: 'Connect Gmail, Calendar, Drive, Sheets & Docs with one click. Uses Google OAuth for secure access.',
     helpUrl: 'https://console.cloud.google.com/apis/credentials',
     helpLabel: 'Google Cloud Console',
-    fields: [], // Gmail uses OAuth, not manual credentials
+    fields: [], // Google Workspace uses OAuth, not manual credentials
   },
   google_ads: {
     title: 'Connect Google Ads',
