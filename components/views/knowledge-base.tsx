@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { useSlideTransition } from "@/hooks/use-slide-transition"
-import { toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { fetchWithCsrf } from "@/lib/csrf"
 import { cn } from "@/lib/utils"
 import {
@@ -29,6 +29,10 @@ import {
   Cloud,
   Users,
   ChevronDown,
+  Download,
+  Share2,
+  Trash2,
+  Loader2,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -36,6 +40,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Diiiploy - Knowledge Base Documents (initial data, will be replaced by API)
 const initialDocuments: Document[] = [
@@ -241,6 +255,9 @@ export function KnowledgeBase() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [isDriveLinkModalOpen, setIsDriveLinkModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("documents")
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   // Get unique clients for filter dropdown
   const availableClients = useMemo(() => getUniqueClients(documents), [documents])
@@ -413,22 +430,44 @@ export function KnowledgeBase() {
     const doc = documents.find(d => d.id === docId)
     if (!doc) return
 
+    setIsDownloading(true)
     try {
-      // TODO: Implement actual download via API
-      // For now, show toast
+      const response = await fetchWithCsrf(`/api/v1/documents/${docId}/download`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to download document')
+      }
+
+      const { data } = await response.json()
+
+      // Create a blob and trigger download
+      if (data.url) {
+        const link = document.createElement('a')
+        link.href = data.url
+        link.download = doc.name
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+
       toast({
         title: "Download started",
         description: doc.name,
       })
-      console.log("Download document:", docId)
-    } catch (_error) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to download document'
       toast({
         title: "Download failed",
-        description: "Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
+    } finally {
+      setIsDownloading(false)
     }
-  }, [documents])
+  }, [documents, toast])
 
   // Share a document
   const handleShare = useCallback(async (docId: string) => {
@@ -458,34 +497,47 @@ export function KnowledgeBase() {
     const doc = documents.find(d => d.id === docId)
     if (!doc) return
 
-    // TODO: Add confirmation dialog before deleting
+    // Show confirmation dialog
+    setShowDeleteModal(true)
+  }, [documents])
 
-    // Close preview panel
-    setSelectedDocument(null)
+  // Confirm delete
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedDocument) return
 
-    // Optimistic update
-    setDocuments(prev => prev.filter(d => d.id !== docId))
-
+    setIsDeleting(true)
     try {
-      // TODO: Implement actual delete via API
-      // const response = await fetchWithCsrf(`/api/v1/knowledge-base/${docId}`, {
-      //   method: 'DELETE',
-      // })
+      const response = await fetchWithCsrf(`/api/v1/documents/${selectedDocument.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to delete document')
+      }
+
+      // Close preview panel and modal
+      setSelectedDocument(null)
+      setShowDeleteModal(false)
+
+      // Remove from list
+      setDocuments(prev => prev.filter(d => d.id !== selectedDocument.id))
 
       toast({
         title: "Document deleted",
-        description: doc.name,
+        description: selectedDocument.name,
       })
-    } catch (_error) {
-      // Rollback on error
-      setDocuments(prev => [doc, ...prev])
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete document'
       toast({
         title: "Delete failed",
-        description: "Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
+    } finally {
+      setIsDeleting(false)
     }
-  }, [documents])
+  }, [selectedDocument, toast])
 
   // Add a document from Google Drive
   const handleAddDriveLink = useCallback(async (url: string, displayName?: string) => {
@@ -801,6 +853,8 @@ export function KnowledgeBase() {
               onShare={() => handleShare(selectedDocument.id)}
               onDelete={() => handleDelete(selectedDocument.id)}
               onToggleTraining={() => handleToggleTraining(selectedDocument.id)}
+              isDownloading={isDownloading}
+              isDeleting={isDeleting}
             />
           </motion.div>
         )}
@@ -818,6 +872,29 @@ export function KnowledgeBase() {
         onClose={() => setIsDriveLinkModalOpen(false)}
         onAddDriveLink={handleAddDriveLink}
       />
+
+      {/* Delete confirmation modal */}
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedDocument?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

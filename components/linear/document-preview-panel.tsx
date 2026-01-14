@@ -17,6 +17,7 @@ import {
   History,
   FolderInput,
   Check,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SendToAiButton } from "@/components/ui/send-to-ai-button"
@@ -59,6 +60,8 @@ interface DocumentPreviewPanelProps {
   onShare?: () => void
   onDelete?: () => void
   onToggleTraining?: () => void
+  isDownloading?: boolean
+  isDeleting?: boolean
   className?: string
 }
 
@@ -70,6 +73,8 @@ export function DocumentPreviewPanel({
   onShare,
   onDelete,
   onToggleTraining,
+  isDownloading,
+  isDeleting,
   className,
 }: DocumentPreviewPanelProps) {
   return (
@@ -101,9 +106,15 @@ export function DocumentPreviewPanel({
           </button>
           <button
             onClick={onDownload}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
+            disabled={isDownloading}
+            className={cn(
+              "p-1.5 rounded transition-colors",
+              isDownloading
+                ? "text-muted-foreground cursor-not-allowed"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+            )}
           >
-            <Download className="w-4 h-4" />
+            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           </button>
           <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer">
             <ExternalLink className="w-4 h-4" />
@@ -133,9 +144,9 @@ export function DocumentPreviewPanel({
                 Version history
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
+              <DropdownMenuItem onClick={onDelete} disabled={isDeleting} className="text-destructive">
+                {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                {isDeleting ? "Deleting..." : "Delete"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -287,17 +298,29 @@ export function DocumentPreviewPanel({
             </button>
             <button
               onClick={onDownload}
-              className="flex items-center justify-center gap-1.5 h-9 bg-secondary text-foreground rounded-md text-xs font-medium hover:bg-secondary/80 transition-colors cursor-pointer"
+              disabled={isDownloading}
+              className={cn(
+                "flex items-center justify-center gap-1.5 h-9 rounded-md text-xs font-medium transition-colors",
+                isDownloading
+                  ? "bg-secondary/50 text-muted-foreground cursor-not-allowed"
+                  : "bg-secondary text-foreground hover:bg-secondary/80 cursor-pointer"
+              )}
             >
-              <Download className="w-3.5 h-3.5" />
-              Download
+              {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              {isDownloading ? "Downloading..." : "Download"}
             </button>
             <button
               onClick={onDelete}
-              className="flex items-center justify-center gap-1.5 h-9 text-red-500 border border-red-500/30 hover:bg-red-500/10 rounded-md text-xs font-medium transition-colors cursor-pointer"
+              disabled={isDeleting}
+              className={cn(
+                "flex items-center justify-center gap-1.5 h-9 rounded-md text-xs font-medium transition-colors",
+                isDeleting
+                  ? "text-red-500/50 border border-red-500/20 cursor-not-allowed"
+                  : "text-red-500 border border-red-500/30 hover:bg-red-500/10 cursor-pointer"
+              )}
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {isDeleting ? <Loader2 className="w-3.5 h-3.5 mr-0.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              {isDeleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
