@@ -7,7 +7,7 @@
  * Created: 2026-01-15 (CTO Security Audit)
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { PermissionService } from '@/lib/rbac/permission-service'
 import type { EffectivePermission } from '@/lib/rbac/types'
 
