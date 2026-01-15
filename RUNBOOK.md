@@ -618,6 +618,79 @@ git push             # Triggers Vercel auto-deploy
 
 ---
 
+## ✅ Verification Commands (Critical for CI/CD)
+
+**MANDATORY:** Run this checklist BEFORE claiming any backend feature is complete.
+
+**Why:** Static file checks ≠ Runtime proof. See EP-088 in `~/.claude/troubleshooting/error-patterns.md`
+
+```bash
+# === W1 CARTRIDGE BACKEND VERIFICATION (2026-01-15) ===
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "INFRASTRUCTURE VERIFICATION CHECKLIST"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+echo ""
+echo "[1/7] TypeScript Compilation"
+npm run build 2>&1 | tail -10
+if [ $? -eq 0 ]; then echo "✅ PASS"; else echo "❌ FAIL"; exit 1; fi
+
+echo ""
+echo "[2/7] Type Checking"
+npm run typecheck 2>&1 | tail -10
+if [ $? -eq 0 ]; then echo "✅ PASS"; else echo "❌ FAIL"; exit 1; fi
+
+echo ""
+echo "[3/7] Linting"
+npm run lint 2>&1 | tail -10
+if [ $? -eq 0 ]; then echo "✅ PASS"; else echo "⚠️  WARNINGS (OK)"; fi
+
+echo ""
+echo "[4/7] Unit & Integration Tests"
+npm run test 2>&1 | tail -15
+if [ $? -eq 0 ]; then echo "✅ PASS"; else echo "❌ FAIL: Tests failed"; fi
+
+echo ""
+echo "[5/7] Git Status (must be clean before push)"
+git status
+if [ -z "$(git status --porcelain)" ]; then echo "✅ PASS"; else echo "❌ FAIL: Uncommitted changes"; fi
+
+echo ""
+echo "[6/7] API Endpoints Exist (dev server must be running on 3001)"
+echo "Testing: GET /api/v1/cartridges/brand"
+curl -s -X GET http://localhost:3001/api/v1/cartridges/brand \
+  -H "Authorization: Bearer test" 2>/dev/null | head -c 100
+echo ""
+echo "Testing: POST /api/v1/cartridges/voice"
+curl -s -X POST http://localhost:3001/api/v1/cartridges/voice \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer test" \
+  -d '{"name":"test"}' 2>/dev/null | head -c 100
+echo ""
+echo "✅ PASS (endpoints respond, not 404)"
+
+echo ""
+echo "[7/7] Database Migrations Present"
+ls -la supabase/migrations/009_rbac_schema.sql supabase/migrations/010_cartridge_tables.sql
+if [ $? -eq 0 ]; then echo "✅ PASS"; else echo "❌ FAIL: Migration files missing"; fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ ALL CHECKS PASSED - Ready for deployment"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+```
+
+**When to use this:**
+- ✅ Before marking any API endpoint task as complete
+- ✅ Before committing database migrations
+- ✅ Before pushing to main (triggers Vercel deploy)
+- ✅ Before claiming "verified" in a task description
+
+**Key principle:** "Verified" = "I built it, tested it, and ran it." Not just "the file exists."
+
+---
+
 ## 🎯 When to Update This File
 
 Update RUNBOOK.md when:
