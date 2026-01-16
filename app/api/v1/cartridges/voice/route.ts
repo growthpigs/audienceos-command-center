@@ -6,7 +6,8 @@ import { withRateLimit, withCsrfProtection, createErrorResponse } from '@/lib/se
 
 /**
  * GET /api/v1/cartridges/voice
- * Fetch voice cartridge for the authenticated user's agency
+ * List all voice cartridges for the authenticated user's agency
+ * Filters by type='voice' to ensure type safety
  */
 export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
   async (request: AuthenticatedRequest) => {
@@ -17,22 +18,26 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId
 
-      const { data, error } = await (supabase
-        .from('voice_cartridge' as any)
+      const { data: cartridges, error } = await supabase
+        .from('cartridges')
         .select('*')
         .eq('agency_id', agencyId)
+        .eq('type', 'voice')
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single() as any)
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('[Voice Cartridge GET] Query error:', error)
-        return createErrorResponse(500, 'Failed to fetch voice cartridge')
+      if (error) {
+        console.error('[Voice Cartridges GET] Query error:', error)
+        return createErrorResponse(500, 'Failed to fetch voice cartridges')
       }
 
-      return NextResponse.json(data || null)
+      return NextResponse.json({
+        success: true,
+        data: cartridges || [],
+        count: cartridges?.length || 0,
+      })
     } catch (error) {
-      console.error('[Voice Cartridge GET] Unexpected error:', error)
+      console.error('[Voice Cartridges GET] Unexpected error:', error)
       return createErrorResponse(500, 'Internal server error')
     }
   }
@@ -40,7 +45,9 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
 
 /**
  * POST /api/v1/cartridges/voice
- * Create or update voice cartridge with tone, style, and personality parameters
+ * Create new voice cartridge with tone, style, personality, vocabulary
+ * Validates required 'name' field
+ * All optional voice fields: voice_tone, voice_style, voice_personality, voice_vocabulary
  */
 export const POST = withPermission({ resource: 'cartridges', action: 'write' })(
   async (request: AuthenticatedRequest) => {
@@ -53,78 +60,42 @@ export const POST = withPermission({ resource: 'cartridges', action: 'write' })(
 
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId
+      const userId = request.user.id
 
       const body = await request.json()
+      const { name, voice_tone, voice_style, voice_personality, voice_vocabulary } = body
 
-      // Validation
-      if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
-        return createErrorResponse(400, 'Voice name is required')
+      // Validate required fields
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        return createErrorResponse(400, 'name is required')
       }
 
       // Prepare cartridge data
       const cartridgeData = {
         agency_id: agencyId,
-        name: body.name.trim(),
-        display_name: body.displayName || body.name.trim(),
-        system_instructions: body.systemInstructions || null,
-        tier: body.tier || 'default',
-        is_active: body.isActive !== false,
-        voice_params: body.voiceParams || null,
+        name: name.trim(),
+        type: 'voice',
+        tier: 'agency',
+        is_active: true,
+        voice_tone: voice_tone || null,
+        voice_style: voice_style || null,
+        voice_personality: voice_personality || null,
+        voice_vocabulary: voice_vocabulary || null,
+        created_by: userId,
       }
 
-      // Try to update existing cartridge first
-      const { data: existing, error: existingError } = await (supabase
-        .from('voice_cartridge' as any)
-        .select('id')
-        .eq('agency_id', agencyId)
-        .eq('name', cartridgeData.name)
-        .single() as any)
+      const { data, error } = await supabase
+        .from('cartridges')
+        .insert([cartridgeData])
+        .select()
+        .single()
 
-      // Handle actual database errors (not just "no rows found")
-      if (existingError && existingError.code !== 'PGRST116') {
-        console.error('[Voice Cartridge POST] Lookup error:', existingError)
-        return createErrorResponse(500, 'Failed to check existing cartridge')
+      if (error) {
+        console.error('[Voice Cartridge POST] Error:', error)
+        return createErrorResponse(500, 'Failed to create voice cartridge')
       }
 
-      let result
-      let statusCode = 201
-
-      if (existing) {
-        // Update existing
-        const { data, error } = await (supabase
-          .from('voice_cartridge' as any)
-          .update({
-            ...cartridgeData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existing.id)
-          .select()
-          .single() as any)
-
-        if (error) {
-          console.error('[Voice Cartridge POST Update] Error:', error)
-          return createErrorResponse(500, 'Failed to update voice cartridge')
-        }
-
-        result = data
-        statusCode = 200
-      } else {
-        // Create new
-        const { data, error } = await (supabase
-          .from('voice_cartridge' as any)
-          .insert([cartridgeData])
-          .select()
-          .single() as any)
-
-        if (error) {
-          console.error('[Voice Cartridge POST Insert] Error:', error)
-          return createErrorResponse(500, 'Failed to create voice cartridge')
-        }
-
-        result = data
-      }
-
-      return NextResponse.json(result, { status: statusCode })
+      return NextResponse.json(data, { status: 201 })
     } catch (error) {
       if (error instanceof SyntaxError) {
         return createErrorResponse(400, 'Invalid JSON in request body')
