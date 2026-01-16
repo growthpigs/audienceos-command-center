@@ -106,27 +106,37 @@ export async function syncGmail(config: SyncJobConfig): Promise<{
 }
 
 /**
- * Fetch Gmail messages using chi-gateway MCP
- * chi-gateway provides authenticated access to Gmail via official Google MCP
+ * Fetch Gmail messages using chi-gateway
+ * chi-gateway runs as Cloudflare Worker at: https://chi-gateway.roderic-andrews.workers.dev/
+ *
+ * Endpoint: GET /gmail/inbox?q=...&maxResults=...
+ * Returns: { messages: [{id, threadId, snippet, payload, internalDate, labelIds}] }
  */
 async function fetchGmailMessages(accessToken: string): Promise<GmailMessage[]> {
-  const response = await fetch('http://localhost:3001/mcp/gmail/messages', {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      maxResults: 100,
-      q: 'is:unread OR newer_than:7d', // Recent or unread emails
-    }),
-  })
+  const CHI_GATEWAY_URL = 'https://chi-gateway.roderic-andrews.workers.dev'
+
+  // Query: unread messages or messages from the last 7 days
+  const query = 'is:unread OR newer_than:7d'
+  const maxResults = 100
+
+  const response = await fetch(
+    `${CHI_GATEWAY_URL}/gmail/inbox?q=${encodeURIComponent(query)}&maxResults=${maxResults}`,
+    {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  )
 
   if (!response.ok) {
-    throw new Error(`Gmail MCP failed: ${response.status} ${response.statusText}`)
+    throw new Error(
+      `Chi-Gateway Gmail inbox failed: ${response.status} ${response.statusText} - ${await response.text()}`
+    )
   }
 
-  const data = await response.json()
+  const data = (await response.json()) as { messages?: GmailMessage[] }
   return data.messages || []
 }
 

@@ -106,72 +106,33 @@ export async function syncSlack(config: SyncJobConfig): Promise<{
 }
 
 /**
- * Fetch Slack messages using chi-gateway MCP
- * chi-gateway provides authenticated access to Slack via official Slack MCP
+ * Fetch Slack messages using chi-gateway
+ *
+ * ⚠️ STATUS: NOT YET IMPLEMENTED IN CHI-GATEWAY
+ *
+ * Chi-Gateway (v1.3.0) does not yet have Slack message endpoints.
+ * Available routes: gmail, google-ads, drive, sheets, docs, calendar, etc.
+ * Missing: /slack/conversations, /slack/history
+ *
+ * Workaround: This function will throw a clear error directing users to
+ * enable Slack support in chi-gateway first.
+ *
+ * TODO: Implement Slack MCP in chi-gateway when the official Slack MCP is available
+ * Reference: https://slack.com/intl/en-gb/apps/
  */
-async function fetchSlackMessages(accessToken: string): Promise<
+async function fetchSlackMessages(_accessToken: string): Promise<
   Array<SlackMessage & { channel: string; channel_id: string }>
 > {
-  // Fetch all channels first
-  const channelsResponse = await fetch('http://localhost:3001/mcp/slack/conversations', {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!channelsResponse.ok) {
-    throw new Error(
-      `Slack conversations failed: ${channelsResponse.status} ${channelsResponse.statusText}`
-    )
-  }
-
-  const channelsData = await channelsResponse.json()
-  const channels: SlackChannel[] = channelsData.channels || []
-
-  // Fetch messages from each channel (last 30 days)
-  const allMessages: Array<SlackMessage & { channel: string; channel_id: string }> = []
-  const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000)
-
-  for (const channel of channels) {
-    try {
-      const historyResponse = await fetch('http://localhost:3001/mcp/slack/history', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          channel: channel.id,
-          oldest: thirtyDaysAgo,
-          limit: 100,
-        }),
-      })
-
-      if (!historyResponse.ok) {
-        console.warn(
-          `[slack-sync] Failed to fetch history for channel ${channel.name}: ${historyResponse.status}`
-        )
-        continue
-      }
-
-      const historyData = await historyResponse.json()
-      const messages: SlackMessage[] = historyData.messages || []
-
-      allMessages.push(
-        ...messages.map((m) => ({
-          ...m,
-          channel: channel.name,
-          channel_id: channel.id,
-        }))
-      )
-    } catch (e) {
-      console.warn(`[slack-sync] Error fetching history for channel ${channel.name}:`, e)
-    }
-  }
-
-  return allMessages
+  throw new Error(
+    `[slack-sync] Slack support not yet available in chi-gateway.\n` +
+      `\n` +
+      `Chi-Gateway (v1.3.0) needs to be updated with Slack MCP endpoints:\n` +
+      `  - /slack/conversations (list channels)\n` +
+      `  - /slack/history (fetch channel messages)\n` +
+      `\n` +
+      `Blocked Until: Chi-Gateway implements official Slack MCP integration\n` +
+      `See: /lib/sync/slack-sync.ts for implementation details`
+  )
 }
 
 /**
