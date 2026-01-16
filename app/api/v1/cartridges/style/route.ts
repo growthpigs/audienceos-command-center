@@ -6,7 +6,8 @@ import { withRateLimit, withCsrfProtection, createErrorResponse } from '@/lib/se
 
 /**
  * GET /api/v1/cartridges/style
- * Fetch style cartridge for the authenticated user's agency
+ * List all style cartridges for the authenticated user's agency
+ * Filters by type='style' to ensure type safety
  */
 export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
   async (request: AuthenticatedRequest) => {
@@ -17,20 +18,26 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId
 
-      const { data, error } = await (supabase
-        .from('style_cartridge' as any)
+      const { data: cartridges, error } = await supabase
+        .from('cartridges')
         .select('*')
         .eq('agency_id', agencyId)
-        .single() as any)
+        .eq('type', 'style')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('[Style Cartridge GET] Query error:', error)
-        return createErrorResponse(500, 'Failed to fetch style cartridge')
+      if (error) {
+        console.error('[Style Cartridges GET] Query error:', error)
+        return createErrorResponse(500, 'Failed to fetch style cartridges')
       }
 
-      return NextResponse.json(data || null)
+      return NextResponse.json({
+        success: true,
+        data: cartridges || [],
+        count: cartridges?.length || 0,
+      })
     } catch (error) {
-      console.error('[Style Cartridge GET] Unexpected error:', error)
+      console.error('[Style Cartridges GET] Unexpected error:', error)
       return createErrorResponse(500, 'Internal server error')
     }
   }
@@ -38,7 +45,9 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
 
 /**
  * POST /api/v1/cartridges/style
- * Create or update style cartridge with analyzed writing patterns
+ * Create new style cartridge with style_primary_color, style_secondary_color, style_fonts
+ * Validates required 'name' field
+ * All optional style fields: style_primary_color, style_secondary_color, style_fonts
  */
 export const POST = withPermission({ resource: 'cartridges', action: 'write' })(
   async (request: AuthenticatedRequest) => {
@@ -51,70 +60,41 @@ export const POST = withPermission({ resource: 'cartridges', action: 'write' })(
 
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId
+      const userId = request.user.id
 
       const body = await request.json()
+      const { name, style_primary_color, style_secondary_color, style_fonts } = body
+
+      // Validate required fields
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        return createErrorResponse(400, 'name is required')
+      }
 
       // Prepare cartridge data
       const cartridgeData = {
         agency_id: agencyId,
-        source_files: body.sourceFiles || [],
-        learned_style: body.learnedStyle || null,
-        mem0_namespace: body.mem0Namespace || `style-${agencyId}`,
-        analysis_status: body.analysisStatus || 'pending',
+        name: name.trim(),
+        type: 'style',
+        tier: 'agency',
+        is_active: true,
+        style_primary_color: style_primary_color || null,
+        style_secondary_color: style_secondary_color || null,
+        style_fonts: style_fonts || null,
+        created_by: userId,
       }
 
-      // Try to update existing cartridge first
-      const { data: existing, error: existingError } = await (supabase
-        .from('style_cartridge' as any)
-        .select('id')
-        .eq('agency_id', agencyId)
-        .single() as any)
+      const { data, error } = await supabase
+        .from('cartridges')
+        .insert([cartridgeData])
+        .select()
+        .single()
 
-      // Handle actual database errors (not just "no rows found")
-      if (existingError && existingError.code !== 'PGRST116') {
-        console.error('[Style Cartridge POST] Lookup error:', existingError)
-        return createErrorResponse(500, 'Failed to check existing cartridge')
+      if (error) {
+        console.error('[Style Cartridge POST] Error:', error)
+        return createErrorResponse(500, 'Failed to create style cartridge')
       }
 
-      let result
-      let statusCode = 201
-
-      if (existing) {
-        // Update existing
-        const { data, error } = await (supabase
-          .from('style_cartridge' as any)
-          .update({
-            ...cartridgeData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existing.id)
-          .select()
-          .single() as any)
-
-        if (error) {
-          console.error('[Style Cartridge POST Update] Error:', error)
-          return createErrorResponse(500, 'Failed to update style cartridge')
-        }
-
-        result = data
-        statusCode = 200
-      } else {
-        // Create new
-        const { data, error } = await (supabase
-          .from('style_cartridge' as any)
-          .insert([cartridgeData])
-          .select()
-          .single() as any)
-
-        if (error) {
-          console.error('[Style Cartridge POST Insert] Error:', error)
-          return createErrorResponse(500, 'Failed to create style cartridge')
-        }
-
-        result = data
-      }
-
-      return NextResponse.json(result, { status: statusCode })
+      return NextResponse.json(data, { status: 201 })
     } catch (error) {
       if (error instanceof SyntaxError) {
         return createErrorResponse(400, 'Invalid JSON in request body')

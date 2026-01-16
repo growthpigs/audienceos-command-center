@@ -6,7 +6,8 @@ import { withRateLimit, withCsrfProtection, createErrorResponse } from '@/lib/se
 
 /**
  * GET /api/v1/cartridges/instructions
- * Fetch instruction cartridges for the authenticated user's agency
+ * List all instructions cartridges for the authenticated user's agency
+ * Filters by type='instructions' to ensure type safety
  */
 export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
   async (request: AuthenticatedRequest) => {
@@ -17,20 +18,26 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId
 
-      const { data, error } = await (supabase
-        .from('instruction_cartridge' as any)
+      const { data: cartridges, error } = await supabase
+        .from('cartridges')
         .select('*')
         .eq('agency_id', agencyId)
-        .order('created_at', { ascending: false }) as any)
+        .eq('type', 'instructions')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('[Instruction Cartridge GET] Query error:', error)
-        return createErrorResponse(500, 'Failed to fetch instruction cartridges')
+        console.error('[Instructions Cartridges GET] Query error:', error)
+        return createErrorResponse(500, 'Failed to fetch instructions cartridges')
       }
 
-      return NextResponse.json(data || [])
+      return NextResponse.json({
+        success: true,
+        data: cartridges || [],
+        count: cartridges?.length || 0,
+      })
     } catch (error) {
-      console.error('[Instruction Cartridge GET] Unexpected error:', error)
+      console.error('[Instructions Cartridges GET] Unexpected error:', error)
       return createErrorResponse(500, 'Internal server error')
     }
   }
@@ -38,7 +45,9 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
 
 /**
  * POST /api/v1/cartridges/instructions
- * Create instruction cartridge with training documents and extracted knowledge
+ * Create new instructions cartridge with instructions_system_prompt, instructions_rules
+ * Validates required 'name' field
+ * All optional instructions fields: instructions_system_prompt, instructions_rules
  */
 export const POST = withPermission({ resource: 'cartridges', action: 'write' })(
   async (request: AuthenticatedRequest) => {
@@ -51,84 +60,46 @@ export const POST = withPermission({ resource: 'cartridges', action: 'write' })(
 
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId
+      const userId = request.user.id
 
       const body = await request.json()
+      const { name, instructions_system_prompt, instructions_rules } = body
 
-      // Validation
-      if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
-        return createErrorResponse(400, 'Instruction name is required')
+      // Validate required fields
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        return createErrorResponse(400, 'name is required')
       }
 
       // Prepare cartridge data
       const cartridgeData = {
         agency_id: agencyId,
-        name: body.name.trim(),
-        description: body.description || null,
-        training_docs: body.trainingDocs || [],
-        extracted_knowledge: body.extractedKnowledge || null,
-        mem0_namespace: body.mem0Namespace || `instructions-${agencyId}`,
-        process_status: body.processStatus || 'pending',
+        name: name.trim(),
+        type: 'instructions',
+        tier: 'agency',
+        is_active: true,
+        instructions_system_prompt: instructions_system_prompt || null,
+        instructions_rules: instructions_rules || null,
+        created_by: userId,
       }
 
-      // Try to update existing instruction
-      const { data: existing, error: existingError } = await (supabase
-        .from('instruction_cartridge' as any)
-        .select('id')
-        .eq('agency_id', agencyId)
-        .eq('name', cartridgeData.name)
-        .single() as any)
+      const { data, error } = await supabase
+        .from('cartridges')
+        .insert([cartridgeData])
+        .select()
+        .single()
 
-      // Handle actual database errors (not just "no rows found")
-      if (existingError && existingError.code !== 'PGRST116') {
-        console.error('[Instruction Cartridge POST] Lookup error:', existingError)
-        return createErrorResponse(500, 'Failed to check existing instruction cartridge')
+      if (error) {
+        console.error('[Instructions Cartridge POST] Error:', error)
+        return createErrorResponse(500, 'Failed to create instructions cartridge')
       }
 
-      let result
-      let statusCode = 201
-
-      if (existing) {
-        // Update existing
-        const { data, error } = await (supabase
-          .from('instruction_cartridge' as any)
-          .update({
-            ...cartridgeData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existing.id)
-          .select()
-          .single() as any)
-
-        if (error) {
-          console.error('[Instruction Cartridge POST Update] Error:', error)
-          return createErrorResponse(500, 'Failed to update instruction cartridge')
-        }
-
-        result = data
-        statusCode = 200
-      } else {
-        // Create new
-        const { data, error } = await (supabase
-          .from('instruction_cartridge' as any)
-          .insert([cartridgeData])
-          .select()
-          .single() as any)
-
-        if (error) {
-          console.error('[Instruction Cartridge POST Insert] Error:', error)
-          return createErrorResponse(500, 'Failed to create instruction cartridge')
-        }
-
-        result = data
-      }
-
-      return NextResponse.json(result, { status: statusCode })
+      return NextResponse.json(data, { status: 201 })
     } catch (error) {
       if (error instanceof SyntaxError) {
         return createErrorResponse(400, 'Invalid JSON in request body')
       }
 
-      console.error('[Instruction Cartridge POST] Unexpected error:', error)
+      console.error('[Instructions Cartridge POST] Unexpected error:', error)
       return createErrorResponse(500, 'Internal server error')
     }
   }
