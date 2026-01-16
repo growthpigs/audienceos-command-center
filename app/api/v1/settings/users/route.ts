@@ -33,12 +33,13 @@ export const GET = withPermission({ resource: 'users', action: 'manage' })(
       const _search = searchParams.get('search') // TODO: implement search
       const isActive = searchParams.get('is_active')
 
-      // Build query - join role table to get hierarchy_level for RBAC
+      // Build query - join role table to get name and hierarchy_level for RBAC
       let query = supabase
         .from('user')
         .select(`
           id, email, first_name, last_name, avatar_url, is_active, last_active_at, created_at, role_id,
           role_info:role_id (
+            name,
             hierarchy_level
           )
         `, { count: 'exact' })
@@ -68,11 +69,12 @@ export const GET = withPermission({ resource: 'users', action: 'manage' })(
         return createErrorResponse(500, 'Failed to fetch users')
       }
 
-      // Flatten hierarchy_level from nested role_info into each user object
+      // Flatten role info from nested role_info into each user object
       const usersWithHierarchy = (users || []).map((user: any) => {
         const { role_info, ...rest } = user
         return {
           ...rest,
+          role: role_info?.name ?? 'user', // Default to 'user' if role name not found
           hierarchy_level: role_info?.hierarchy_level ?? null,
         }
       })
