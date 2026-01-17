@@ -263,8 +263,8 @@ function IntegrationCardSkeleton() {
   )
 }
 
-// Providers that need manual credential entry (not OAuth)
-const credentialBasedProviders: IntegrationProvider[] = ['slack', 'google_ads', 'meta_ads']
+// Providers that can be connected from the UI (credential or OAuth-based)
+const credentialBasedProviders: IntegrationProvider[] = ['slack', 'gmail', 'google_ads', 'meta_ads']
 
 // Map diiiploy-gateway service names to our IntegrationProvider types
 const GATEWAY_SERVICE_TO_PROVIDER: Record<string, IntegrationProvider | null> = {
