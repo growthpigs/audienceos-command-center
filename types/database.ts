@@ -140,7 +140,6 @@ export type Database = {
       }
       agency: {
         Row: {
-          ai_config: Json | null
           business_hours: Json | null
           created_at: string
           domain: string | null
@@ -154,7 +153,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          ai_config?: Json | null
           business_hours?: Json | null
           created_at?: string
           domain?: string | null
@@ -168,7 +166,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          ai_config?: Json | null
           business_hours?: Json | null
           created_at?: string
           domain?: string | null
@@ -256,6 +253,203 @@ export type Database = {
           {
             foreignKeyName: "alert_resolved_by_fkey"
             columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_cartridge: {
+        Row: {
+          agency_id: string
+          benson_blueprint: Json | null
+          brand_colors: Json | null
+          brand_personality: string[] | null
+          brand_voice: string | null
+          company_description: string | null
+          company_name: string | null
+          company_tagline: string | null
+          core_messaging: string | null
+          core_values: string[] | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          logo_url: string | null
+          name: string
+          social_links: Json | null
+          target_audience: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agency_id: string
+          benson_blueprint?: Json | null
+          brand_colors?: Json | null
+          brand_personality?: string[] | null
+          brand_voice?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          company_tagline?: string | null
+          core_messaging?: string | null
+          core_values?: string[] | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name: string
+          social_links?: Json | null
+          target_audience?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agency_id?: string
+          benson_blueprint?: Json | null
+          brand_colors?: Json | null
+          brand_personality?: string[] | null
+          brand_voice?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          company_tagline?: string | null
+          core_messaging?: string | null
+          core_values?: string[] | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name?: string
+          social_links?: Json | null
+          target_audience?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_cartridge_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cartridges: {
+        Row: {
+          agency_id: string
+          brand_logo_url: string | null
+          brand_name: string | null
+          brand_tagline: string | null
+          brand_values: string[] | null
+          client_id: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          instructions_rules: string[] | null
+          instructions_system_prompt: string | null
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          parent_id: string | null
+          style_fonts: string[] | null
+          style_primary_color: string | null
+          style_secondary_color: string | null
+          tier: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+          voice_personality: string | null
+          voice_style: string | null
+          voice_tone: string | null
+          voice_vocabulary: string | null
+        }
+        Insert: {
+          agency_id: string
+          brand_logo_url?: string | null
+          brand_name?: string | null
+          brand_tagline?: string | null
+          brand_values?: string[] | null
+          client_id?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          instructions_rules?: string[] | null
+          instructions_system_prompt?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          parent_id?: string | null
+          style_fonts?: string[] | null
+          style_primary_color?: string | null
+          style_secondary_color?: string | null
+          tier?: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+          voice_personality?: string | null
+          voice_style?: string | null
+          voice_tone?: string | null
+          voice_vocabulary?: string | null
+        }
+        Update: {
+          agency_id?: string
+          brand_logo_url?: string | null
+          brand_name?: string | null
+          brand_tagline?: string | null
+          brand_values?: string[] | null
+          client_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          instructions_rules?: string[] | null
+          instructions_system_prompt?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          parent_id?: string | null
+          style_fonts?: string[] | null
+          style_primary_color?: string | null
+          style_secondary_color?: string | null
+          tier?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+          voice_personality?: string | null
+          voice_style?: string | null
+          voice_tone?: string | null
+          voice_vocabulary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartridges_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "cartridges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["id"]
@@ -569,22 +763,18 @@ export type Database = {
           category: Database["public"]["Enums"]["document_category"]
           client_id: string | null
           created_at: string
-          drive_file_id: string | null
-          drive_url: string | null
           file_name: string
           file_size: number
           gemini_file_id: string | null
           id: string
           index_status: Database["public"]["Enums"]["index_status"]
           is_active: boolean
-          is_starred: boolean
           mime_type: string
           page_count: number | null
           storage_path: string
           title: string
           updated_at: string
           uploaded_by: string
-          use_for_training: boolean
           word_count: number | null
         }
         Insert: {
@@ -592,22 +782,18 @@ export type Database = {
           category: Database["public"]["Enums"]["document_category"]
           client_id?: string | null
           created_at?: string
-          drive_file_id?: string | null
-          drive_url?: string | null
           file_name: string
           file_size: number
           gemini_file_id?: string | null
           id?: string
           index_status?: Database["public"]["Enums"]["index_status"]
           is_active?: boolean
-          is_starred?: boolean
           mime_type: string
           page_count?: number | null
           storage_path: string
           title: string
           updated_at?: string
           uploaded_by: string
-          use_for_training?: boolean
           word_count?: number | null
         }
         Update: {
@@ -615,22 +801,18 @@ export type Database = {
           category?: Database["public"]["Enums"]["document_category"]
           client_id?: string | null
           created_at?: string
-          drive_file_id?: string | null
-          drive_url?: string | null
           file_name?: string
           file_size?: number
           gemini_file_id?: string | null
           id?: string
           index_status?: Database["public"]["Enums"]["index_status"]
           is_active?: boolean
-          is_starred?: boolean
           mime_type?: string
           page_count?: number | null
           storage_path?: string
           title?: string
           updated_at?: string
           uploaded_by?: string
-          use_for_training?: boolean
           word_count?: number | null
         }
         Relationships: [
@@ -653,6 +835,56 @@ export type Database = {
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instruction_cartridge: {
+        Row: {
+          agency_id: string
+          created_at: string | null
+          description: string | null
+          extracted_knowledge: Json | null
+          id: string
+          last_processed_at: string | null
+          mem0_namespace: string | null
+          name: string
+          process_status: string
+          training_docs: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string | null
+          description?: string | null
+          extracted_knowledge?: Json | null
+          id?: string
+          last_processed_at?: string | null
+          mem0_namespace?: string | null
+          name: string
+          process_status?: string
+          training_docs?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string | null
+          description?: string | null
+          extracted_knowledge?: Json | null
+          id?: string
+          last_processed_at?: string | null
+          mem0_namespace?: string | null
+          name?: string
+          process_status?: string
+          training_docs?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_cartridge_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency"
             referencedColumns: ["id"]
           },
         ]
@@ -1140,6 +1372,59 @@ export type Database = {
         }
         Relationships: []
       }
+      preferences_cartridge: {
+        Row: {
+          agency_id: string
+          call_to_action: string
+          content_length: string
+          created_at: string | null
+          emoji_usage: string
+          hashtag_count: number | null
+          id: string
+          language: string
+          personalization_level: string
+          platform: string
+          tone: string
+          updated_at: string | null
+        }
+        Insert: {
+          agency_id: string
+          call_to_action: string
+          content_length: string
+          created_at?: string | null
+          emoji_usage: string
+          hashtag_count?: number | null
+          id?: string
+          language?: string
+          personalization_level: string
+          platform: string
+          tone: string
+          updated_at?: string | null
+        }
+        Update: {
+          agency_id?: string
+          call_to_action?: string
+          content_length?: string
+          created_at?: string | null
+          emoji_usage?: string
+          hashtag_count?: number | null
+          id?: string
+          language?: string
+          personalization_level?: string
+          platform?: string
+          tone?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preferences_cartridge_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role: {
         Row: {
           agency_id: string
@@ -1298,6 +1583,47 @@ export type Database = {
             columns: ["moved_by"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      style_cartridge: {
+        Row: {
+          agency_id: string
+          analysis_status: string
+          created_at: string | null
+          id: string
+          learned_style: Json | null
+          mem0_namespace: string | null
+          source_files: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          agency_id: string
+          analysis_status?: string
+          created_at?: string | null
+          id?: string
+          learned_style?: Json | null
+          mem0_namespace?: string | null
+          source_files?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          agency_id?: string
+          analysis_status?: string
+          created_at?: string | null
+          id?: string
+          learned_style?: Json | null
+          mem0_namespace?: string | null
+          source_files?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "style_cartridge_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agency"
             referencedColumns: ["id"]
           },
         ]
@@ -1707,6 +2033,53 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_cartridge: {
+        Row: {
+          agency_id: string
+          created_at: string | null
+          display_name: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          system_instructions: string | null
+          tier: string
+          updated_at: string | null
+          voice_params: Json | null
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          system_instructions?: string | null
+          tier?: string
+          updated_at?: string | null
+          voice_params?: Json | null
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          system_instructions?: string | null
+          tier?: string
+          updated_at?: string | null
+          voice_params?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_cartridge_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency"
             referencedColumns: ["id"]
           },
         ]
