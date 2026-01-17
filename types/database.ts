@@ -7,7 +7,7 @@ export type DocumentCategory = string
 export type IndexStatus = 'pending' | 'processing' | 'indexing' | 'indexed' | 'completed' | 'failed'
 export type CommunicationPlatform = 'email' | 'slack'
 export type IntegrationProvider = 'slack' | 'gmail' | 'google_ads' | 'meta_ads'
-export type OAuthProvider = 'gmail' | 'slack' | 'meta' | 'stripe'
+export type OAuthProvider = 'gmail' | 'slack' | 'meta' | 'stripe' | 'linkedin'
 export type PreferenceCategory = string
 export type UserRole = 'admin' | 'user'
 export type WorkflowStatus = 'active' | 'paused' | 'disabled'
@@ -1182,7 +1182,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'gmail' | 'slack' | 'meta' | 'stripe'
+          type: 'gmail' | 'slack' | 'meta' | 'stripe' | 'linkedin'
           access_token: string
           refresh_token: string | null
           is_connected: boolean
@@ -1194,7 +1194,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          type: 'gmail' | 'slack' | 'meta' | 'stripe'
+          type: 'gmail' | 'slack' | 'meta' | 'stripe' | 'linkedin'
           access_token: string
           refresh_token?: string | null
           is_connected?: boolean
@@ -1206,7 +1206,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          type?: 'gmail' | 'slack' | 'meta' | 'stripe'
+          type?: 'gmail' | 'slack' | 'meta' | 'stripe' | 'linkedin'
           access_token?: string
           refresh_token?: string | null
           is_connected?: boolean

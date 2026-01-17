@@ -49,7 +49,7 @@ CREATE POLICY "users_delete_own_oauth_credentials"
   USING (user_id = auth.uid());
 
 -- Comment for documentation
-COMMENT ON TABLE user_oauth_credential IS 'Per-user OAuth token storage for third-party service integrations (Gmail, Slack, Meta, Stripe). Tokens are stored encrypted. Separate from agency-level integration table.';
-COMMENT ON COLUMN user_oauth_credential.type IS 'Integration type: gmail, slack, meta, stripe';
+COMMENT ON TABLE user_oauth_credential IS 'Per-user OAuth token storage for third-party service integrations (Gmail, Slack, Meta, Stripe, LinkedIn). Tokens are stored encrypted. Separate from agency-level integration table.';
+COMMENT ON COLUMN user_oauth_credential.type IS 'Integration type: gmail, slack, meta, stripe, linkedin';
 COMMENT ON COLUMN user_oauth_credential.is_connected IS 'Whether the integration is currently active';
 COMMENT ON COLUMN user_oauth_credential.last_sync_at IS 'Timestamp of last successful sync';
