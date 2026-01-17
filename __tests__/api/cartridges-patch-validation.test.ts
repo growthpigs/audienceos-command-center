@@ -17,7 +17,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
       const validPatchData = {
         name: 'updated-name',
         voice_tone: 'professional',
-      }
+      } as any
 
       // Validation logic: if body.type !== undefined, reject
       const shouldReject = validPatchData.type !== undefined
@@ -73,7 +73,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
         name: 'updated-name',
         voice_tone: 'professional',
         brand_name: 'My Brand',
-      }
+      } as any
 
       // Validation logic: if body.created_by !== undefined || body.created_at !== undefined, reject
       const shouldReject = validPatchData.created_by !== undefined || validPatchData.created_at !== undefined
@@ -94,7 +94,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
     it('should allow updating voice_tone for voice cartridge', () => {
       const validPatchData = {
         voice_tone: 'casual',
-      }
+      } as any
 
       // Should not trigger any immutable field validations
       const hasImmutableFields = validPatchData.type !== undefined || validPatchData.created_by !== undefined || validPatchData.created_at !== undefined
@@ -104,7 +104,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
     it('should allow updating brand_name for brand cartridge', () => {
       const validPatchData = {
         brand_name: 'New Brand Name',
-      }
+      } as any
 
       const hasImmutableFields = validPatchData.type !== undefined || validPatchData.created_by !== undefined || validPatchData.created_at !== undefined
       expect(hasImmutableFields).toBe(false)
@@ -113,7 +113,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
     it('should allow updating style_primary_color for style cartridge', () => {
       const validPatchData = {
         style_primary_color: '#FF0000',
-      }
+      } as any
 
       const hasImmutableFields = validPatchData.type !== undefined || validPatchData.created_by !== undefined || validPatchData.created_at !== undefined
       expect(hasImmutableFields).toBe(false)
@@ -122,7 +122,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
     it('should allow updating instructions_custom_system for instructions cartridge', () => {
       const validPatchData = {
         instructions_custom_system: 'You are a helpful assistant',
-      }
+      } as any
 
       const hasImmutableFields = validPatchData.type !== undefined || validPatchData.created_by !== undefined || validPatchData.created_at !== undefined
       expect(hasImmutableFields).toBe(false)
@@ -133,7 +133,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
         voice_tone: 'professional',
         voice_style: 'formal',
         voice_personality: 'authoritative',
-      }
+      } as any
 
       const hasImmutableFields = validPatchData.type !== undefined || validPatchData.created_by !== undefined || validPatchData.created_at !== undefined
       expect(hasImmutableFields).toBe(false)
@@ -142,7 +142,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
     it('should allow updating name field', () => {
       const validPatchData = {
         name: 'new-cartridge-name',
-      }
+      } as any
 
       const hasImmutableFields = validPatchData.type !== undefined || validPatchData.created_by !== undefined || validPatchData.created_at !== undefined
       expect(hasImmutableFields).toBe(false)
@@ -184,7 +184,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
       const patchData = {
         brand_description: 'A complex description',
         name: 'updated-name',
-      }
+      } as any
 
       const hasImmutableFields = patchData.type !== undefined || patchData.created_by !== undefined || patchData.created_at !== undefined
       expect(hasImmutableFields).toBe(false)
@@ -211,7 +211,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
     })
 
     it('should prevent immutable field modification in both endpoints', () => {
-      const patchData = { created_by: 'attacker' }
+      const patchData = { created_by: 'attacker' } as any
 
       const genericEndpointRejects = patchData.created_by !== undefined || patchData.created_at !== undefined
       const byTypeEndpointRejects = patchData.created_by !== undefined || patchData.created_at !== undefined
@@ -270,7 +270,7 @@ describe('Cartridge PATCH Validation - Immutable Fields', () => {
         name: 'updated-name',
         voice_tone: 'casual',
         // No type, created_by, or created_at
-      }
+      } as any
 
       const hasImmutableFields = validPatch.type !== undefined || validPatch.created_by !== undefined || validPatch.created_at !== undefined
       expect(hasImmutableFields).toBe(false)

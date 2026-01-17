@@ -49,7 +49,7 @@ describe('Cartridges API - Edge Cases', () => {
     })
 
     it('should handle empty result sets', () => {
-      const emptyResults = []
+      const emptyResults: any[] = []
       expect(emptyResults.length).toBe(0)
       expect(Array.isArray(emptyResults)).toBe(true)
     })

@@ -14,12 +14,15 @@ const VALID_TYPES = ['voice', 'brand', 'style', 'instructions']
 export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
   async (request: AuthenticatedRequest, { params }: { params: { type: string; id: string } }) => {
     try {
-      const { type, id } = params
+      const { type: typeParam, id } = params
 
       // Validate type parameter
-      if (!VALID_TYPES.includes(type)) {
+      if (!VALID_TYPES.includes(typeParam)) {
         return createErrorResponse(400, 'Invalid type')
       }
+
+      // Type-safe cast after validation
+      const type = typeParam as 'voice' | 'brand' | 'style' | 'instructions'
 
       const supabase = await createRouteHandlerClient(cookies)
 
@@ -59,12 +62,15 @@ export const PATCH = withPermission({ resource: 'cartridges', action: 'write' })
       const csrfError = withCsrfProtection(request)
       if (csrfError) return csrfError
 
-      const { type, id } = params
+      const { type: typeParam, id } = params
 
       // Validate type parameter
-      if (!VALID_TYPES.includes(type)) {
+      if (!VALID_TYPES.includes(typeParam)) {
         return createErrorResponse(400, 'Invalid type')
       }
+
+      // Type-safe cast after validation
+      const type = typeParam as 'voice' | 'brand' | 'style' | 'instructions'
 
       const supabase = await createRouteHandlerClient(cookies)
       const body = await request.json()
@@ -131,12 +137,15 @@ export const DELETE = withPermission({ resource: 'cartridges', action: 'write' }
       const csrfError = withCsrfProtection(request)
       if (csrfError) return csrfError
 
-      const { type, id } = params
+      const { type: typeParam, id } = params
 
       // Validate type parameter
-      if (!VALID_TYPES.includes(type)) {
+      if (!VALID_TYPES.includes(typeParam)) {
         return createErrorResponse(400, 'Invalid type')
       }
+
+      // Type-safe cast after validation
+      const type = typeParam as 'voice' | 'brand' | 'style' | 'instructions'
 
       const supabase = await createRouteHandlerClient(cookies)
 

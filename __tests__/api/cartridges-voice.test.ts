@@ -27,7 +27,7 @@ describe('Voice Cartridge API Endpoints', () => {
     })
 
     it('should accept all voice fields as optional', () => {
-      const minimalData = { name: 'minimal-voice' }
+      const minimalData = { name: 'minimal-voice' } as any
 
       expect(minimalData.name).toBeDefined()
       expect(minimalData.voice_tone).toBeUndefined()

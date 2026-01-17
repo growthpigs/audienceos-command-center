@@ -17,15 +17,18 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
       const rateLimitResponse = withRateLimit(request, { maxRequests: 100, windowMs: 60000 })
       if (rateLimitResponse) return rateLimitResponse
 
-      const { type } = params
+      const { type: typeParam } = params
 
       // Validate type parameter
-      if (!VALID_TYPES.includes(type)) {
+      if (!VALID_TYPES.includes(typeParam)) {
         return createErrorResponse(
           400,
           `Invalid type. Must be one of: ${VALID_TYPES.join(', ')}`
         )
       }
+
+      // Type-safe cast after validation
+      const type = typeParam as 'voice' | 'brand' | 'style' | 'instructions'
 
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId
@@ -70,15 +73,18 @@ export const POST = withPermission({ resource: 'cartridges', action: 'write' })(
       const csrfError = withCsrfProtection(request)
       if (csrfError) return csrfError
 
-      const { type } = params
+      const { type: typeParam } = params
 
       // Validate type parameter
-      if (!VALID_TYPES.includes(type)) {
+      if (!VALID_TYPES.includes(typeParam)) {
         return createErrorResponse(
           400,
           `Invalid type. Must be one of: ${VALID_TYPES.join(', ')}`
         )
       }
+
+      // Type-safe cast after validation
+      const type = typeParam as 'voice' | 'brand' | 'style' | 'instructions'
 
       const supabase = await createRouteHandlerClient(cookies)
       const agencyId = request.user.agencyId

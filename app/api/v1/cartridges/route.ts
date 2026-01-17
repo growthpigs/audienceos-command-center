@@ -43,12 +43,30 @@ export const GET = withPermission({ resource: 'cartridges', action: 'read' })(
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
-      // Apply filters
-      const type = searchParams.get('type')
+      // Apply filters with validation
+      const typeParam = searchParams.get('type')
       const tier = searchParams.get('tier')
 
-      if (type) query = query.eq('type', type)
-      if (tier) query = query.eq('tier', tier)
+      // Validate and apply type filter
+      if (typeParam) {
+        const validTypes = ['voice', 'brand', 'style', 'instructions']
+        if (validTypes.includes(typeParam)) {
+          const type = typeParam as 'voice' | 'brand' | 'style' | 'instructions'
+          query = query.eq('type', type)
+        } else {
+          return createErrorResponse(400, `Invalid type. Must be one of: ${validTypes.join(', ')}`)
+        }
+      }
+
+      if (tier) {
+        const validTiers = ['system', 'agency', 'client', 'user']
+        if (validTiers.includes(tier)) {
+          const validTier = tier as 'system' | 'agency' | 'client' | 'user'
+          query = query.eq('tier', validTier)
+        } else {
+          return createErrorResponse(400, `Invalid tier. Must be one of: ${validTiers.join(', ')}`)
+        }
+      }
 
       const { data: cartridges, error, count } = await query
 

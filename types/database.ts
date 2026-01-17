@@ -678,6 +678,132 @@ export type Database = {
           },
         ]
       }
+      cartridges: {
+        Row: {
+          id: string
+          agency_id: string
+          name: string
+          description: string | null
+          type: Database["public"]["Enums"]["cartridge_type"]
+          tier: Database["public"]["Enums"]["cartridge_tier"]
+          is_active: boolean
+          is_default: boolean
+          client_id: string | null
+          user_id: string | null
+          parent_id: string | null
+          voice_tone: string | null
+          voice_style: string | null
+          voice_personality: string | null
+          voice_vocabulary: string | null
+          brand_name: string | null
+          brand_tagline: string | null
+          brand_values: string[] | null
+          brand_logo_url: string | null
+          style_primary_color: string | null
+          style_secondary_color: string | null
+          style_fonts: string[] | null
+          instructions_system_prompt: string | null
+          instructions_rules: string[] | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          agency_id: string
+          name: string
+          description?: string | null
+          type: Database["public"]["Enums"]["cartridge_type"]
+          tier?: Database["public"]["Enums"]["cartridge_tier"]
+          is_active?: boolean
+          is_default?: boolean
+          client_id?: string | null
+          user_id?: string | null
+          parent_id?: string | null
+          voice_tone?: string | null
+          voice_style?: string | null
+          voice_personality?: string | null
+          voice_vocabulary?: string | null
+          brand_name?: string | null
+          brand_tagline?: string | null
+          brand_values?: string[] | null
+          brand_logo_url?: string | null
+          style_primary_color?: string | null
+          style_secondary_color?: string | null
+          style_fonts?: string[] | null
+          instructions_system_prompt?: string | null
+          instructions_rules?: string[] | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          agency_id?: string
+          name?: string
+          description?: string | null
+          type?: Database["public"]["Enums"]["cartridge_type"]
+          tier?: Database["public"]["Enums"]["cartridge_tier"]
+          is_active?: boolean
+          is_default?: boolean
+          client_id?: string | null
+          user_id?: string | null
+          parent_id?: string | null
+          voice_tone?: string | null
+          voice_style?: string | null
+          voice_personality?: string | null
+          voice_vocabulary?: string | null
+          brand_name?: string | null
+          brand_tagline?: string | null
+          brand_values?: string[] | null
+          brand_logo_url?: string | null
+          style_primary_color?: string | null
+          style_secondary_color?: string | null
+          style_fonts?: string[] | null
+          instructions_system_prompt?: string | null
+          instructions_rules?: string[] | null
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartridges_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "cartridges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartridges_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication: {
         Row: {
           agency_id: string
@@ -2220,6 +2346,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      set_cartridge_default: {
+        Args: {
+          p_cartridge_id: string
+          p_agency_id: string
+          p_type: Database["public"]["Enums"]["cartridge_type"]
+        }
+        Returns: {
+          success: boolean
+          error?: string
+        }
+      }
     }
     Enums: {
       ad_platform: "google_ads" | "meta_ads"
@@ -2227,6 +2364,8 @@ export type Database = {
       alert_status: "active" | "snoozed" | "dismissed" | "resolved"
       alert_type: "risk_detected" | "kpi_drop" | "inactivity" | "disconnect"
       assignment_role: "owner" | "collaborator"
+      cartridge_tier: "system" | "agency" | "client" | "user"
+      cartridge_type: "voice" | "brand" | "style" | "instructions"
       chat_role: "user" | "assistant"
       chat_route: "rag" | "web" | "memory" | "casual" | "dashboard"
       client_access_permission: "read" | "write"

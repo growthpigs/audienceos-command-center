@@ -209,7 +209,7 @@ describe('Cartridges Store - Result Validation', () => {
         name: 'Existing',
         type: 'brand',
         agency_id: 'agency-1',
-      }
+      } as any
 
       useCartridgesStore.setState({ cartridges: [existingCartridge] })
 
@@ -271,7 +271,7 @@ describe('Cartridges Store - Result Validation', () => {
       const result = await store.createCartridge({ name: 'Test', type: 'voice' })
 
       expect(result.id).toBe('cart-123')
-      expect(result.extra_field).toBe('should not cause issue')
+      expect((result as any).extra_field).toBe('should not cause issue')
     })
 
     it('should accept id as numeric value (coerced to truthy)', async () => {

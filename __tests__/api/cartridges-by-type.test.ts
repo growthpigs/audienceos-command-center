@@ -57,7 +57,7 @@ describe('Cartridges By-Type Endpoint', () => {
 
       vi.mocked(cookies).mockResolvedValueOnce({} as any)
       const { createRouteHandlerClient } = await import('@/lib/supabase')
-      vi.mocked(createRouteHandlerClient).mockResolvedValueOnce(mockSupabase)
+      vi.mocked(createRouteHandlerClient).mockResolvedValueOnce(mockSupabase as any)
 
       // Simulate the endpoint behavior
       expect(VALID_TYPES).toContain('voice')
@@ -140,10 +140,10 @@ describe('Cartridges By-Type Endpoint', () => {
     it('should reject if name is missing', async () => {
       const payload = {
         voice_tone: 'formal',
-      }
+      } as any
 
       expect(payload.name).toBeUndefined()
-      expect(!payload.name || typeof payload.name !== 'string').toBe(true)
+      expect(!payload.name || typeof payload.name !== 'string' || payload.name.trim().length === 0).toBe(true)
     })
 
     it('should reject if name is empty string', async () => {
