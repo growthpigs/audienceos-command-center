@@ -104,11 +104,45 @@ See: `docs/04-technical/VALIDATION.md` (living document, updated per cycle)
 - ✅ RPC function `set_cartridge_default()` implemented and tested
 - ✅ 5 RLS policies enforcing multi-tenant isolation
 
-### Next Step: Task 6 - Gmail OAuth Flow
-Plan ready at: `docs/plans/2026-01-16-task-6-gmail-oauth.md`
-- Subtasks: Database schema, authorization endpoint, callback handler, sync service
-- Expected outcome: Users authorize Gmail, threads appear in Communications Hub
-- Start: Immediately ready
+### Task 6-7 Complete: Gmail + Slack OAuth ✅
+- ✅ Gmail OAuth authorize/callback/sync endpoints
+- ✅ Slack OAuth authorize/callback/sync endpoints
+- ✅ Schema fixed: Critical `user_communication` table created
+- ✅ All services write correct fields (agency_id, user_id, platform, message_id)
+- ✅ All 64 tests passing (Gmail sync 11, Slack sync 11, OAuth integration 40, migration 2)
+
+### Next Step: Task 8 - UniPile LinkedIn Integration
+**Approach:** Use UniPile SDK (multi-channel platform) instead of custom OAuth
+- Copy `lib/unipile-client.ts` from revOS (already proven)
+- Create LinkedIn service using UniPile Node SDK
+- Add webhook handlers (new_message, new_relation events)
+- Store in user_communication table (schema already in place)
+- After Task 8: Jump to deployment (no separate Task 9 for Meta yet - different SDK)
+
+---
+
+## 🔐 UniPile Configuration (Task 8+)
+
+**Credentials stored in:** `~/.claude/secrets/secrets-vault.md` (global PAI vault)
+
+| Property | Value |
+|----------|-------|
+| **API Key** | `Bd4msLwJ.REJPcOA+0Jl22xJ7+7sKg+A9DuWeThN0sRxh5SoTWsY=` |
+| **DSN** | `api3.unipile.com:13344` |
+| **Credentials** | `vgpSetters9911%` |
+| **Contact** | `brent@diiiploy.io` |
+
+**Environment Variables (add to .env):**
+```
+UNIPILE_API_KEY=Bd4msLwJ.REJPcOA+0Jl22xJ7+7sKg+A9DuWeThN0sRxh5SoTWsY=
+UNIPILE_DSN=api3.unipile.com:13344
+```
+
+**Usage:**
+- Multi-channel unified API: LinkedIn, WhatsApp, Telegram, Email, Instagram, Messenger
+- Node SDK: `unipile-node-sdk` (already in revOS, will copy pattern)
+- Webhooks: new_message, new_relation, account_status events
+- Real-time: Messages are real-time, connections have up to 8-hour delay
 
 ---
 
