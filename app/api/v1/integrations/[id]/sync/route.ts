@@ -18,6 +18,7 @@ import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
 import { withCsrfProtection } from '@/lib/security'
 import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
+import { decryptToken, deserializeEncryptedToken } from '@/lib/crypto'
 import { syncGoogleAds } from '@/lib/sync/google-ads-sync'
 import { syncGmail } from '@/lib/sync/gmail-sync'
 import { syncSlack } from '@/lib/sync/slack-sync'
@@ -63,13 +64,53 @@ export const POST = withPermission({ resource: 'integrations', action: 'manage' 
     // Build sync job config
     // Note: integration is agency-scoped. clientId comes from config or defaults to agency
     const integrationConfig = (integration.config as Record<string, unknown>) || {}
+
+    // Decrypt tokens before passing to sync workers
+    // Tokens are stored encrypted with AES-256-GCM in the database
+    let decryptedAccessToken = ''
+    let decryptedRefreshToken: string | undefined
+
+    if (integration.access_token) {
+      try {
+        const accessTokenEncrypted = deserializeEncryptedToken(integration.access_token)
+        if (accessTokenEncrypted) {
+          decryptedAccessToken = decryptToken(accessTokenEncrypted) || ''
+        }
+      } catch (e) {
+        console.error('[sync] Failed to decrypt access token:', e)
+        return NextResponse.json(
+          { error: 'Failed to decrypt credentials. Please reconnect the integration.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (integration.refresh_token) {
+      try {
+        const refreshTokenEncrypted = deserializeEncryptedToken(integration.refresh_token)
+        if (refreshTokenEncrypted) {
+          decryptedRefreshToken = decryptToken(refreshTokenEncrypted) || undefined
+        }
+      } catch (e) {
+        console.error('[sync] Failed to decrypt refresh token:', e)
+        // Non-fatal - some providers don't use refresh tokens
+      }
+    }
+
+    if (!decryptedAccessToken) {
+      return NextResponse.json(
+        { error: 'No valid access token available. Please reconnect the integration.' },
+        { status: 400 }
+      )
+    }
+
     const syncConfig: SyncJobConfig = {
       integrationId: id,
       agencyId,
       clientId: (integrationConfig.clientId as string) || agencyId, // Fallback to agency
       provider: integration.provider,
-      accessToken: integration.access_token || '',
-      refreshToken: integration.refresh_token || undefined,
+      accessToken: decryptedAccessToken,
+      refreshToken: decryptedRefreshToken,
       config: integrationConfig,
     }
 
