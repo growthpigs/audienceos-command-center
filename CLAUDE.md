@@ -84,6 +84,7 @@ lib/
 2. **Memory Persistence:** Mem0 retrieval works, storage never called
 3. **LinkedIn Integration:** Backend code exists, not in UI
 4. **Training Cartridges:** Fixed - see commits 4029fc1→f9b4c7c
+5. **RBAC UI Gap:** Database supports 4-tier roles but UI only shows Admin/User - see `features/multi-org-roles.md` Testing Findings (2026-01-18)
 
 ---
 
