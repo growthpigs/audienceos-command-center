@@ -9,6 +9,32 @@ import { geminiFileService } from '@/lib/gemini/file-service'
 import type { IndexStatus } from '@/types/database'
 
 /**
+ * DISPLAY_NAME_PREFIX for Gemini file metadata encoding
+ * Format: hgc|{agencyId}|{scope}|{clientId}|{displayName}
+ * This allows RAG service to identify and filter files by agency/client
+ */
+const DISPLAY_NAME_PREFIX = 'hgc'
+const DISPLAY_NAME_SEPARATOR = '|'
+
+/**
+ * Encode document metadata into Gemini displayName for RAG filtering
+ */
+function encodeDisplayName(
+  agencyId: string,
+  scope: 'global' | 'client',
+  clientId: string | null,
+  displayName: string
+): string {
+  return [
+    DISPLAY_NAME_PREFIX,
+    agencyId,
+    scope,
+    clientId || 'none',
+    displayName,
+  ].join(DISPLAY_NAME_SEPARATOR)
+}
+
+/**
  * Wait for Gemini to finish processing a file with exponential backoff retry
  */
 async function waitForGeminiProcessing(fileId: string, maxAttempts = 10) {
@@ -143,8 +169,9 @@ export const POST = withPermission({ resource: 'knowledge-base', action: 'write'
         // Convert to buffer
         const buffer = Buffer.from(await fileData.arrayBuffer())
 
-        // Upload to Gemini File API
-        const displayName = `${doc.title} (${doc.file_name})`
+        // Upload to Gemini File API with HGC-encoded displayName for RAG filtering
+        const scope: 'global' | 'client' = doc.client_id ? 'client' : 'global'
+        const displayName = encodeDisplayName(agencyId, scope, doc.client_id, doc.title)
         const geminiFileId = await geminiFileService.uploadFile(
           buffer,
           doc.mime_type,

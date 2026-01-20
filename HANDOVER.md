@@ -1,7 +1,58 @@
 # AudienceOS Command Center - Session Handover
 
 **Last Session:** 2026-01-20
-**Status:** Production active | RBAC 403 fix deployed | Demo ready
+**Status:** Production active | RBAC 403 + KB Gemini auto-upload fixed | Demo ready
+
+---
+
+## CRITICAL FIX: HGC Knowledge Base "No Documents Found" ✅
+
+**Status:** FIXED
+**Priority:** HIGH
+**Fixed:** 2026-01-20
+
+### Problem
+
+HGC chat showing "No documents found for this query" when users ask knowledge base questions.
+
+### Root Cause
+
+Documents were uploaded to Supabase Storage and metadata created in `document` table, but **never uploaded to Gemini File API**. The RAG service queries Gemini's `files.list()`, which returned empty.
+
+**Broken Flow:**
+```
+Upload → Supabase Storage → document table (pending) → ❌ STOPPED
+```
+
+### Fix
+
+Modified `app/api/v1/documents/route.ts` to auto-trigger Gemini File API upload after document creation:
+
+1. Added `encodeDisplayName()` function to encode agency/client metadata in Gemini displayName
+2. Added fire-and-forget Gemini upload after document record created
+3. Updated `app/api/v1/documents/process/route.ts` to use same encoding for consistency
+
+**Fixed Flow:**
+```
+Upload → Supabase Storage → document table → Gemini File API → ✅ RAG works
+```
+
+### Key Code Changes
+
+```typescript
+// Fire-and-forget Gemini upload after document create
+const encodedDisplayName = encodeDisplayName(agencyId, scope, clientId, title.trim())
+;(async () => {
+  const geminiFileId = await geminiFileService.uploadFile(buffer, file.type, encodedDisplayName)
+  await supabase.from('document').update({ gemini_file_id: geminiFileId, index_status: 'indexed' }).eq('id', documentId)
+})()
+```
+
+### Verification
+
+- ✅ Build passes
+- ✅ 22 document tests pass
+- ✅ 446 cartridge tests pass (468 total)
 
 ---
 
