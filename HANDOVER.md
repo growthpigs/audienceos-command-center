@@ -1,7 +1,63 @@
 # AudienceOS Command Center - Session Handover
 
 **Last Session:** 2026-01-20
-**Status:** Production active | Integration fix deployed | RevOS+AudienceOS Unified Plan approved
+**Status:** Production active | RBAC 403 fix deployed | Demo ready
+
+---
+
+## CRITICAL FIX: RBAC 403 Permission Errors ✅
+
+**Status:** FIXED
+**Priority:** DEFCON 1 (Demo blocker)
+**Fixed:** 2026-01-20
+**Commit:** `553179c`
+
+### Problem
+
+All protected API endpoints returning 403 PERMISSION_DENIED:
+- `/api/v1/clients` - 403
+- `/api/v1/chat` - 403
+- `/api/v1/settings/preferences` - 403
+
+Users with valid roles (Admin, Owner) still getting 403 errors.
+
+### Root Cause
+
+RLS policies blocked the permission service's nested JOIN query:
+```
+user → role → role_permission → permission
+```
+
+Even though RBAC data existed (45 role_permissions, 52 permissions, 5 roles), the anon key couldn't read them due to RLS blocking the join.
+
+### Fix
+
+Changed `lib/rbac/permission-service.ts` to use `createServiceRoleClient()` for all permission lookup operations. This bypasses RLS for internal server-side permission checks.
+
+```typescript
+// BEFORE (broken)
+const client = supabase || createBrowserClient();
+
+// AFTER (fixed)
+const client = createServiceRoleClient() || supabase || createBrowserClient();
+```
+
+Applied to 4 methods: `getUserPermissions`, `getUserHierarchyLevel`, `getMemberAccessibleClientIds`, `hasMemberClientAccess`
+
+### Verification
+
+- ✅ Build passes
+- ✅ Deployed via `npx vercel --prod`
+- ✅ Clients page loads 23 clients
+- ✅ HGC chat accessible
+
+### Deployment Note
+
+⚠️ `v0-audience-os-command-center` in `chase-6917s-projects` was NOT connected to GitHub. Deployed via Vercel CLI:
+```bash
+npx vercel link --scope chase-6917s-projects --project v0-audience-os-command-center --yes
+npx vercel --prod --yes
+```
 
 ---
 
