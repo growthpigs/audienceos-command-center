@@ -183,7 +183,7 @@ export function LinearSidebar({
                   className="flex items-center gap-0"
                   style={{ fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}
                 >
-                  <span className="text-[17px] font-semibold tracking-tight text-white">audience</span>
+                  <span className="text-[17px] font-semibold tracking-tight text-foreground dark:text-white">audience</span>
                   <span
                     className="text-[17px] font-light tracking-tight"
                     style={{
