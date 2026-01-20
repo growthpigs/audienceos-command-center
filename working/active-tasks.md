@@ -1,32 +1,35 @@
 # Active Tasks
 
-## 🔥 IN PROGRESS: Week 1 Security Hardening (2026-01-20)
+## ✅ COMPLETED: Week 1 Security Hardening - Phase 1 (2026-01-20)
 
-**Branch:** `security-hardening` (separate worktree at `../audienceos-security-hardening`)
-**Status:** Phase 1 of CTO-approved 3-week unified platform plan
+**Branch:** `security-hardening` → MERGED TO `main`
+**Status:** Phase 1 COMPLETE - merged to main
 
-### Completed This Session:
+### Completed:
 - ✅ `lib/crypto.ts` - Production guards, removed insecure fallback keys
-- ✅ `lib/env.ts` - NEW centralized env validation module
-- ✅ Gmail/Slack callback - Removed userId from all console logs
-- ✅ `get-clients.ts` - Throws in production instead of mock data
+- ✅ `lib/env.ts` - NEW centralized env validation module (202 lines)
+- ✅ Gmail/Slack/LinkedIn callbacks - Removed userId from all console logs
+- ✅ `get-clients.ts`, `get-alerts.ts`, `get-agency-stats.ts`, `get-recent-communications.ts` - Throw in production instead of mock data
+- ✅ 11 files cleaned of PII exposure (reduced userId logs from 43 to ~19)
+- ✅ Unit tests for lib/env.ts (217 lines)
+- ✅ Lint passes (0 errors, 239 warnings)
 
-### Remaining Week 1 Tasks:
-- [ ] Apply `withPermission` to 9 OAuth routes missing RBAC
-- [ ] Fix DEV MODE in: `get-alerts.ts`, `get-agency-stats.ts`, `get-recent-communications.ts`
-- [ ] Remove 200+ console.log statements exposing sensitive data
-- [ ] Add rate limiting to 34 unprotected auth routes
+### Commits (merged to main):
+- `86f5c08` - security: Week 1 hardening - crypto, env, console logs
+- `b2002b1` - security: add production guards to chat function mock data fallbacks
+- `1cacc4d` - security: remove userId/PII from console.log statements
+- `8e75d20` - test: add unit tests for lib/env.ts environment validation
+- `435a8c7` - merge: Week 1 security hardening to main
 
-### Commit: `86f5c08`
-```
-security: Week 1 hardening - crypto, env, console logs
-```
+### Exit Criteria (Week 1) - Progress:
+- [x] Zero hardcoded fallback keys (DONE)
+- [x] Centralized env validation in use (DONE - lib/env.ts)
+- [~] Zero userId/integrationId in production logs (PARTIAL - reduced by 50%+)
+- [ ] All OAuth routes protected with RBAC (FUTURE)
 
-### Exit Criteria (Week 1):
-- [ ] All OAuth routes protected with RBAC
-- [ ] Zero userId/integrationId in production logs
-- [ ] Zero hardcoded fallback keys
-- [ ] Centralized env validation in use
+### Remaining Work (Week 1 continued):
+- Apply `withPermission(member)` to 9 OAuth routes
+- Add rate limiting to unprotected auth routes (security.ts already exists)
 
 ---
 
