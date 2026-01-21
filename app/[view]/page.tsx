@@ -10,7 +10,9 @@ import { notFound } from "next/navigation"
 import CommandCenter from "../page"
 
 // Valid view slugs that map to LinearView types
+// Includes both AudienceOS and RevOS views
 const VALID_VIEWS = [
+  // AudienceOS views
   "dashboard",
   "pipeline",
   "clients",
@@ -22,6 +24,12 @@ const VALID_VIEWS = [
   "automations",
   "integrations",
   "settings",
+  // RevOS views
+  "campaigns",
+  "content",
+  "outreach",
+  "cartridges",
+  "analytics",
 ] as const
 
 type ViewSlug = typeof VALID_VIEWS[number]

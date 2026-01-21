@@ -1,11 +1,58 @@
 # AudienceOS Command Center - Session Handover
 
-**Last Session:** 2026-01-20
-**Status:** Production active | RBAC 403 + KB Gemini auto-upload fixed | Demo ready
+**Last Session:** 2026-01-21
+**Status:** Unified Platform feature branch active | App Switcher implemented | Preview deployment working
 
 ---
 
-## CRITICAL FIX: HGC Knowledge Base "No Documents Found" ✅
+## Session 2026-01-21: Unified Platform - App Switcher
+
+**Branch:** `feature/unified-platform`
+**Worktree:** `/Users/rodericandrews/_PAI/projects/audienceos-unified-platform`
+**Preview URL:** https://v0-audience-os-command-center-3ljtuj9jf.vercel.app
+
+### What Was Built
+
+1. **App Switcher Component** (`components/app-switcher.tsx`)
+   - Dropdown to switch between AudienceOS and RevOS
+   - Gradient branding for each app
+   - Persists selection to localStorage
+
+2. **App Store** (`stores/app-store.ts`)
+   - Zustand store with `persist` middleware
+   - `skipHydration: true` to prevent SSR mismatch
+   - Manual rehydration in layout.tsx
+
+3. **Sidebar Updates** (`components/linear/sidebar.tsx`)
+   - Conditional navigation based on active app
+   - AudienceOS: Dashboard, Pipeline, Clients, Operations, Resources
+   - RevOS: Dashboard, Campaigns, Content, Marketing
+
+### Commits
+
+| Hash | Description |
+|------|-------------|
+| `6e7ade3` | feat(unified): add app switcher for AudienceOS/RevOS navigation |
+| `a890082` | fix(hydration): add skipHydration to app-store and rehydrate on client |
+
+### Vercel Environment Setup
+
+Preview env vars added to `rodericandrews-4022s-projects`:
+- `NEXT_PUBLIC_SUPABASE_URL` (ebxshdqfaqupnvpghodi)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_AI_API_KEY`
+- `RESEND_API_KEY` / `RESEND_FROM_EMAIL`
+- `DIIIPLOY_GATEWAY_URL` / `DIIIPLOY_GATEWAY_API_KEY`
+
+### Email Sent
+
+Sent support request to `support@vercel.com` about lost "Agro Bros" workspace access.
+
+---
+
+## Previous Session: CRITICAL FIX: HGC Knowledge Base "No Documents Found" ✅
 
 **Status:** FIXED
 **Priority:** HIGH

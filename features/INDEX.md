@@ -8,16 +8,25 @@
 
 ## 🔴 ACTIVE: RevOS + AudienceOS Unified Platform
 
-**Status:** PLANNED - Awaiting execution
+**Status:** IN PROGRESS - App Switcher deployed, security hardening pending
+**Spec:** [features/UNIFIED-PLATFORM.md](UNIFIED-PLATFORM.md)
 **Plan:** `docs/05-planning/UNIFIED-EXECUTION-PLAN.md`
+**Preview:** https://v0-audience-os-command-center-3ljtuj9jf.vercel.app
 
-AudienceOS selected as foundation for unified platform with RevOS. Integration pending security hardening completion.
+AudienceOS selected as foundation for unified platform with RevOS. App switcher UI deployed 2026-01-21.
 
 | Week | Focus | Status |
 |------|-------|--------|
 | 1 | Security hardening | ⏳ Pending |
 | 2 | Schema migration + feature port | ⏳ Pending |
-| 3 | HGC adapter + app switcher | ⏳ Pending |
+| 3 | HGC adapter + app switcher | 🚧 Started (App switcher UI complete) |
+
+### 2026-01-21 Progress
+- ✅ App switcher component with gradient branding
+- ✅ Zustand store with localStorage persistence (SSR-safe)
+- ✅ Conditional sidebar navigation per app
+- ✅ Preview deployment with 11 env vars configured
+- ⏳ Security hardening (Week 1 blockers)
 
 ---
 

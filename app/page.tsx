@@ -144,6 +144,8 @@ import { AutomationsHub } from "@/components/views/automations-hub"
 import { DashboardView } from "@/components/dashboard-view"
 import { SettingsView } from "@/components/settings-view"
 import { ClientDetailView } from "@/components/views/client-detail-view"
+// RevOS views
+import { CampaignsHub, ContentHub, OutreachHub, RevOSCartridgesHub, AnalyticsHub } from "@/components/views/revos"
 
 // Valid filter keys for URL params
 const FILTER_KEYS = ["stage", "health", "owner", "tier"] as const
@@ -156,7 +158,12 @@ function CommandCenterContent() {
   // Initialize activeView from URL pathname or default to dashboard
   // Supports both /dashboard style paths and legacy ?view= params
   const [activeView, setActiveView] = useState<LinearView>(() => {
-    const validViews: LinearView[] = ["dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings"]
+    const validViews: LinearView[] = [
+      // AudienceOS views
+      "dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings",
+      // RevOS views
+      "campaigns", "content", "outreach", "cartridges", "analytics"
+    ]
 
     // First check pathname (new style: /onboarding)
     const pathView = pathname.split('/')[1] // Get first segment after /
@@ -227,7 +234,12 @@ function CommandCenterContent() {
   // Sync activeView from URL pathname or query param after hydration
   // This handles direct URL navigation (e.g., /settings or ?view=settings)
   useEffect(() => {
-    const validViews: LinearView[] = ["dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings"]
+    const validViews: LinearView[] = [
+      // AudienceOS views
+      "dashboard", "pipeline", "clients", "client", "onboarding", "tickets", "intelligence", "knowledge", "automations", "integrations", "settings",
+      // RevOS views
+      "campaigns", "content", "outreach", "cartridges", "analytics"
+    ]
 
     // First check pathname (new style: /onboarding)
     const pathView = pathname.split('/')[1]
@@ -592,6 +604,22 @@ function CommandCenterContent() {
             }}
           />
         )
+
+      // ============ REVOS VIEWS ============
+      case "campaigns":
+        return <CampaignsHub />
+
+      case "content":
+        return <ContentHub />
+
+      case "outreach":
+        return <OutreachHub />
+
+      case "cartridges":
+        return <RevOSCartridgesHub />
+
+      case "analytics":
+        return <AnalyticsHub />
 
       default:
         return (

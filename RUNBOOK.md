@@ -486,6 +486,67 @@ npx vercel --prod --yes
 
 This bypasses Git and deploys directly from local files.
 
+### 🔧 Vercel Preview Environment Setup (2026-01-21)
+
+**Unified Platform feature branch uses a Preview deployment for development testing.**
+
+| Environment | Vercel Team | Purpose |
+|-------------|-------------|---------|
+| Production | `chase-6917s-projects` | Live site |
+| Preview | `rodericandrews-4022s-projects` | Feature development |
+
+**Preview Deployment URL:** Dynamic per deployment (e.g., `v0-audience-os-command-center-3ljtuj9jf.vercel.app`)
+
+**Required Environment Variables (11 total):**
+
+| Variable | Source | Required |
+|----------|--------|----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard | ✅ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard | ✅ |
+| `NEXT_PUBLIC_APP_URL` | Preview URL | ✅ |
+| `GOOGLE_CLIENT_ID` | Google Cloud Console | ✅ |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud Console | ✅ |
+| `GOOGLE_AI_API_KEY` | Google AI Studio | ✅ |
+| `RESEND_API_KEY` | Resend Dashboard | ⚠️ Email |
+| `RESEND_FROM_EMAIL` | Resend verified domain | ⚠️ Email |
+| `DIIIPLOY_GATEWAY_URL` | Chi-Gateway deployment | ⚠️ Gateway |
+| `DIIIPLOY_GATEWAY_API_KEY` | Chi-Gateway secrets | ⚠️ Gateway |
+
+**To Add Env Vars via Vercel CLI:**
+```bash
+# Set environment variable for Preview
+vercel env add NEXT_PUBLIC_SUPABASE_URL preview
+
+# Or add directly in Vercel Dashboard:
+# Project Settings → Environment Variables → Add
+```
+
+**Supabase Project:** `audienceos-cc-fresh` (Project ID: `ebxshdqfaqupnvpghodi`)
+
+**⚠️ Known Issue:** Google OAuth won't work on Preview URLs unless they're added to Google Cloud Console authorized redirect URIs.
+
+### 📱 Git Worktree for Feature Development (2026-01-21)
+
+**Unified Platform development uses a git worktree for isolation.**
+
+| Location | Branch | Purpose |
+|----------|--------|---------|
+| `command_center_audience_OS/` | `main` | Production code |
+| `audienceos-unified-platform/` | `feature/unified-platform` | Feature development |
+
+**To create a worktree (if it doesn't exist):**
+```bash
+cd /Users/rodericandrews/_PAI/projects/command_center_audience_OS
+git worktree add ../audienceos-unified-platform feature/unified-platform
+```
+
+**To deploy Preview from worktree:**
+```bash
+cd /Users/rodericandrews/_PAI/projects/audienceos-unified-platform
+npx vercel  # Deploys to Preview (not --prod)
+```
+
 ### GitHub Repo Status
 
 | What | Value |
