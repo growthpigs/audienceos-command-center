@@ -13,8 +13,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
 import { verifyOAuthState, encryptToken, serializeEncryptedToken } from '@/lib/crypto'
+import { withRateLimit, getClientIp } from '@/lib/security'
 import { integrationLogger } from '@/lib/logger'
 import type { IntegrationProvider } from '@/types/database'
+
+// Strict rate limit for OAuth callbacks: 5 per minute per IP
+const OAUTH_RATE_LIMIT = { maxRequests: 5, windowMs: 60000 }
 
 // Token exchange endpoints for each provider
 const TOKEN_ENDPOINTS: Record<string, string> = {
@@ -53,6 +57,10 @@ function getClientCredentials(provider: IntegrationProvider): { clientId: string
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limit check (5 per minute per IP)
+  const rateLimitResponse = withRateLimit(request, OAUTH_RATE_LIMIT)
+  if (rateLimitResponse) return rateLimitResponse
+
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get('code')
   const state = searchParams.get('state')

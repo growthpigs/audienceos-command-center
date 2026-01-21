@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@/lib/supabase'
+import { withRateLimit } from '@/lib/security'
 import { integrationLogger } from '@/lib/logger'
+
+// Strict rate limit for OAuth initiations: 3 per minute per IP
+const OAUTH_RATE_LIMIT = { maxRequests: 3, windowMs: 60000 }
 
 /**
  * GET /api/v1/integrations/linkedin/authorize
@@ -24,13 +28,17 @@ import { integrationLogger } from '@/lib/logger'
  * 4. Redirect to UniPile consent screen
  */
 export async function GET(request: NextRequest) {
+  // Rate limit check (3 per minute per IP)
+  const rateLimitResponse = withRateLimit(request, OAUTH_RATE_LIMIT)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const supabase = await createRouteHandlerClient(cookies)
 
     // Step 1: Verify user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      console.warn('[LinkedIn Authorize] Unauthorized access attempt')
+      integrationLogger.warn({ provider: 'linkedin' }, 'Unauthorized access attempt')
       return NextResponse.json(
         { error: 'Unauthorized', message: 'You must be logged in to authorize LinkedIn' },
         { status: 401 }
