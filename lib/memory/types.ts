@@ -18,9 +18,15 @@ export interface Memory {
 
 /**
  * Memory metadata for scoping
+ *
+ * 3-PART SCOPING: agencyId::clientId::userId
+ *   - agencyId: Required - tenant isolation
+ *   - clientId: Optional - client-specific memories
+ *   - userId: Required - user attribution
  */
 export interface MemoryMetadata {
   agencyId: string;
+  clientId?: string;
   userId: string;
   sessionId?: string;
   type: MemoryType;
@@ -46,6 +52,7 @@ export type MemoryType =
 export interface MemorySearchRequest {
   query: string;
   agencyId: string;
+  clientId?: string;
   userId: string;
   limit?: number;
   minScore?: number;
@@ -67,6 +74,7 @@ export interface MemorySearchResult {
 export interface MemoryAddRequest {
   content: string;
   agencyId: string;
+  clientId?: string;
   userId: string;
   sessionId?: string;
   type: MemoryType;

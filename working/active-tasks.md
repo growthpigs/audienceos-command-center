@@ -6,7 +6,7 @@
 **Plan:** `audienceos-unified-platform/docs/05-planning/CTO-DECISION-2026-01-20.md`
 **Worktree:** `/Users/rodericandrews/_PAI/projects/audienceos-unified-platform`
 **Branch:** `feature/unified-platform`
-**Confidence:** 7/10 (Week 1 Security complete, ready for Phase 0)
+**Confidence:** 8/10 (Week 1 Security + Phase 0 complete, ready for Phase 1)
 **Foundation:** AudienceOS codebase + Supabase
 
 ---
@@ -37,20 +37,44 @@ Per CTO Decision 2026-01-20: "Week 1 is security hardening. No exceptions."
 
 ---
 
-### Phase 0: Database Schema Prep (1-2 days)
+### Phase 0: Database Schema Prep (1-2 days) ✅ COMPLETE
 
-**Status:** READY TO START (Week 1 Security complete)
+**Status:** DONE (2026-01-21)
 
 **Tasks:**
-- [ ] Create migration: `supabase/migrations/025_add_revos_tables.sql`
-- [ ] Create migration: `supabase/migrations/026_unify_cartridges.sql`
-- [ ] Update `lib/memory/mem0-service.ts` to 3-part format
-- [ ] Apply migrations to AudienceOS Supabase (`ebxshdqfaqupnvpghodi`)
-- [ ] Generate TypeScript types from new schema
+- [x] Create migration: `supabase/migrations/025_add_revos_tables.sql`
+  - 11 new tables: linkedin_account, lead_magnet, campaign, post, comment, lead, webhook_config, webhook_delivery, pod, pod_member, pod_activity
+  - 10 new enums for status tracking
+  - Full RLS policies with agency_id scoping
+- [x] Create migration: `supabase/migrations/026_unify_cartridges.sql`
+  - Master `cartridge` table with 4-tier system (system/workspace/user/skill)
+  - `get_effective_cartridges()` function for tier-based precedence
+  - `get_merged_cartridge()` function for merging cartridge data
+  - Bidirectional links to specialized cartridge tables
+- [x] Update `lib/memory/mem0-service.ts` to 3-part format
+  - New format: `agencyId::clientId::userId`
+  - Supports agency-wide, client-level, and user-level scoping
+  - All methods updated with optional clientId parameter
+- [x] Generate TypeScript types: `lib/revos/types.ts`
+  - 370+ lines of type definitions
+  - Insert/Update variants for all tables
+
+**Migration Instructions:**
+```bash
+# Link project (if not already linked)
+supabase link --project-ref ebxshdqfaqupnvpghodi
+
+# Push migrations
+supabase db push
+
+# Or apply manually in Supabase Dashboard SQL Editor:
+# 1. Run supabase/migrations/025_add_revos_tables.sql
+# 2. Run supabase/migrations/026_unify_cartridges.sql
+```
 
 ### Phase 1: Core Integration (2-3 days)
 
-**Status:** BLOCKED on Phase 0
+**Status:** READY TO START (Phase 0 complete)
 
 **Tasks:**
 - [ ] Port `lib/chips/` (11 chip implementations)
@@ -149,4 +173,4 @@ Per CTO Decision 2026-01-20: "Week 1 is security hardening. No exceptions."
 
 ---
 
-**Last Updated:** 2026-01-21 (Week 1 Security Complete)
+**Last Updated:** 2026-01-21 (Week 1 Security + Phase 0 Complete)

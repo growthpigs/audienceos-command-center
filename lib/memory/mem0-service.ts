@@ -29,9 +29,41 @@ interface Mem0MCPClient {
 
 /**
  * Build scoped user ID for multi-tenant support
+ *
+ * 3-PART FORMAT: agencyId::clientId::userId
+ *
+ * Supports 3 scoping levels:
+ *   1. Agency-wide:  agencyId::_::_
+ *   2. Client-level: agencyId::clientId::_
+ *   3. User-level:   agencyId::clientId::userId
+ *
+ * Using '::' as separator and '_' for wildcards ensures:
+ *   - Clear visual separation
+ *   - Safe for Mem0 userId field
+ *   - Query patterns work (can search by prefix)
  */
-function buildScopedUserId(agencyId: string, userId: string): string {
-  return `${agencyId}:${userId}`;
+function buildScopedUserId(
+  agencyId: string,
+  userId: string,
+  clientId?: string | null
+): string {
+  const client = clientId || '_';
+  const user = userId || '_';
+  return `${agencyId}::${client}::${user}`;
+}
+
+/**
+ * Build agency-level scope (for agency-wide memories)
+ */
+function buildAgencyScopedId(agencyId: string): string {
+  return `${agencyId}::_::_`;
+}
+
+/**
+ * Build client-level scope (for client-specific memories)
+ */
+function buildClientScopedId(agencyId: string, clientId: string): string {
+  return `${agencyId}::${clientId}::_`;
 }
 
 /**
@@ -74,12 +106,22 @@ export class Mem0Service {
 
   /**
    * Add a memory
+   *
+   * 3-PART SCOPING:
+   *   - User memories: agencyId::clientId::userId (most specific)
+   *   - Client memories: agencyId::clientId::_ (client-wide)
+   *   - Agency memories: agencyId::_::_ (agency-wide)
    */
   async addMemory(request: MemoryAddRequest): Promise<Memory> {
-    const scopedUserId = buildScopedUserId(request.agencyId, request.userId);
+    const scopedUserId = buildScopedUserId(
+      request.agencyId,
+      request.userId,
+      request.clientId
+    );
 
     const metadata: MemoryMetadata = {
       agencyId: request.agencyId,
+      clientId: request.clientId,
       userId: request.userId,
       sessionId: request.sessionId,
       type: request.type,
@@ -111,10 +153,18 @@ export class Mem0Service {
 
   /**
    * Search memories
+   *
+   * 3-PART SCOPING: Searches at the most specific level provided:
+   *   - With clientId: searches agencyId::clientId::userId
+   *   - Without clientId: searches agencyId::_::userId
    */
   async searchMemories(request: MemorySearchRequest): Promise<MemorySearchResult> {
     const startTime = Date.now();
-    const scopedUserId = buildScopedUserId(request.agencyId, request.userId);
+    const scopedUserId = buildScopedUserId(
+      request.agencyId,
+      request.userId,
+      request.clientId
+    );
 
     const results = await this.mcpClient.searchMemories({
       query: request.query,
@@ -129,6 +179,7 @@ export class Mem0Service {
         content,
         metadata: {
           agencyId: request.agencyId,
+          clientId: request.clientId || metadata.clientId,
           userId: request.userId,
           type: (metadata.type as MemoryType) || 'conversation',
           ...metadata,
@@ -165,11 +216,13 @@ export class Mem0Service {
   async getRecentMemories(
     agencyId: string,
     userId: string,
-    limit: number = 10
+    limit: number = 10,
+    clientId?: string
   ): Promise<Memory[]> {
     const result = await this.searchMemories({
       query: 'recent conversations and decisions',
       agencyId,
+      clientId,
       userId,
       limit,
     });
@@ -183,11 +236,13 @@ export class Mem0Service {
     agencyId: string,
     userId: string,
     type: MemoryType,
-    limit: number = 10
+    limit: number = 10,
+    clientId?: string
   ): Promise<Memory[]> {
     const result = await this.searchMemories({
       query: `${type} memory`,
       agencyId,
+      clientId,
       userId,
       limit,
       types: [type],
@@ -201,11 +256,13 @@ export class Mem0Service {
   async getImportantMemories(
     agencyId: string,
     userId: string,
-    limit: number = 5
+    limit: number = 5,
+    clientId?: string
   ): Promise<Memory[]> {
     const result = await this.searchMemories({
       query: 'important decisions and preferences',
       agencyId,
+      clientId,
       userId,
       limit,
     });
@@ -224,11 +281,13 @@ export class Mem0Service {
     userId: string,
     sessionId: string,
     summary: string,
-    topics: string[]
+    topics: string[],
+    clientId?: string
   ): Promise<Memory> {
     return this.addMemory({
       content: summary,
       agencyId,
+      clientId,
       userId,
       sessionId,
       type: 'conversation',
@@ -245,11 +304,13 @@ export class Mem0Service {
     agencyId: string,
     userId: string,
     decision: string,
-    context: string
+    context: string,
+    clientId?: string
   ): Promise<Memory> {
     return this.addMemory({
       content: `Decision: ${decision}. Context: ${context}`,
       agencyId,
+      clientId,
       userId,
       type: 'decision',
       importance: 'high',
@@ -262,11 +323,13 @@ export class Mem0Service {
   async storePreference(
     agencyId: string,
     userId: string,
-    preference: string
+    preference: string,
+    clientId?: string
   ): Promise<Memory> {
     return this.addMemory({
       content: `Preference: ${preference}`,
       agencyId,
+      clientId,
       userId,
       type: 'preference',
       importance: 'high',
@@ -280,11 +343,13 @@ export class Mem0Service {
     agencyId: string,
     userId: string,
     task: string,
-    dueContext?: string
+    dueContext?: string,
+    clientId?: string
   ): Promise<Memory> {
     return this.addMemory({
       content: `Task: ${task}${dueContext ? `. Due: ${dueContext}` : ''}`,
       agencyId,
+      clientId,
       userId,
       type: 'task',
       importance: 'medium',
@@ -294,7 +359,7 @@ export class Mem0Service {
   /**
    * Get memory statistics (estimate)
    */
-  async getStats(agencyId: string, userId: string): Promise<MemoryStats> {
+  async getStats(agencyId: string, userId: string, clientId?: string): Promise<MemoryStats> {
     // Search for all types to estimate counts
     const types: MemoryType[] = [
       'conversation',
@@ -320,6 +385,7 @@ export class Mem0Service {
       const result = await this.searchMemories({
         query: type,
         agencyId,
+        clientId,
         userId,
         limit: 100,
         types: [type],
