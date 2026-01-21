@@ -1,8 +1,59 @@
 # AudienceOS Command Center - RUNBOOK
 
 **Status:** Production active | 65-70% production ready | RevOS integration planned
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-21
 **For strategy/status:** See CLAUDE.md | **For day-to-day ops:** This file | **For validation results:** See docs/04-technical/VALIDATION.md
+
+---
+
+## 🚨 CRITICAL: Pre-Work Checklist (Added 2026-01-21)
+
+**Lesson Learned:** 5 duplicate AudienceOS directories caused confusion, wrong repo edited, wasted time. Follow this checklist EVERY session.
+
+### Before Making ANY Changes
+
+1. **Which repo deploys to production?**
+   ```bash
+   # Check .vercel/project.json for projectName
+   cat .vercel/project.json | grep projectName
+   ```
+   | Directory | GitHub Remote | Vercel Project | Status |
+   |-----------|---------------|----------------|--------|
+   | `command_center_audience_OS` | `agro-bros/audienceos-command-center` | `v0-audience-os-command-center` | **PRODUCTION** |
+   | `hgc-monorepo/packages/audiences-os` | `growthpigs/hgc-monorepo` | `audienceos` | HGC Library |
+   | `audienceos` | ARCHIVED | - | `_archived_audienceos_2026-01-21` |
+   | `audienceos-security-hardening` | DELETED | - | Orphaned worktree |
+
+2. **Are you in the right directory?**
+   ```bash
+   pwd && git remote get-url origin
+   # For production work, MUST be: /Users/rodericandrews/_PAI/projects/command_center_audience_OS
+   # Remote MUST be: git@github.com:agro-bros/audienceos-command-center.git
+   ```
+
+3. **Is there codebase sprawl?**
+   ```bash
+   ls ~/projects | grep -i audience  # Should only see command_center_audience_OS
+   ```
+
+4. **Runtime-First Rule:**
+   > "Verification requires Execution. File existence does not imply functionality. Repo existence does not imply production deployment."
+
+   Always run `npm run build` after changes - don't assume syntax correctness means it works.
+
+5. **Known Gotchas:**
+   - `@/` path aliases don't work cross-package in monorepos (use relative imports)
+   - Broken symlinks cause silent build failures (check with `ls -la`)
+   - Same commit can have flaky builds on Vercel - check multiple deployments
+   - Git auto-deploy is broken (repo transferred) - use `npx vercel --prod --yes`
+   - Debug console.log statements MUST be removed before production
+
+6. **Deployment Method (CLI Only - 2026-01-20):**
+   ```bash
+   # From command_center_audience_OS directory
+   npx vercel --prod --yes
+   ```
+   Git push does NOT auto-deploy (Vercel only has access to old `growthpigs/` org).
 
 ---
 
