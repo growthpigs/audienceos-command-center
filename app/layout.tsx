@@ -10,6 +10,7 @@ import "./globals.css"
 import { ChatInterface } from "@/components/chat/chat-interface"
 import { ThemeSync } from "@/components/theme-sync"
 import { useAuth } from "@/hooks/use-auth"
+import { useAppStore } from "@/stores/app-store"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +39,11 @@ export default function RootLayout({
   // DIAGNOSTIC: Log initial render
   useEffect(() => {
     console.log('[CHAT-INIT] RootLayout mounted')
+  }, [])
+
+  // Rehydrate Zustand stores that use skipHydration
+  useEffect(() => {
+    useAppStore.persist.rehydrate()
   }, [])
 
   // Initialize portal host after DOM is ready

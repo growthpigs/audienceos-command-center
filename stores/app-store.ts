@@ -72,6 +72,7 @@ export const useAppStore = create<AppState>()(
       }),
       {
         name: 'unified-platform-app',
+        skipHydration: true,
       }
     ),
     { name: 'AppStore' }
