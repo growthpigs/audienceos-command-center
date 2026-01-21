@@ -17,8 +17,16 @@ interface AppSwitcherProps {
 }
 
 export function AppSwitcher({ collapsed }: AppSwitcherProps) {
-  const { activeApp, setActiveApp, getActiveConfig } = useAppStore()
-  const activeConfig = getActiveConfig()
+  const { activeApp, setActiveApp } = useAppStore()
+  // Derive config directly to ensure it updates with activeApp
+  // Use fallback to audienceos to handle initial hydration state
+  const safeActiveApp = activeApp || 'audienceos'
+  const activeConfig = APP_CONFIGS[safeActiveApp]
+
+  // Early return if config is somehow undefined (shouldn't happen but defensive)
+  if (!activeConfig) {
+    return null
+  }
 
   return (
     <DropdownMenu>
@@ -40,7 +48,7 @@ export function AppSwitcher({ collapsed }: AppSwitcherProps) {
                 className="flex items-center gap-1.5"
                 style={{ fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}
               >
-                {activeApp === 'audienceos' ? (
+                {safeActiveApp === 'audienceos' ? (
                   <>
                     <span className="text-[17px] font-semibold tracking-tight text-foreground dark:text-white">
                       audience
@@ -97,7 +105,7 @@ export function AppSwitcher({ collapsed }: AppSwitcherProps) {
       >
         {(Object.keys(APP_CONFIGS) as AppId[]).map((appId) => {
           const config = APP_CONFIGS[appId]
-          const isActive = activeApp === appId
+          const isActive = safeActiveApp === appId
 
           return (
             <DropdownMenuItem
