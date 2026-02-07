@@ -63,7 +63,8 @@ function getSessionFromCookie(): { access_token: string; refresh_token: string; 
       if (chunkMatch) {
         chunks.push({
           index: parseInt(chunkMatch[1], 10),
-          value: chunkMatch[2]
+          // URL-decode each chunk individually before joining
+          value: decodeURIComponent(chunkMatch[2])
         })
       }
     }
@@ -72,7 +73,7 @@ function getSessionFromCookie(): { access_token: string; refresh_token: string; 
       // Sort by index and concatenate
       chunks.sort((a, b) => a.index - b.index)
       cookieValue = chunks.map(c => c.value).join('')
-      console.log(`[AUTH] Reassembled ${chunks.length} cookie chunks`)
+      console.log(`[AUTH] Reassembled ${chunks.length} cookie chunks, total length: ${cookieValue.length}`)
     }
   }
 
@@ -82,14 +83,29 @@ function getSessionFromCookie(): { access_token: string; refresh_token: string; 
   }
 
   try {
-    cookieValue = decodeURIComponent(cookieValue)
+    // Only decode if it wasn't already decoded during chunk reassembly
+    if (nonChunkedCookie) {
+      cookieValue = decodeURIComponent(cookieValue)
+    }
 
     // Strip 'base64-' prefix if present
     if (cookieValue.startsWith('base64-')) {
       cookieValue = cookieValue.substring(7)
     }
 
-    const session = JSON.parse(atob(cookieValue))
+    // Debug: Log token preview (first 50 chars only for security)
+    console.log(`[AUTH] Cookie value preview: ${cookieValue.substring(0, 50)}...`)
+
+    // Convert base64url to standard base64 (Supabase uses URL-safe encoding)
+    // Replace - with + and _ with /, then add padding if needed
+    let base64 = cookieValue.replace(/-/g, '+').replace(/_/g, '/')
+    // Add padding if necessary
+    const padding = base64.length % 4
+    if (padding) {
+      base64 += '='.repeat(4 - padding)
+    }
+
+    const session = JSON.parse(atob(base64))
 
     if (session.access_token && session.refresh_token && session.user) {
       return {
@@ -132,7 +148,9 @@ async function fetchProfileDirect(
     )
 
     if (!response.ok) {
-      console.error('[AUTH] Profile fetch failed:', response.status)
+      // Get the error body for more details on 500 errors
+      const errorBody = await response.text()
+      console.error('[AUTH] Profile fetch failed:', response.status, errorBody)
       return null
     }
 
