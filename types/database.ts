@@ -9,7 +9,7 @@ export type CommunicationPlatform = 'email' | 'slack'
 export type IntegrationProvider = 'slack' | 'gmail' | 'google_ads' | 'meta_ads'
 export type OAuthProvider = 'gmail' | 'slack' | 'meta' | 'stripe' | 'linkedin'
 export type PreferenceCategory = string
-export type UserRole = 'owner' | 'admin' | 'manager' | 'member'
+export type UserRole = 'owner' | 'admin' | 'manager' | 'member' | 'user'
 export type WorkflowStatus = 'active' | 'paused' | 'disabled'
 
 // Onboarding types (from database enums)
