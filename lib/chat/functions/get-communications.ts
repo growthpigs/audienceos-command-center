@@ -174,7 +174,7 @@ export async function getRecentCommunications(
       summary: row.content?.substring(0, 200) ?? undefined,
       from: row.is_inbound ? (row.sender_email ?? undefined) : undefined,
       to: !row.is_inbound ? (row.sender_email ?? undefined) : undefined,
-      date: row.created_at,
+      date: row.created_at ?? new Date().toISOString(),
     }));
 
     // Merge and deduplicate by id, sort by date descending
