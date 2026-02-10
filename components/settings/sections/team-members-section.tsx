@@ -92,8 +92,9 @@ interface MemberProfileProps {
 function MemberProfile({ member, onBack, onUpdate }: MemberProfileProps) {
   const [firstName, setFirstName] = useState(member.first_name)
   const [lastName, setLastName] = useState(member.last_name)
-  const initialNickname = member.nickname ?? member.first_name.toLowerCase()
+  const [initialNickname] = useState(member.nickname ?? member.first_name.toLowerCase())
   const [nickname, setNickname] = useState(initialNickname)
+  const [initialRole] = useState(member.role)
   const [role, setRole] = useState(member.role)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -104,26 +105,28 @@ function MemberProfile({ member, onBack, onUpdate }: MemberProfileProps) {
     firstName !== member.first_name ||
     lastName !== member.last_name ||
     nickname !== initialNickname ||
-    role !== member.role
+    role !== initialRole
 
   const handleSave = async () => {
-    if (!hasChanges) return
-
     setIsSaving(true)
     try {
+      // Only send fields that actually changed
+      const patch: Record<string, unknown> = {}
+      if (firstName !== member.first_name) patch.first_name = firstName
+      if (lastName !== member.last_name) patch.last_name = lastName
+      if (nickname !== initialNickname) patch.nickname = nickname || null
+      if (role !== initialRole) patch.role = role
+
+      if (Object.keys(patch).length === 0) return
+
       const response = await fetchWithCsrf(`/api/v1/settings/users/${member.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          nickname: nickname || null,
-          role: role,
-        }),
+        body: JSON.stringify(patch),
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to update user')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update user')
       }
 
       const { data: updated } = await response.json()
