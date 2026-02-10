@@ -163,11 +163,14 @@ export async function syncChannel(
 
     // Update sync metadata and message count
     // Get total message count for this channel from communication table
+    // Count messages for THIS specific channel (not all slack messages for the client)
     const { count: totalMessages } = await supabase
       .from('communication')
       .select('id', { count: 'exact', head: true })
+      .eq('agency_id', agencyId)
       .eq('client_id', clientId)
       .eq('platform', 'slack')
+      .like('message_id', `slack-${channelId}-%`)
 
     await supabase
       .from('client_slack_channel')

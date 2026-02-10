@@ -50,19 +50,20 @@ export const GET = withPermission({ resource: 'clients', action: 'read' })(
       const agencyId = request.user.agencyId
       const supabase = await createRouteHandlerClient(cookies)
 
-      const { data: linkages } = await (supabase as any)
+      const { data: linkages } = await supabase
         .from('client_slack_channel')
-        .select('slack_channel_id, client_id, client:client_id(name)')
+        .select('id, slack_channel_id, client_id, client:client_id(name)')
         .eq('agency_id', agencyId)
         .eq('is_active', true)
 
       // Build a map of channel_id -> linked client info
-      const linkageMap = new Map<string, { client_id: string; client_name: string }>()
+      const linkageMap = new Map<string, { client_id: string; client_name: string; link_id: string }>()
       if (linkages) {
         for (const link of linkages) {
           linkageMap.set(link.slack_channel_id, {
             client_id: link.client_id,
             client_name: link.client?.name || 'Unknown',
+            link_id: link.id,
           })
         }
       }

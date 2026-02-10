@@ -17,6 +17,7 @@ interface CreateChannelParams {
   clientName: string
   channelNameOverride?: string
   isPrivate?: boolean
+  label?: string
   supabase: SupabaseClient
 }
 
@@ -26,6 +27,7 @@ interface CreateChannelResult {
     id: string
     slack_channel_id: string
     slack_channel_name: string
+    label: string | null
   }
   error?: string
   status?: number
@@ -35,7 +37,7 @@ interface CreateChannelResult {
  * Create a Slack channel for a client via the Gateway and record the mapping.
  */
 export async function createSlackChannelForClient(params: CreateChannelParams): Promise<CreateChannelResult> {
-  const { agencyId, clientId, clientName, channelNameOverride, isPrivate, supabase } = params
+  const { agencyId, clientId, clientName, channelNameOverride, isPrivate, label, supabase } = params
 
   // Check if Slack is connected for this tenant
   if (!GATEWAY_API_KEY || !TENANT_ID) {
@@ -92,20 +94,18 @@ export async function createSlackChannelForClient(params: CreateChannelParams): 
       console.warn(`[slack-channel-service] Bot invite failed for channel ${result.channel.id}`)
     }
 
-    // Store the mapping in Supabase
-const { data: record, error: dbError } = await supabase
+    // Store the mapping in Supabase (insert, not upsert — multiple channels per client)
+    const { data: record, error: dbError } = await supabase
       .from('client_slack_channel')
-      .upsert(
-        {
-          agency_id: agencyId,
-          client_id: clientId,
-          slack_channel_id: result.channel.id,
-          slack_channel_name: result.channel.name,
-          is_active: true,
-        },
-        { onConflict: 'agency_id,client_id' }
-      )
-      .select('id, slack_channel_id, slack_channel_name')
+      .insert({
+        agency_id: agencyId,
+        client_id: clientId,
+        slack_channel_id: result.channel.id,
+        slack_channel_name: result.channel.name,
+        label: label || null,
+        is_active: true,
+      })
+      .select('id, slack_channel_id, slack_channel_name, label')
       .single()
 
     if (dbError) {
@@ -122,45 +122,55 @@ const { data: record, error: dbError } = await supabase
 }
 
 /**
- * Archive a client's Slack channel via the Gateway and mark it inactive.
+ * Archive a client's Slack channel(s) via the Gateway and mark inactive.
+ * If linkId is provided, only archive that specific link.
+ * Otherwise, archive ALL active channels for the client.
  */
 export async function archiveSlackChannelForClient(
   clientId: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  linkId?: string
 ): Promise<{ ok: boolean; error?: string }> {
-  // Get existing channel mapping
-  const { data: mapping } = await supabase
+  // Get channel mapping(s) to archive
+  let query = supabase
     .from('client_slack_channel')
     .select('id, slack_channel_id')
     .eq('client_id', clientId)
     .eq('is_active', true)
-    .maybeSingle()
 
-  if (!mapping) {
-    return { ok: true } // No channel to archive
+  if (linkId) {
+    query = query.eq('id', linkId)
   }
 
-  // Archive in Slack via Gateway
-  try {
-    await fetch(`${GATEWAY_URL}/slack/channels/archive`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GATEWAY_API_KEY}`,
-        'X-Tenant-ID': TENANT_ID,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ channel: mapping.slack_channel_id }),
-      signal: AbortSignal.timeout(5000),
-    })
-  } catch {
-    console.warn(`[slack-channel-service] Gateway archive failed for ${mapping.slack_channel_id}`)
+  const { data: mappings } = await query
+
+  if (!mappings || mappings.length === 0) {
+    return { ok: true } // No channel(s) to archive
   }
 
-  // Mark inactive in DB regardless (preserve historical data)
-  await supabase
-    .from('client_slack_channel')
-    .update({ is_active: false })
-    .eq('id', mapping.id)
+  // Archive each channel in Slack via Gateway, then mark inactive in DB
+  for (const mapping of mappings) {
+    try {
+      await fetch(`${GATEWAY_URL}/slack/channels/archive`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GATEWAY_API_KEY}`,
+          'X-Tenant-ID': TENANT_ID,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ channel: mapping.slack_channel_id }),
+        signal: AbortSignal.timeout(5000),
+      })
+    } catch {
+      console.warn(`[slack-channel-service] Gateway archive failed for ${mapping.slack_channel_id}`)
+    }
+
+    // Mark inactive in DB regardless (preserve historical data)
+    await supabase
+      .from('client_slack_channel')
+      .update({ is_active: false })
+      .eq('id', mapping.id)
+  }
 
   return { ok: true }
 }

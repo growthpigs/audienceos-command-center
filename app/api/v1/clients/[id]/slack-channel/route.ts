@@ -1,7 +1,8 @@
 /**
- * Client Slack Channel API
- * GET /api/v1/clients/[id]/slack-channel - Get linked Slack channel info
- * POST /api/v1/clients/[id]/slack-channel - Create or link a Slack channel for this client
+ * Client Slack Channel API (multi-channel)
+ * GET /api/v1/clients/[id]/slack-channel - Get all linked Slack channels (array)
+ * POST /api/v1/clients/[id]/slack-channel - Link a Slack channel to this client
+ * DELETE /api/v1/clients/[id]/slack-channel?linkId=uuid - Unlink a specific channel
  */
 
 import { NextResponse } from 'next/server'
@@ -12,7 +13,7 @@ import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permi
 import { createSlackChannelForClient } from '@/lib/integrations/slack-channel-service'
 import { syncChannel } from '@/lib/integrations/slack-channel-sync-service'
 
-// DELETE /api/v1/clients/[id]/slack-channel
+// DELETE /api/v1/clients/[id]/slack-channel?linkId=uuid
 export const DELETE = withPermission({ resource: 'clients', action: 'write' })(
   async (request: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
     const rateLimitResponse = withRateLimit(request)
@@ -26,16 +27,36 @@ export const DELETE = withPermission({ resource: 'clients', action: 'write' })(
       const agencyId = request.user.agencyId
       const supabase = await createRouteHandlerClient(cookies)
 
-      const { error } = await (supabase as any)
+      // Require linkId query parameter for targeted unlink
+      const { searchParams } = new URL(request.url)
+      const linkId = searchParams.get('linkId')
+
+      if (!linkId) {
+        return createErrorResponse(400, 'Missing required query parameter: linkId')
+      }
+
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (!uuidRegex.test(linkId)) {
+        return createErrorResponse(400, 'Invalid linkId format')
+      }
+
+      const { data, error } = await supabase
         .from('client_slack_channel')
         .update({ is_active: false })
+        .eq('id', linkId)
         .eq('client_id', clientId)
         .eq('agency_id', agencyId)
         .eq('is_active', true)
+        .select('id')
 
       if (error) {
         console.error('[slack-channel] Unlink error:', error)
         return createErrorResponse(500, 'Failed to unlink channel')
+      }
+
+      if (!data || data.length === 0) {
+        return createErrorResponse(404, 'No matching active channel link found')
       }
 
       return NextResponse.json({ data: null, message: 'Channel unlinked' })
@@ -55,18 +76,18 @@ export const GET = withPermission({ resource: 'clients', action: 'read' })(
       const { id: clientId } = await params
       const supabase = await createRouteHandlerClient(cookies)
 
-const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('client_slack_channel')
         .select('*')
         .eq('client_id', clientId)
         .eq('is_active', true)
-        .maybeSingle()
+        .order('created_at', { ascending: true })
 
       if (error) {
-        return createErrorResponse(500, 'Failed to fetch Slack channel')
+        return createErrorResponse(500, 'Failed to fetch Slack channels')
       }
 
-      return NextResponse.json({ data })
+      return NextResponse.json({ data: data || [] })
     } catch {
       return createErrorResponse(500, 'Internal server error')
     }
@@ -86,20 +107,6 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
       const { id: clientId } = await params
       const agencyId = request.user.agencyId
       const supabase = await createRouteHandlerClient(cookies)
-
-      // Check if channel already exists
-      const { data: existing } = await supabase
-        .from('client_slack_channel')
-        .select('id, slack_channel_id, slack_channel_name, is_active')
-        .eq('client_id', clientId)
-        .maybeSingle()
-
-      if (existing?.is_active) {
-        return NextResponse.json(
-          { error: 'Client already has an active Slack channel', data: existing },
-          { status: 409 }
-        )
-      }
 
       // Get client name for channel naming
       const { data: client, error: clientError } = await supabase
@@ -126,23 +133,47 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
         const slackChannelName = (typeof body.slack_channel_name === 'string' && body.slack_channel_name)
           ? body.slack_channel_name
           : slackChannelId // Use ID as fallback name
+        const label = (typeof body.label === 'string' && body.label.length <= 50)
+          ? body.label
+          : null
+
+        // Check for duplicate: same channel already linked to THIS client
+        const { data: existingLink } = await supabase
+          .from('client_slack_channel')
+          .select('id')
+          .eq('agency_id', agencyId)
+          .eq('client_id', clientId)
+          .eq('slack_channel_id', slackChannelId)
+          .eq('is_active', true)
+
+        if (existingLink && existingLink.length > 0) {
+          return NextResponse.json(
+            { error: 'This channel is already linked to this client' },
+            { status: 409 }
+          )
+        }
 
         const { data: record, error: dbError } = await supabase
           .from('client_slack_channel')
-          .upsert(
-            {
-              agency_id: agencyId,
-              client_id: clientId,
-              slack_channel_id: slackChannelId,
-              slack_channel_name: slackChannelName,
-              is_active: true,
-            },
-            { onConflict: 'agency_id,client_id' }
-          )
-          .select('id, slack_channel_id, slack_channel_name')
+          .insert({
+            agency_id: agencyId,
+            client_id: clientId,
+            slack_channel_id: slackChannelId,
+            slack_channel_name: slackChannelName,
+            label,
+            is_active: true,
+          })
+          .select('id, slack_channel_id, slack_channel_name, label, message_count')
           .single()
 
         if (dbError) {
+          // Handle unique violation (channel linked to another client)
+          if (dbError.code === '23505') {
+            return NextResponse.json(
+              { error: 'This channel is already linked to another client' },
+              { status: 409 }
+            )
+          }
           console.error('[slack-channel] Link existing channel DB error:', dbError)
           return createErrorResponse(500, 'Failed to save channel mapping')
         }
@@ -157,6 +188,7 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
       // Mode 2: Create a NEW Slack channel via Gateway
       const isPrivate = body.is_private === true
       const channelNameOverride = typeof body.channel_name === 'string' ? body.channel_name : undefined
+      const label = (typeof body.label === 'string' && body.label.length <= 50) ? body.label : undefined
 
       const result = await createSlackChannelForClient({
         agencyId,
@@ -164,6 +196,7 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
         clientName: client.name,
         channelNameOverride,
         isPrivate,
+        label,
         supabase,
       })
 
