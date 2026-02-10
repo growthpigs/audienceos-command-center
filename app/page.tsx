@@ -625,6 +625,8 @@ function CommandCenterContent() {
             <ClientDetailPanel
               client={clientForPanel}
               onClose={() => setSelectedClient(null)}
+              onOpenDetail={selectedClient ? () => handleOpenClientDetail(selectedClient.id) : undefined}
+              clientId={selectedClient?.id}
             />
           ) : undefined
         }

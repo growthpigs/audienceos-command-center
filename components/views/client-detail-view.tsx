@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import {
   ArrowLeft,
-  ExternalLink,
   CheckCircle2,
   Circle,
   TrendingUp,
@@ -20,7 +19,6 @@ import {
   RefreshCw,
   Play,
   Check,
-  Share2,
 } from "lucide-react"
 import { owners } from "@/lib/constants/pipeline"
 import { cn } from "@/lib/utils"
@@ -165,15 +163,6 @@ export function ClientDetailView({ clientId, onBack }: ClientDetailViewProps) {
                 <AvatarFallback className={cn(owner?.color, "text-xs text-white")}>{owner?.avatar}</AvatarFallback>
               </Avatar>
               <span className="text-[10px] text-muted-foreground">Owner: {client.owner}</span>
-
-              <Button variant="outline" size="sm" className="ml-4 gap-2 bg-transparent">
-                <Share2 className="h-4 w-4" />
-                Share
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                <ExternalLink className="h-4 w-4" />
-                Open Shopify
-              </Button>
             </div>
           </div>
         </div>

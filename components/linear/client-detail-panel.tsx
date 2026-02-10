@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -62,6 +62,8 @@ interface ClientDetailPanelProps {
     statusNote?: string | null
   }
   onClose: () => void
+  onOpenDetail?: () => void
+  clientId?: string // Real UUID for API calls (client.id in the panel is the logo)
 }
 
 function getHealthBadgeStyle(health: string) {
@@ -94,29 +96,62 @@ function getTierBadgeStyle(tier: string) {
 
 interface Note {
   id: string
-  text: string
-  author: string
-  timestamp: Date
+  content: string
+  created_at: string
+  author: {
+    id: string
+    first_name: string
+    last_name: string
+  } | null
 }
 
-export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
+function formatTimeAgo(dateString: string) {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return "just now"
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString()
+}
+
+export function ClientDetailPanel({ client, onClose, onOpenDetail, clientId }: ClientDetailPanelProps) {
   const router = useRouter()
   const { toast } = useToast()
 
+  // Use clientId (real UUID) for API calls, fall back to client.id
+  const apiClientId = clientId || client.id
+
   const [isEditing, setIsEditing] = useState(false)
   const [noteText, setNoteText] = useState("")
-  const [notes, setNotes] = useState<Note[]>(() => {
-    // Initialize with statusNote if it exists
-    if (client.statusNote) {
-      return [{
-        id: '1',
-        text: client.statusNote,
-        author: client.owner.name,
-        timestamp: new Date()
-      }]
+  const [notes, setNotes] = useState<Note[]>([])
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false)
+
+  // Fetch notes from API on mount / when client changes
+  const fetchNotes = useCallback(async () => {
+    if (!clientId) return // Don't fetch if no real UUID
+    setIsLoadingNotes(true)
+    try {
+      const response = await fetch(`/api/v1/clients/${clientId}/notes`)
+      if (response.ok) {
+        const { data } = await response.json()
+        setNotes(data || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch notes:', error)
+    } finally {
+      setIsLoadingNotes(false)
     }
-    return []
-  })
+  }, [clientId])
+
+  useEffect(() => {
+    fetchNotes()
+  }, [fetchNotes])
 
   // Modal state
   const [showStageModal, setShowStageModal] = useState(false)
@@ -141,8 +176,11 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
   }
 
   const handleOpen = () => {
-    // Open client in detail view
-    router.push(`/clients/${client.id}`)
+    if (onOpenDetail) {
+      onOpenDetail()
+    } else {
+      router.push(`/clients/${client.id}`)
+    }
   }
 
   const handleMove = () => {
@@ -228,41 +266,35 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
     if (!noteText.trim()) return
 
     setIsSendingNote(true)
-    const newNote: Note = {
-      id: Date.now().toString(),
-      text: noteText.trim(),
-      author: client.owner.name,
-      timestamp: new Date()
+    const tempId = `temp_${Date.now()}`
+    const optimisticNote: Note = {
+      id: tempId,
+      content: noteText.trim(),
+      created_at: new Date().toISOString(),
+      author: null,
     }
 
     try {
-      // Add note to list immediately (optimistic update)
-      setNotes(prev => [newNote, ...prev])
+      // Optimistic update
+      setNotes(prev => [optimisticNote, ...prev])
       setNoteText("")
 
-      // Save note to API
-      const response = await fetchWithCsrf(`/api/v1/clients/${client.id}/notes`, {
+      const response = await fetchWithCsrf(`/api/v1/clients/${apiClientId}/notes`, {
         method: 'POST',
-        body: JSON.stringify({ text: newNote.text })
+        body: JSON.stringify({ text: optimisticNote.content })
       })
 
       if (!response.ok) {
         throw new Error('Failed to save note')
       }
 
-      const savedNote = await response.json()
-      // Update with server-generated ID if needed
-      setNotes(prev => prev.map(n => n.id === newNote.id ? { ...n, id: savedNote.id } : n))
-
-      toast({
-        title: "Note saved",
-        description: "Your note has been added to the client",
-        variant: "default",
-      })
+      const { data: savedNote } = await response.json()
+      // Replace optimistic note with server response
+      setNotes(prev => prev.map(n => n.id === tempId ? savedNote : n))
     } catch (error) {
-      // Revert optimistic update on error
-      setNotes(prev => prev.filter(n => n.id !== newNote.id))
-      setNoteText(newNote.text)
+      // Revert optimistic update
+      setNotes(prev => prev.filter(n => n.id !== tempId))
+      setNoteText(optimisticNote.content)
 
       const errorMessage = error instanceof Error ? error.message : 'Failed to save note'
       toast({
@@ -344,6 +376,21 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
           </Button>
         </div>
       </header>
+
+      {/* View Full Details */}
+      {onOpenDetail && (
+        <div className="px-4 py-3 border-b border-border">
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            size="sm"
+            onClick={onOpenDetail}
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Full Details
+          </Button>
+        </div>
+      )}
 
       {/* Properties - using fixed-width label pattern */}
       <div className="p-4 border-b border-border">
@@ -441,13 +488,18 @@ export function ClientDetailPanel({ client, onClose }: ClientDetailPanelProps) {
         <div className="p-4 flex-1 overflow-y-auto">
           <h3 className="text-sm font-medium mb-3">Notes</h3>
 
-          {notes.length > 0 ? (
+          {isLoadingNotes ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Loading notes...</span>
+            </div>
+          ) : notes.length > 0 ? (
             <div className="space-y-3">
               {notes.map((note) => (
                 <div key={note.id} className="p-3 rounded bg-secondary/50 border border-border">
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{note.text}</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{note.content}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {note.author} • {note.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {note.author ? `${note.author.first_name} ${note.author.last_name}` : "You"} • {formatTimeAgo(note.created_at)}
                   </p>
                 </div>
               ))}

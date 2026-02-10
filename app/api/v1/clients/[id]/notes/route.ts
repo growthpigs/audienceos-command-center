@@ -8,6 +8,56 @@ interface RouteParams {
   params: Promise<{ id: string }>
 }
 
+// GET /api/v1/clients/[id]/notes - Fetch all notes for a client
+export const GET = withPermission({ resource: 'clients', action: 'read' })(
+  async (request: AuthenticatedRequest, { params }: RouteParams) => {
+    try {
+      const { id } = await params
+      const supabase = await createRouteHandlerClient(cookies)
+      const agencyId = request.user.agencyId
+
+      // Verify client belongs to agency
+      const { data: client, error: clientError } = await (supabase as any)
+        .from('client')
+        .select('id')
+        .eq('id', id)
+        .eq('agency_id', agencyId)
+        .single()
+
+      if (clientError || !client) {
+        return createErrorResponse(404, 'Client not found')
+      }
+
+      // Fetch notes with author info, newest first
+      const { data: notes, error: notesError } = await (supabase as any)
+        .from('client_note')
+        .select(`
+          id,
+          content,
+          created_at,
+          author:author_id (
+            id,
+            first_name,
+            last_name
+          )
+        `)
+        .eq('client_id', id)
+        .eq('agency_id', agencyId)
+        .order('created_at', { ascending: false })
+
+      if (notesError) {
+        console.error('Client notes GET error:', notesError)
+        return createErrorResponse(500, 'Failed to fetch notes')
+      }
+
+      return NextResponse.json({ data: notes || [] })
+    } catch (error) {
+      console.error('Client notes GET error:', error)
+      return createErrorResponse(500, 'Internal server error')
+    }
+  }
+)
+
 // POST /api/v1/clients/[id]/notes - Create a note for a client
 export const POST = withPermission({ resource: 'clients', action: 'write' })(
   async (request: AuthenticatedRequest, { params }: RouteParams) => {
@@ -54,21 +104,32 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
         return createErrorResponse(404, 'Client not found')
       }
 
-      // Create note (notes are stored in client's notes field as JSON array)
-      // For simplicity, we'll update the notes field on the client
-      // In a production system, you'd have a separate notes table
-      const timestamp = new Date().toISOString()
-      const newNote = {
-        id: `note_${Date.now()}`,
-        content: sanitizedText,
-        author: {
-          id: userId,
-          email: request.user.email,
-        },
-        created_at: timestamp,
+      // Insert note into client_note table
+      const { data: newNote, error: insertError } = await (supabase as any)
+        .from('client_note')
+        .insert({
+          agency_id: agencyId,
+          client_id: id,
+          author_id: userId,
+          content: sanitizedText,
+        })
+        .select(`
+          id,
+          content,
+          created_at,
+          author:author_id (
+            id,
+            first_name,
+            last_name
+          )
+        `)
+        .single()
+
+      if (insertError) {
+        console.error('Client notes INSERT error:', insertError)
+        return createErrorResponse(500, 'Failed to save note')
       }
 
-      // Return the created note
       return NextResponse.json({ data: newNote }, { status: 201 })
     } catch (error) {
       console.error('Client notes POST error:', error)
