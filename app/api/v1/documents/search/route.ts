@@ -44,12 +44,14 @@ export const POST = withPermission({ resource: 'knowledge-base', action: 'read' 
     }
 
     // Build document filter query
-    let docQuery = supabase
+    // Cast to any: use_for_training column not yet in generated Supabase types
+    let docQuery = (supabase as any)
       .from('document')
       .select('id, title, category, gemini_file_id, file_name')
       .eq('agency_id', agencyId)
       .eq('index_status', 'indexed')
       .eq('is_active', true)
+      .eq('use_for_training', true)
       .not('gemini_file_id', 'is', null)
 
     // Filter by categories if provided
@@ -86,9 +88,10 @@ export const POST = withPermission({ resource: 'knowledge-base', action: 'read' 
     }
 
     // Extract Gemini file references with mime types
+    // Explicit types needed because (supabase as any) makes chain return any
     const docReferences = documents
-      .filter(doc => doc.gemini_file_id && doc.mime_type)
-      .map(doc => ({
+      .filter((doc: any) => doc.gemini_file_id && doc.mime_type)
+      .map((doc: any) => ({
         id: doc.gemini_file_id!,
         mimeType: doc.mime_type!
       }))
@@ -108,7 +111,7 @@ export const POST = withPermission({ resource: 'knowledge-base', action: 'read' 
 
       const result: SearchResult = {
         answer: searchAnswer,
-        documentsSearched: documents.map(doc => ({
+        documentsSearched: documents.map((doc: any) => ({
           id: doc.id,
           title: doc.title,
           category: doc.category,

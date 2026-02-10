@@ -34,8 +34,8 @@ export const functionSchemas = {
   }),
 
   get_recent_communications: z.object({
-    client_id: z.string().min(1),
-    type: z.enum(['email', 'call', 'meeting', 'note']).optional(),
+    client_id: z.string().min(1).optional(),
+    type: z.enum(['email', 'call', 'meeting', 'note', 'slack']).optional(),
     limit: z.number().int().positive().max(100).optional().default(10),
   }),
 

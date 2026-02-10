@@ -635,7 +635,7 @@ When citing information, reference the specific document.`,
    * Get documents relevant to the search request
    */
   private getRelevantDocuments(request: RAGSearchRequest): DocumentMetadata[] {
-    const { agencyId, clientId, includeGlobal = true, maxDocuments = 5 } = request;
+    const { agencyId, clientId, includeGlobal = true, maxDocuments = 5, allowedGeminiFileNames } = request;
 
     const relevant: DocumentMetadata[] = [];
 
@@ -647,6 +647,11 @@ When citing information, reference the specific document.`,
 
       // Check agency match
       if (doc.agencyId !== agencyId) {
+        continue;
+      }
+
+      // Filter by training allowlist if provided
+      if (allowedGeminiFileNames && !allowedGeminiFileNames.includes(doc.geminiFileName || '')) {
         continue;
       }
 

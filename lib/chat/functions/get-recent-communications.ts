@@ -111,12 +111,6 @@ export async function getRecentCommunications(
   const args = rawArgs as unknown as GetRecentCommunicationsArgs;
   const { agencyId, supabase } = context;
 
-  // Validate required parameters
-  if (!args.client_id) {
-    console.warn('[ValidationError] get_recent_communications: missing required parameter client_id');
-    return [];
-  }
-
   const days = args.days ?? 30;
   const limit = args.limit ?? 10;
 
@@ -133,29 +127,37 @@ export async function getRecentCommunications(
           is_inbound, received_at
         `)
         .eq('agency_id', agencyId)
-        .eq('client_id', args.client_id)
         .gte('received_at', cutoffDate)
         .order('received_at', { ascending: false })
         .limit(limit);
 
+      // Scope to client if provided
+      if (args.client_id) {
+        clientQuery = clientQuery.eq('client_id', args.client_id);
+      }
+
       // Platform filter maps to type
       if (args.type) {
-        if (args.type === 'email') {
+        if (args.type === 'slack') {
+          clientQuery = clientQuery.eq('platform', 'slack');
+        } else if (args.type === 'email') {
           clientQuery = clientQuery.eq('platform', 'gmail');
         } else if (args.type === 'meeting' || args.type === 'call') {
           clientQuery = clientQuery.eq('platform', 'slack');
         }
       }
 
-      // --- Query 2: User-scoped communications (synced Gmail/Slack) ---
+      // --- Query 2: User-scoped communications (only if client_id provided) ---
       // Bridge: look up client's contact_email, then match in user_communication
-      const { data: clientData } = await supabase
-        .from('client')
-        .select('contact_email')
-        .eq('id', args.client_id)
-        .single();
-
-      const clientEmail = clientData?.contact_email;
+      let clientEmail: string | null = null;
+      if (args.client_id) {
+        const { data: clientData } = await supabase
+          .from('client')
+          .select('contact_email')
+          .eq('id', args.client_id)
+          .single();
+        clientEmail = clientData?.contact_email ?? null;
+      }
 
       // Run both queries in parallel
       const [clientResult, userResult] = await Promise.all([
@@ -226,22 +228,24 @@ export async function getRecentCommunications(
     throw new Error('[SECURITY] Supabase client is required in production. Mock data is disabled.');
   }
   // Fallback: Use mock data for standalone mode
-  let communications = MOCK_COMMUNICATIONS[args.client_id] || [];
+  let communications: CommunicationSummary[] = args.client_id
+    ? (MOCK_COMMUNICATIONS[args.client_id] || [])
+    : Object.values(MOCK_COMMUNICATIONS).flat();
 
   // Filter by type if specified
   if (args.type) {
-    communications = communications.filter((c) => c.type === args.type);
+    communications = communications.filter((c: CommunicationSummary) => c.type === args.type);
   }
 
   // Filter by date range
   const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   communications = communications.filter(
-    (c) => new Date(c.date) >= cutoffDate
+    (c: CommunicationSummary) => new Date(c.date) >= cutoffDate
   );
 
   // Sort by date (newest first)
   communications.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a: CommunicationSummary, b: CommunicationSummary) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
   return communications.slice(0, limit);

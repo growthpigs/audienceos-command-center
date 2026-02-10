@@ -66,6 +66,8 @@ const PUBLIC_ROUTES = [
   '/api/v1/oauth/callback', // OAuth callback needs to work without auth
   '/api/v1/settings/invitations/', // Invitation validation/accept API (public for invite flow)
   '/api/public/', // Public endpoints (onboarding portal) - uses service role key internally
+  '/api/cron/', // Cron jobs authenticate via CRON_SECRET bearer token, not Supabase session
+  '/api/v1/webhooks/', // Webhook endpoints authenticate via provider signatures (e.g., Slack signing secret)
   '/invite', // Invitation acceptance pages
   '/onboarding/start', // Client onboarding portal page
   '/test-oauth', // OAuth test page (temporary - remove after testing)

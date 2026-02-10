@@ -30,6 +30,25 @@ const CHAT_RATE_LIMIT = { maxRequests: 10, windowMs: 60000 };
 const GEMINI_MODEL = 'gemini-3-flash-preview';
 
 /**
+ * Retry wrapper for Gemini API calls.
+ * Preview models have restrictive rate limits — retry once after 1s on failure.
+ * Only adds latency on the failure path; successful calls are unaffected.
+ */
+async function callGeminiWithRetry<T>(
+  fn: () => Promise<T>,
+  label: string
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (firstError) {
+    const errMsg = firstError instanceof Error ? firstError.message : String(firstError);
+    console.warn(`[Chat API] ${label} first attempt failed: ${errMsg} — retrying in 1s`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return await fn(); // Let this throw if it fails — caller handles it
+  }
+}
+
+/**
  * Build rich system prompt with all context layers
  * Combines: app structure, cartridges, chat history
  */
@@ -176,7 +195,7 @@ export const POST = withPermission({ resource: 'ai-features', action: 'write' })
       responseContent = await handleDashboardRoute(apiKey, message, agencyId, userId, functionCalls, supabase, systemPrompt);
     } else if (route === 'rag') {
       // Use RAG for document search queries
-      responseContent = await handleRAGRoute(apiKey, message, agencyId, citations);
+      responseContent = await handleRAGRoute(apiKey, message, agencyId, citations, supabase);
     } else if (route === 'memory') {
       // Use Memory for recall queries
       responseContent = await handleMemoryRoute(apiKey, message, agencyId, userId);
@@ -313,15 +332,25 @@ async function handleDashboardRoute(
   })) as unknown as Array<{name: string; description: string; parameters?: object}>;
 
   // First call: Let Gemini decide which function to call (with full context)
-  const response = await genai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: `${systemPrompt}\n\nUser: ${message}`,
-    config: {
-      temperature: 0,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      tools: [{ functionDeclarations }] as any,
-    },
-  });
+  let response;
+  try {
+    response = await callGeminiWithRetry(
+      () => genai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: `${systemPrompt}\n\nUser: ${message}`,
+        config: {
+          temperature: 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          tools: [{ functionDeclarations }] as any,
+        },
+      }),
+      'Dashboard route'
+    );
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('[Chat API] Dashboard route Gemini error (after retry):', errMsg);
+    return `I'm having trouble processing that request right now. Please try again in a moment. (Error: ${errMsg})`;
+  }
 
   // Check if Gemini wants to call a function
   const candidate = response.candidates?.[0];
@@ -382,9 +411,33 @@ async function handleRAGRoute(
   apiKey: string,
   message: string,
   agencyId: string | undefined,
-  citations: Citation[]
+  citations: Citation[],
+  supabase: SupabaseClient
 ): Promise<string> {
   try {
+    // Query training-enabled documents to build allowlist
+    let allowedGeminiFileNames: string[] | undefined;
+    try {
+      const { data: trainingDocs } = await (supabase as any)
+        .from('document')
+        .select('gemini_file_id')
+        .eq('agency_id', agencyId || 'demo-agency')
+        .eq('is_active', true)
+        .eq('use_for_training', true)
+        .not('gemini_file_id', 'is', null);
+
+      if (trainingDocs && trainingDocs.length > 0) {
+        allowedGeminiFileNames = trainingDocs.map(
+          (d: { gemini_file_id: string }) => d.gemini_file_id
+        );
+      } else if (trainingDocs && trainingDocs.length === 0) {
+        return "No documents are currently enabled for AI training. Go to Knowledge Base and enable 'AI Training' on documents you want me to reference.";
+      }
+    } catch (err) {
+      console.warn('[Chat API] Failed to load training allowlist:', err);
+      // Continue without allowlist — fail open to avoid breaking RAG entirely
+    }
+
     const ragService = getGeminiRAG(apiKey);
 
     const result = await ragService.search({
@@ -393,6 +446,7 @@ async function handleRAGRoute(
       includeGlobal: true,
       maxDocuments: 5,
       minConfidence: 0.5,
+      allowedGeminiFileNames,
     });
 
     // Add RAG citations
@@ -502,7 +556,17 @@ async function handleCasualRoute(
     }];
   }
 
-  const response = await genai.models.generateContent(requestConfig);
+  let response;
+  try {
+    response = await callGeminiWithRetry(
+      () => genai.models.generateContent(requestConfig),
+      'Casual route'
+    );
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('[Chat API] Casual route Gemini error (after retry):', errMsg);
+    return `I'm having trouble connecting to the AI service right now. Please try again in a moment. (Error: ${errMsg})`;
+  }
 
   // Extract citations from grounding metadata if available
   const candidate = response.candidates?.[0];

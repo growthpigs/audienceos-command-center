@@ -11,7 +11,7 @@ import type { ExecutorContext, FunctionExecutor } from './types';
 import { getClients, getClientDetails } from './get-clients';
 import { getAlerts } from './get-alerts';
 import { getAgencyStats } from './get-agency-stats';
-import { getRecentCommunications } from './get-communications';
+import { getRecentCommunications } from './get-recent-communications';
 import { navigateTo } from './navigate-to';
 import { validateFunctionArgs } from './schemas';
 import {
@@ -109,25 +109,24 @@ export const hgcFunctions = [
   },
   {
     name: 'get_recent_communications',
-    description: 'Get recent communications (emails, messages) with a client.',
+    description: 'Get recent communications (emails, Slack messages) with a client or across all clients. Use when user asks about messages, Slack, or communications.',
     parameters: {
       type: 'object',
       properties: {
         client_id: {
           type: 'string',
-          description: 'The client UUID',
+          description: 'The client UUID. If omitted, returns communications across all clients.',
         },
         type: {
           type: 'string',
           description: 'Filter by communication type',
-          enum: ['email', 'call', 'meeting', 'note'],
+          enum: ['email', 'call', 'meeting', 'note', 'slack'],
         },
         limit: {
           type: 'number',
           description: 'Maximum communications to return (default: 10)',
         },
       },
-      required: ['client_id'],
     },
   },
   {

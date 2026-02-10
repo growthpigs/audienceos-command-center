@@ -85,6 +85,37 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
         // No body is fine — use defaults
       }
 
+      // Mode 1: Link an EXISTING Slack channel (skip gateway create)
+      if (typeof body.slack_channel_id === 'string' && body.slack_channel_id) {
+        const slackChannelId = body.slack_channel_id as string
+        const slackChannelName = (typeof body.slack_channel_name === 'string' && body.slack_channel_name)
+          ? body.slack_channel_name
+          : slackChannelId // Use ID as fallback name
+
+        const { data: record, error: dbError } = await supabase
+          .from('client_slack_channel')
+          .upsert(
+            {
+              agency_id: agencyId,
+              client_id: clientId,
+              slack_channel_id: slackChannelId,
+              slack_channel_name: slackChannelName,
+              is_active: true,
+            },
+            { onConflict: 'agency_id,client_id' }
+          )
+          .select('id, slack_channel_id, slack_channel_name')
+          .single()
+
+        if (dbError) {
+          console.error('[slack-channel] Link existing channel DB error:', dbError)
+          return createErrorResponse(500, 'Failed to save channel mapping')
+        }
+
+        return NextResponse.json({ data: record }, { status: 201 })
+      }
+
+      // Mode 2: Create a NEW Slack channel via Gateway
       const isPrivate = body.is_private === true
       const channelNameOverride = typeof body.channel_name === 'string' ? body.channel_name : undefined
 

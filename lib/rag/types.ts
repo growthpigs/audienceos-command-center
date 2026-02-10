@@ -227,6 +227,11 @@ export interface RAGSearchRequest {
    * Minimum confidence threshold
    */
   minConfidence?: number;
+  /**
+   * Optional allowlist of Gemini file names to restrict search to.
+   * Enforces Supabase-side use_for_training filtering.
+   */
+  allowedGeminiFileNames?: string[];
 }
 
 /**

@@ -126,8 +126,8 @@ export interface GetAlertsArgs {
 }
 
 export interface GetRecentCommunicationsArgs {
-  client_id: string;
-  type?: 'email' | 'call' | 'meeting' | 'note';
+  client_id?: string;
+  type?: 'email' | 'call' | 'meeting' | 'note' | 'slack';
   days?: number;
   limit?: number;
 }
