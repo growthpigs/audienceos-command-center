@@ -127,31 +127,58 @@ export async function syncChannel(
       sender_email: null,
       is_inbound: true,
       received_at: new Date(parseFloat(msg.ts) * 1000).toISOString(),
-      metadata: {
-        slack_channel_id: channelId,
-        slack_ts: msg.ts,
-        slack_thread_ts: msg.thread_ts || null,
-      },
+      thread_id: msg.thread_ts || null,
     }))
 
-    // Upsert using message_id for deduplication
+    // Deduplicate: fetch existing message_ids for this channel, filter to new only
+    const messageIds = records.map((r) => r.message_id)
+    const { data: existing } = await supabase
+      .from('communication')
+      .select('message_id')
+      .eq('agency_id', agencyId)
+      .in('message_id', messageIds)
+
+    const existingIds = new Set((existing || []).map((e: { message_id: string }) => e.message_id))
+    const newRecords = records.filter((r) => !existingIds.has(r.message_id))
+
+    if (newRecords.length === 0) {
+      // All messages already synced — just update timestamp
+      await supabase
+        .from('client_slack_channel')
+        .update({ last_sync_at: new Date().toISOString() })
+        .eq('agency_id', agencyId)
+        .eq('slack_channel_id', channelId)
+
+      return { channelId, clientId, messagesAdded: 0 }
+    }
+
     const { error: insertError } = await supabase
       .from('communication')
-      .upsert(records, { onConflict: 'agency_id,message_id', ignoreDuplicates: true })
+      .insert(newRecords)
 
     if (insertError) {
       console.error(`[slack-sync] Insert error for channel ${channelId}:`, insertError)
       return { channelId, clientId, messagesAdded: 0, error: insertError.message }
     }
 
-    // Update sync metadata
+    // Update sync metadata and message count
+    // Get total message count for this channel from communication table
+    const { count: totalMessages } = await supabase
+      .from('communication')
+      .select('id', { count: 'exact', head: true })
+      .eq('client_id', clientId)
+      .eq('platform', 'slack')
+
     await supabase
       .from('client_slack_channel')
-      .update({ last_sync_at: new Date().toISOString() })
+      .update({
+        last_sync_at: new Date().toISOString(),
+        message_count: totalMessages || records.length,
+      })
       .eq('agency_id', agencyId)
       .eq('slack_channel_id', channelId)
 
-    return { channelId, clientId, messagesAdded: records.length }
+    return { channelId, clientId, messagesAdded: newRecords.length }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error(`[slack-sync] Error syncing channel ${channelId}:`, message)

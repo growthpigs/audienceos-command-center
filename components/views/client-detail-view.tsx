@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { useClientDetail } from "@/hooks/use-client-detail"
 import { useAuth } from "@/hooks/use-auth"
+import { SlackChannelLinker } from "@/components/slack-channel-linker"
 
 interface ClientDetailViewProps {
   clientId: string
@@ -305,6 +306,7 @@ export function ClientDetailView({ clientId, onBack }: ClientDetailViewProps) {
           </TabsContent>
 
           <TabsContent value="comms" className="space-y-4">
+            <SlackChannelLinker clientId={clientId} />
             {/* Full communications tab content */}
             <Card className="p-6">
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">

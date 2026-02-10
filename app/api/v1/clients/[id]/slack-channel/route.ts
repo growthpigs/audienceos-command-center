@@ -10,6 +10,40 @@ import { createRouteHandlerClient } from '@/lib/supabase'
 import { withRateLimit, withCsrfProtection, createErrorResponse } from '@/lib/security'
 import { withPermission, type AuthenticatedRequest } from '@/lib/rbac/with-permission'
 import { createSlackChannelForClient } from '@/lib/integrations/slack-channel-service'
+import { syncChannel } from '@/lib/integrations/slack-channel-sync-service'
+
+// DELETE /api/v1/clients/[id]/slack-channel
+export const DELETE = withPermission({ resource: 'clients', action: 'write' })(
+  async (request: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const rateLimitResponse = withRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
+
+    const csrfError = withCsrfProtection(request)
+    if (csrfError) return csrfError
+
+    try {
+      const { id: clientId } = await params
+      const agencyId = request.user.agencyId
+      const supabase = await createRouteHandlerClient(cookies)
+
+      const { error } = await (supabase as any)
+        .from('client_slack_channel')
+        .update({ is_active: false })
+        .eq('client_id', clientId)
+        .eq('agency_id', agencyId)
+        .eq('is_active', true)
+
+      if (error) {
+        console.error('[slack-channel] Unlink error:', error)
+        return createErrorResponse(500, 'Failed to unlink channel')
+      }
+
+      return NextResponse.json({ data: null, message: 'Channel unlinked' })
+    } catch {
+      return createErrorResponse(500, 'Internal server error')
+    }
+  }
+)
 
 // GET /api/v1/clients/[id]/slack-channel
 export const GET = withPermission({ resource: 'clients', action: 'read' })(
@@ -21,10 +55,11 @@ export const GET = withPermission({ resource: 'clients', action: 'read' })(
       const { id: clientId } = await params
       const supabase = await createRouteHandlerClient(cookies)
 
-const { data, error } = await supabase
+const { data, error } = await (supabase as any)
         .from('client_slack_channel')
         .select('*')
         .eq('client_id', clientId)
+        .eq('is_active', true)
         .maybeSingle()
 
       if (error) {
@@ -112,6 +147,10 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
           return createErrorResponse(500, 'Failed to save channel mapping')
         }
 
+        // Fire-and-forget: sync messages from the newly linked channel
+        syncChannel(agencyId, clientId, slackChannelId, null, supabase)
+          .catch((err) => console.error('[slack-channel] Auto-sync after link failed:', err))
+
         return NextResponse.json({ data: record }, { status: 201 })
       }
 
@@ -130,6 +169,12 @@ export const POST = withPermission({ resource: 'clients', action: 'write' })(
 
       if (!result.ok) {
         return NextResponse.json({ error: result.error }, { status: result.status || 500 })
+      }
+
+      // Fire-and-forget: sync messages from the newly created channel
+      if (result.data?.slack_channel_id) {
+        syncChannel(agencyId, clientId, result.data.slack_channel_id, null, supabase)
+          .catch((err) => console.error('[slack-channel] Auto-sync after create failed:', err))
       }
 
       return NextResponse.json({ data: result.data }, { status: 201 })
