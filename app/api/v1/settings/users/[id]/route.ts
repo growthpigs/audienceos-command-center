@@ -62,11 +62,12 @@ export const PATCH = withPermission({ resource: 'users', action: 'manage' })(
         return createErrorResponse(400, 'Invalid JSON body')
       }
 
-      const { role, is_active, first_name, last_name } = body as {
+      const { role, is_active, first_name, last_name, nickname } = body as {
         role?: unknown
         is_active?: unknown
         first_name?: unknown
         last_name?: unknown
+        nickname?: unknown
       }
       const updates: Record<string, unknown> = {}
 
@@ -83,6 +84,14 @@ export const PATCH = withPermission({ resource: 'users', action: 'manage' })(
           return createErrorResponse(400, 'Last name must be a non-empty string (max 100 chars)')
         }
         updates.last_name = last_name.trim()
+      }
+
+      // Handle nickname change
+      if (nickname !== undefined) {
+        if (nickname !== null && (typeof nickname !== 'string' || nickname.length > 50)) {
+          return createErrorResponse(400, 'Nickname must be a string (max 50 chars) or null')
+        }
+        updates.nickname = nickname === null ? null : (nickname as string).trim() || null
       }
 
       // Handle role change

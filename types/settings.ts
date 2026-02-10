@@ -85,6 +85,7 @@ export interface TeamMember {
   email: string
   first_name: string
   last_name: string
+  nickname?: string | null
   role: UserRole
   avatar_url: string | null
   is_active: boolean

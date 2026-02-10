@@ -92,7 +92,8 @@ interface MemberProfileProps {
 function MemberProfile({ member, onBack, onUpdate }: MemberProfileProps) {
   const [firstName, setFirstName] = useState(member.first_name)
   const [lastName, setLastName] = useState(member.last_name)
-  const [nickname, setNickname] = useState(member.first_name.toLowerCase())
+  const initialNickname = member.nickname ?? member.first_name.toLowerCase()
+  const [nickname, setNickname] = useState(initialNickname)
   const [role, setRole] = useState(member.role)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -102,6 +103,7 @@ function MemberProfile({ member, onBack, onUpdate }: MemberProfileProps) {
   const hasChanges =
     firstName !== member.first_name ||
     lastName !== member.last_name ||
+    nickname !== initialNickname ||
     role !== member.role
 
   const handleSave = async () => {
@@ -114,6 +116,7 @@ function MemberProfile({ member, onBack, onUpdate }: MemberProfileProps) {
         body: JSON.stringify({
           first_name: firstName,
           last_name: lastName,
+          nickname: nickname || null,
           role: role,
         }),
       })

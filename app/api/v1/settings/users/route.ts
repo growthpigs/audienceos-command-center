@@ -37,7 +37,7 @@ export const GET = withPermission({ resource: 'users', action: 'manage' })(
       let query = supabase
         .from('user')
         .select(`
-          id, email, first_name, last_name, avatar_url, is_active, last_active_at, created_at, role_id,
+          id, email, first_name, last_name, avatar_url, is_active, last_active_at, created_at, role, role_id, nickname,
           role_info:role_id (
             name,
             hierarchy_level
@@ -74,7 +74,7 @@ export const GET = withPermission({ resource: 'users', action: 'manage' })(
         const { role_info, ...rest } = user
         return {
           ...rest,
-          role: role_info?.name ?? 'user', // Default to 'user' if role name not found
+          role: rest.role ?? role_info?.name ?? 'member',
           hierarchy_level: role_info?.hierarchy_level ?? null,
         }
       })
