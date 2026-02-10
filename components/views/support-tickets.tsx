@@ -10,14 +10,17 @@ import {
   InboxItem,
   TicketDetailPanel,
   ListHeader,
+  AddTicketModal,
   type Ticket,
 } from "@/components/linear"
 import { useTicketStore, type Ticket as StoreTicket } from "@/stores/ticket-store"
+import { Button } from "@/components/ui/button"
 import {
   Inbox,
   Clock,
   CheckCircle,
   AlertCircle,
+  Plus,
 } from "lucide-react"
 
 // Map store status to UI status
@@ -72,6 +75,7 @@ export function SupportTickets() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
+  const [addTicketModalOpen, setAddTicketModalOpen] = useState(false)
 
   const slideTransition = useSlideTransition()
   const { toast } = useToast()
@@ -310,6 +314,7 @@ export function SupportTickets() {
   }
 
   return (
+    <>
     <div className="flex h-full overflow-hidden">
       {/* Ticket list - shrinks when detail panel is open */}
       <motion.div
@@ -325,6 +330,16 @@ export function SupportTickets() {
           onSearch={!selectedTicket ? setSearchQuery : undefined}
           searchValue={!selectedTicket ? searchQuery : undefined}
           searchPlaceholder="Search tickets..."
+          actions={
+            <Button
+              size="sm"
+              className="h-8 gap-1.5"
+              onClick={() => setAddTicketModalOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add Ticket
+            </Button>
+          }
         />
 
         {/* Filter tabs - hide when compact */}
@@ -399,5 +414,10 @@ export function SupportTickets() {
         )}
       </AnimatePresence>
     </div>
+    <AddTicketModal
+      isOpen={addTicketModalOpen}
+      onClose={() => setAddTicketModalOpen(false)}
+    />
+    </>
   )
 }
