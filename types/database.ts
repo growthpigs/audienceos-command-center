@@ -2624,7 +2624,8 @@ export type Database = {
       ticket_priority: "low" | "medium" | "high" | "critical"
       ticket_status: "new" | "in_progress" | "waiting_client" | "resolved"
       user_communication_platform: "slack" | "gmail"
-      user_role: "admin" | "user"
+      // Manually expanded — DB enum has "admin" | "user" but app uses full RBAC roles
+      user_role: "owner" | "admin" | "manager" | "member" | "user"
       workflow_status: "running" | "completed" | "failed"
     }
     CompositeTypes: {
@@ -2801,7 +2802,7 @@ export const Constants = {
       ticket_priority: ["low", "medium", "high", "critical"],
       ticket_status: ["new", "in_progress", "waiting_client", "resolved"],
       user_communication_platform: ["slack", "gmail"],
-      user_role: ["admin", "user"],
+      user_role: ["owner", "admin", "manager", "member", "user"],
       workflow_status: ["running", "completed", "failed"],
     },
   },
