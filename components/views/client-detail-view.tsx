@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Play,
   Check,
+  TicketIcon,
 } from "lucide-react"
 import { owners } from "@/lib/constants/pipeline"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useClientDetail } from "@/hooks/use-client-detail"
 import { useAuth } from "@/hooks/use-auth"
 import { SlackChannelLinker } from "@/components/slack-channel-linker"
+import { AddTicketModal, type TicketPrefill } from "@/components/linear"
 
 interface ClientDetailViewProps {
   clientId: string
@@ -76,6 +78,8 @@ export function ClientDetailView({ clientId, onBack }: ClientDetailViewProps) {
     gtm: false,
     shopify: false,
   })
+  const [ticketModalOpen, setTicketModalOpen] = useState(false)
+  const [ticketPrefill, setTicketPrefill] = useState<TicketPrefill | undefined>()
 
   // Show loading state while fetching
   if (isLoading) {
@@ -324,6 +328,23 @@ export function ClientDetailView({ clientId, onBack }: ClientDetailViewProps) {
                           <span className="text-xs text-muted-foreground ml-auto">
                             {formatTimeAgo(comm.received_at)}
                           </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => {
+                              const subjectLine = comm.subject ? `${comm.subject}: ` : ""
+                              setTicketPrefill({
+                                clientId: clientId,
+                                title: comm.subject || `${comm.platform} issue — ${client.name}`,
+                                description: `Source: ${comm.platform} message (${new Date(comm.received_at).toLocaleDateString()})\n\n${subjectLine}${comm.content}`,
+                              })
+                              setTicketModalOpen(true)
+                            }}
+                          >
+                            <TicketIcon className="h-3 w-3" />
+                            Create Ticket
+                          </Button>
                         </div>
                         {comm.subject && (
                           <p className="text-sm font-medium text-foreground mb-1">{comm.subject}</p>
@@ -650,6 +671,15 @@ export function ClientDetailView({ clientId, onBack }: ClientDetailViewProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AddTicketModal
+        isOpen={ticketModalOpen}
+        onClose={() => {
+          setTicketModalOpen(false)
+          setTicketPrefill(undefined)
+        }}
+        prefill={ticketPrefill}
+      />
     </div>
   )
 }

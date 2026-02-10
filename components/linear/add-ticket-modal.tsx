@@ -32,16 +32,26 @@ import {
 import { usePipelineStore } from "@/stores/pipeline-store"
 import { useSettingsStore } from "@/stores/settings-store"
 
+export interface TicketPrefill {
+  clientId?: string
+  title?: string
+  description?: string
+  category?: TicketCategory
+  priority?: TicketPriority
+}
+
 interface AddTicketModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
+  prefill?: TicketPrefill
 }
 
 export function AddTicketModal({
   isOpen,
   onClose,
   onSuccess,
+  prefill,
 }: AddTicketModalProps) {
   const { toast } = useToast()
   const { createTicket, fetchTickets } = useTicketStore()
@@ -65,6 +75,17 @@ export function AddTicketModal({
       fetchTeamMembers()
     }
   }, [isOpen, teamMembers.length, fetchTeamMembers])
+
+  // Apply prefill data when modal opens
+  useEffect(() => {
+    if (isOpen && prefill) {
+      if (prefill.clientId) setClientId(prefill.clientId)
+      if (prefill.title) setTitle(prefill.title)
+      if (prefill.description) setDescription(prefill.description)
+      if (prefill.category) setCategory(prefill.category)
+      if (prefill.priority) setPriority(prefill.priority)
+    }
+  }, [isOpen, prefill])
 
   // Reset form to initial state
   const resetForm = () => {
