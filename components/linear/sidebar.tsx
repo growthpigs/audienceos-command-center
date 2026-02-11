@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { KaizenLogo } from "@/components/kaizen-logo"
 
 interface NavItemProps {
   icon: React.ReactNode
@@ -168,7 +169,7 @@ export function LinearSidebar({
       transition={transition}
       className="bg-sidebar border-r border-sidebar-border flex flex-col h-screen"
     >
-      {/* Header - AudienceOS branding (restored 2026-01-20) */}
+      {/* Header - Logo (toggle via USE_KAIZEN_BRANDING in kaizen-logo.tsx) */}
       <div className="h-[52px] px-[15px] flex items-center justify-center">
         <div className="flex items-center justify-between w-full">
           <div className={cn("flex items-center", collapsed && "justify-center w-full")}>
@@ -180,21 +181,8 @@ export function LinearSidebar({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={fadeTransition}
-                  className="flex items-center gap-0"
-                  style={{ fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}
                 >
-                  <span className="text-[17px] font-semibold tracking-tight text-foreground dark:text-white">audience</span>
-                  <span
-                    className="text-[17px] font-light tracking-tight"
-                    style={{
-                      background: "linear-gradient(90deg, #a855f7 0%, #ec4899 50%, #06b6d4 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    OS
-                  </span>
+                  <KaizenLogo variant="sidebar" />
                 </motion.div>
               ) : (
                 <motion.span
@@ -203,15 +191,8 @@ export function LinearSidebar({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={fadeTransition}
-                  className="text-[15px] font-semibold"
-                  style={{
-                    background: "linear-gradient(90deg, #a855f7 0%, #ec4899 50%, #06b6d4 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
                 >
-                  A
+                  <KaizenLogo variant="icon" />
                 </motion.span>
               )}
             </AnimatePresence>
