@@ -102,7 +102,7 @@ export const GET = withPermission({ resource: 'clients', action: 'read' })(
 // POST /api/v1/clients/[id]/slack-channel
 export const POST = withPermission({ resource: 'clients', action: 'write' })(
   async (request: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const rateLimitResponse = withRateLimit(request, { maxRequests: 10, windowMs: 60000 })
+    const rateLimitResponse = withRateLimit(request, { maxRequests: 30, windowMs: 60000 })
     if (rateLimitResponse) return rateLimitResponse
 
     const csrfError = withCsrfProtection(request)
